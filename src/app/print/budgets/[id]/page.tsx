@@ -50,17 +50,6 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
       {/* Container A4 format */}
       <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 print:scale-[0.88] print:origin-top relative overflow-hidden">
         
-        {/* GIANT STAMP */}
-        {showGiantStamp && (
-          <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.15]">
-            <div className={`border-[12px] ${stampColor} rounded-3xl p-8`} style={{ transform: 'rotate(-30deg)' }}>
-              <h2 className={`font-black text-[120px] uppercase tracking-[0.2em] leading-none ${stampColor}`}>
-                {stampText}
-              </h2>
-            </div>
-          </div>
-        )}
-        
         {/* CABEÇALHO DO DOCUMENTO */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4 relative z-10">
           <div className="flex-1">

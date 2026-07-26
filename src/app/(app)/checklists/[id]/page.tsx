@@ -35,20 +35,6 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300 pb-12 max-w-4xl relative">
-      {checklist.status === 'APROVADO' && (
-        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center overflow-hidden mix-blend-multiply opacity-20">
-          <div className="transform -rotate-12 border-8 border-emerald-500 text-emerald-500 text-[120px] font-black uppercase tracking-tighter p-8 rounded-3xl select-none backdrop-blur-sm shadow-2xl">
-            Aprovado
-          </div>
-        </div>
-      )}
-      {checklist.status === 'RECUSADO' && (
-        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center overflow-hidden mix-blend-multiply opacity-20">
-          <div className="transform -rotate-12 border-8 border-red-500 text-red-500 text-[120px] font-black uppercase tracking-tighter p-8 rounded-3xl select-none backdrop-blur-sm shadow-2xl">
-            Recusado
-          </div>
-        </div>
-      )}
 
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-neutral-100 relative z-10">
         <div>

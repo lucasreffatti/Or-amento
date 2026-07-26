@@ -173,26 +173,7 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
         </div>
       )}
 
-      <div className="relative mt-4">
-        {/* WATERMARK STAMPS */}
-        <div className="pointer-events-none absolute inset-0 flex items-start justify-center overflow-hidden z-10 pt-48 select-none">
-          {displayStatus === 'REJECTED' && (
-            <div className="transform -rotate-12 border-[10px] border-red-600/20 text-red-600/20 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
-              RECUSADO
-            </div>
-          )}
-          {displayStatus === 'EXPIRED' && (
-            <div className="transform -rotate-12 border-[10px] border-amber-600/20 text-amber-600/20 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
-              VENCIDO
-            </div>
-          )}
-          {displayStatus === 'APPROVED' && (
-            <div className="transform -rotate-12 border-[10px] border-emerald-600/20 text-emerald-600/20 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
-              APROVADO
-            </div>
-          )}
-        </div>
-
+      <div className="mt-4">
         <BudgetBuilder budget={budget as any} />
       </div>
     </div>
