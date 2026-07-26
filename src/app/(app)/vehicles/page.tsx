@@ -67,14 +67,22 @@ export default async function VehiclesPage() {
               {vehicles.map((v) => (
                 <tr key={v.id} className="hover:bg-neutral-50/80 transition-colors group cursor-pointer">
                   <td className="px-6 py-4">
-                    <span className="font-mono text-neutral-900 font-bold tracking-widest text-[13px] bg-neutral-100 border border-neutral-200/80 px-2.5 py-1 rounded-md shadow-sm">
-                      {v.plate}
-                    </span>
+                    <Link href={`/vehicles/${v.id}`} className="hover:opacity-80">
+                      <span className="font-mono text-neutral-900 font-bold tracking-widest text-[13px] bg-neutral-100 border border-neutral-200/80 px-2.5 py-1 rounded-md shadow-sm">
+                        {v.plate}
+                      </span>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 text-neutral-900 font-medium text-[13px]">
                     {v.brand} {v.model} <span className="text-neutral-400 text-xs font-normal ml-1">({v.year})</span>
                   </td>
-                  <td className="px-6 py-4 text-neutral-500 text-[13px]">{v.customer?.name}</td>
+                  <td className="px-6 py-4 text-neutral-500 text-[13px]">
+                    {v.customer && (
+                      <Link href={`/customers/${v.customer.id}`} className="hover:underline hover:text-neutral-900 transition-colors">
+                        {v.customer.name}
+                      </Link>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-right">
                     <DeleteButton 
                       id={v.id} 

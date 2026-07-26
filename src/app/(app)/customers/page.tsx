@@ -73,7 +73,11 @@ export default async function CustomersPage() {
             <tbody className="divide-y divide-neutral-100 bg-white">
               {customers.map((c) => (
                 <tr key={c.id} className="hover:bg-neutral-50/80 transition-colors group">
-                  <td className="px-6 py-4 font-medium text-neutral-900 text-[13px]">{c.name}</td>
+                  <td className="px-6 py-4 font-medium text-neutral-900 text-[13px]">
+                    <Link href={`/customers/${c.id}`} className="hover:underline">
+                      {c.name}
+                    </Link>
+                  </td>
                   <td className="px-6 py-4 text-neutral-500 font-mono text-[13px]">{c.phone}</td>
                   <td className="px-6 py-4 text-neutral-500 font-mono text-[13px]">{c.document || '-'}</td>
                   <td className="px-6 py-4 text-neutral-400 font-mono text-[12px]">
