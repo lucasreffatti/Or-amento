@@ -31,7 +31,7 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
 
   return (
     <div className="bg-white min-h-screen text-black font-sans print:p-0 p-8 flex justify-center">
-      <div className="w-[210mm] min-h-[297mm] bg-white print:shadow-none shadow-xl border border-neutral-200 print:border-none p-10 relative">
+      <div className="w-[210mm] min-h-[297mm] bg-white print:shadow-none shadow-xl border border-neutral-200 print:border-none p-10 print:scale-[0.88] print:origin-top relative">
         
         {/* CABEÇALHO DA OFICINA */}
         <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">

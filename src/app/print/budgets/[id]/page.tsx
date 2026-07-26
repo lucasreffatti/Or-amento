@@ -51,7 +51,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
       <AutoPrint />
       
       {/* Container A4 format */}
-      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 relative overflow-hidden">
+      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 print:scale-[0.88] print:origin-top relative overflow-hidden">
         
         {/* GIANT STAMP */}
         {showGiantStamp && (
