@@ -24,18 +24,18 @@ export default async function VehiclesPage() {
           <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight">Veículos</h1>
           <p className="text-[13px] text-neutral-500 mt-1">Gerencie a frota de veículos atendida na oficina.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+          <div className="relative w-full sm:w-auto">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
             <input 
               type="text" 
-              placeholder="Buscar placa..." 
-              className="pl-9 pr-4 py-2 bg-white border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all w-64 shadow-sm"
+              placeholder="Buscar placa ou cliente..." 
+              className="pl-9 pr-4 py-2 bg-white border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all w-full sm:w-64 shadow-sm"
             />
           </div>
           <Link 
-            href="/vehicles/new"
-            className="bg-neutral-900 text-white px-4 py-2 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.08)] flex items-center gap-2 h-[38px]"
+            href="/vehicles/new" 
+            className="bg-neutral-900 text-white px-4 py-2 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 h-[38px] shrink-0"
           >
             <Plus className="w-4 h-4" /> Novo Veículo
           </Link>

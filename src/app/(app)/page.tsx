@@ -130,9 +130,9 @@ export default async function Dashboard() {
         ) : (
           <div className="divide-y divide-neutral-100">
             {recentBudgets.map((budget) => (
-              <div key={budget.id} className="p-6 flex items-center justify-between hover:bg-neutral-50/50 transition-colors">
+              <div key={budget.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-neutral-50/50 transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-500">
+                  <div className="w-10 h-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-500 shrink-0">
                     <FileText className="w-4 h-4" />
                   </div>
                   <div>
@@ -144,7 +144,7 @@ export default async function Dashboard() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
                   <div className="text-right">
                     <p className="text-[13px] font-mono font-medium text-neutral-900">
                       R$ {budget.finalTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}

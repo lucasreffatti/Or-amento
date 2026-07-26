@@ -19,18 +19,18 @@ export default async function ChecklistsPage() {
           <h1 className="text-xl font-semibold text-neutral-900 tracking-tight">Checklists</h1>
           <p className="text-sm text-neutral-500 mt-1">Registros de inspeção veicular de entrada.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+          <div className="relative w-full sm:w-auto">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
             <input 
               type="text" 
-              placeholder="Buscar checklist..." 
-              className="pl-9 pr-4 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 transition-colors w-64"
+              placeholder="Buscar por placa..." 
+              className="pl-9 pr-4 py-2 bg-white border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all w-full sm:w-64 shadow-sm"
             />
           </div>
           <Link 
-            href="/checklists/new"
-            className="bg-neutral-900 text-white px-4 py-2 text-sm font-medium rounded-md hover:bg-neutral-800 transition-colors shadow-sm flex items-center gap-2"
+            href="/checklists/new" 
+            className="bg-neutral-900 text-white px-4 py-2 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 h-[38px] shrink-0"
           >
             <Plus className="w-4 h-4" /> Novo Checklist
           </Link>
