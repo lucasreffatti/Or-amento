@@ -24,6 +24,7 @@ export default async function NewVehiclePage() {
     const engineType = formData.get('engineType') as string
     const mileageStr = formData.get('mileage') as string
     const mileage = mileageStr ? parseInt(mileageStr, 10) : null
+    const notes = (formData.get('notes') as string) || null
     
     const tenant = await prisma.tenant.findFirst()
     
@@ -37,7 +38,8 @@ export default async function NewVehiclePage() {
           model,
           year,
           engineType,
-          mileage
+          mileage,
+          notes
         }
       })
     }
@@ -170,14 +172,14 @@ export default async function NewVehiclePage() {
                 </select>
               </div>
 
-              <div className="space-y-1.5">
-                <label htmlFor="mileage" className="text-[13px] font-medium text-neutral-700">Quilometragem</label>
-                <input 
-                  type="number" 
-                  id="mileage" 
-                  name="mileage" 
-                  placeholder="Ex: 45000"
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 font-mono"
+              <div className="space-y-1.5 sm:col-span-2">
+                <label htmlFor="notes" className="text-sm font-medium text-neutral-700">Informações Adicionais / Observações do Veículo</label>
+                <textarea 
+                  id="notes" 
+                  name="notes" 
+                  rows={3}
+                  placeholder="Digite observações importantes sobre este veículo (ex: histórico de problemas, modificações, estado geral)..."
+                  className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 text-neutral-900"
                 />
               </div>
 

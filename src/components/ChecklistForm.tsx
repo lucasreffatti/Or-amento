@@ -156,13 +156,13 @@ export default function ChecklistForm({
       </div>
 
       <div className="space-y-4 pt-4 border-t border-neutral-100">
-        <label className="text-[13px] font-medium text-neutral-700 block">Itens da Vistoria</label>
+        <label className="text-sm font-semibold text-neutral-800 block">Itens da Vistoria</label>
         
         <div className="bg-neutral-50/50 border border-neutral-200 rounded-md overflow-hidden">
           {checklistItemsTemplate.map((item, idx) => (
-            <div key={item} className={`flex items-center justify-between p-3 ${idx !== 0 ? 'border-t border-neutral-100' : ''}`}>
-              <span className="text-[13px] text-neutral-800 font-medium">{item}</span>
-              <div className="flex bg-white border border-neutral-200 rounded-md overflow-hidden shadow-sm">
+            <div key={item} className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 gap-2 ${idx !== 0 ? 'border-t border-neutral-100' : ''}`}>
+              <span className="text-sm text-neutral-800 font-medium">{item}</span>
+              <div className="flex bg-white border border-neutral-200 rounded-md overflow-hidden shadow-sm self-start sm:self-auto">
                 {(['OK', 'AVARIA', 'N/A'] as const).map(status => {
                   const isActive = itemsStatus[item] === status;
                   return (
@@ -170,10 +170,10 @@ export default function ChecklistForm({
                       key={status}
                       type="button"
                       onClick={() => handleStatusChange(item, status)}
-                      className={`px-3 py-1 text-[11px] font-bold transition-colors border-r last:border-r-0 border-neutral-100 ${
+                      className={`px-3.5 py-1.5 text-xs font-bold transition-colors border-r last:border-r-0 border-neutral-100 ${
                         isActive 
                           ? status === 'OK' ? 'bg-emerald-500 text-white' : status === 'AVARIA' ? 'bg-red-500 text-white' : 'bg-neutral-600 text-white'
-                          : 'bg-white text-neutral-500 hover:bg-neutral-50'
+                          : 'bg-white text-neutral-600 hover:bg-neutral-50'
                       }`}
                     >
                       {status}
@@ -186,16 +186,56 @@ export default function ChecklistForm({
         </div>
       </div>
 
+      <div className="space-y-5 pt-4 border-t border-neutral-100">
+        <h3 className="text-sm font-semibold text-neutral-900">Observações & Diagnóstico Inicial</h3>
+        
+        <div className="space-y-1.5">
+          <label htmlFor="reportedIssue" className="text-sm font-medium text-neutral-700">Defeito Relatado / Queixa do Cliente</label>
+          <textarea
+            id="reportedIssue"
+            name="reportedIssue"
+            rows={2}
+            defaultValue={initialData?.reportedIssue ?? ""}
+            placeholder="Descreva o problema relatado pelo cliente (ex: barulho na suspensão, falha ao ligar)..."
+            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 text-neutral-900"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="obd2Codes" className="text-sm font-medium text-neutral-700">Códigos de Diagnóstico / OBD2 (se houver)</label>
+          <input
+            type="text"
+            id="obd2Codes"
+            name="obd2Codes"
+            defaultValue={initialData?.obd2Codes ?? ""}
+            placeholder="Ex: P0300, P0171"
+            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 font-mono text-neutral-900"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="additionalInfo" className="text-sm font-medium text-neutral-700">Informações Adicionais / Observações da Vistoria</label>
+          <textarea
+            id="additionalInfo"
+            name="additionalInfo"
+            rows={3}
+            defaultValue={initialData?.additionalInfo ?? ""}
+            placeholder="Digite qualquer detalhe adicional relevante sobre o estado do veículo ou objetos deixados no interior..."
+            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 text-neutral-900"
+          />
+        </div>
+      </div>
+
       <div className="pt-6 mt-6 border-t border-neutral-100 flex justify-end gap-3">
         <Link 
           href={budgetId ? `/budgets/${budgetId}` : (initialData ? `/checklists/${initialData.id}` : "/checklists")} 
-          className="px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-md hover:bg-neutral-50 transition-colors"
+          className="px-4 py-2.5 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-md hover:bg-neutral-50 transition-colors"
         >
           Cancelar
         </Link>
         <button 
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors shadow-sm"
+          className="px-4 py-2.5 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors shadow-sm"
         >
           {initialData ? "Salvar Alterações" : "Concluir Vistoria"}
         </button>

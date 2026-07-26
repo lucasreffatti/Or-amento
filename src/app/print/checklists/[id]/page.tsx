@@ -123,45 +123,45 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
           </div>
         </div>
 
+        {/* OBSERVAÇÕES E INFORMAÇÕES ADICIONAIS */}
+        {(checklist.reportedIssue || checklist.obd2Codes || checklist.additionalInfo) && (
+          <div className="mb-8 p-4 border border-neutral-300 rounded-lg">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-black mb-3 border-b border-neutral-200 pb-1">
+              Observações & Diagnóstico Inicial
+            </h3>
+            
+            {checklist.reportedIssue && (
+              <div className="mb-2">
+                <span className="text-xs font-bold text-neutral-600 block">Defeito Relatado / Queixa do Cliente:</span>
+                <p className="text-sm font-medium text-black leading-relaxed">{checklist.reportedIssue}</p>
+              </div>
+            )}
+
+            {checklist.obd2Codes && (
+              <div className="mb-2">
+                <span className="text-xs font-bold text-neutral-600 block">Códigos OBD2 / Diagnóstico:</span>
+                <span className="text-sm font-mono font-bold text-black">{checklist.obd2Codes}</span>
+              </div>
+            )}
+
+            {checklist.additionalInfo && (
+              <div>
+                <span className="text-xs font-bold text-neutral-600 block">Informações Adicionais da Vistoria:</span>
+                <p className="text-sm text-black leading-relaxed whitespace-pre-wrap">{checklist.additionalInfo}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ASSINATURAS */}
-        <div className="mt-16 pt-8 border-t border-neutral-300 grid grid-cols-2 gap-12">
+        <div className="mt-12 pt-6 border-t border-neutral-300 grid grid-cols-2 gap-12">
           <div className="text-center">
-            <div className="h-20 border-b border-black mb-2 relative">
-            </div>
+            <div className="h-16 border-b border-black mb-2 relative"></div>
             <p className="font-bold text-sm uppercase">Assinatura do Cliente</p>
             <p className="text-xs text-neutral-500 mt-1">Declaro estar ciente e de acordo com o estado do veículo descrito acima no momento da entrega à oficina.</p>
           </div>
           <div className="text-center relative">
-            {/* CARIMBO AUTOMÁTICO DE ASSINATURA */}
-            {checklist.status === 'APROVADO' && (
-              <div className="absolute top-0 left-1/2 z-20 pointer-events-none opacity-80" style={{ transform: 'translate(-50%, -20%) rotate(-15deg)' }}>
-                <div className="border-4 border-emerald-600 rounded-lg p-2 text-emerald-600 inline-block bg-white/70 backdrop-blur-[2px]">
-                  <div className="border-2 border-emerald-600 rounded p-4 text-center shadow-sm">
-                    <h3 className="font-black text-2xl uppercase tracking-widest leading-none mb-1">Aprovado</h3>
-                    <p className="font-bold text-[10px] uppercase tracking-wider">{tenant?.name}</p>
-                    <p className="font-mono text-[10px] font-bold mt-1 border-t border-emerald-600 pt-1">
-                      {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            {checklist.status === 'RECUSADO' && (
-              <div className="absolute top-0 left-1/2 z-20 pointer-events-none opacity-80" style={{ transform: 'translate(-50%, -20%) rotate(-15deg)' }}>
-                <div className="border-4 border-red-600 rounded-lg p-2 text-red-600 inline-block bg-white/70 backdrop-blur-[2px]">
-                  <div className="border-2 border-red-600 rounded p-4 text-center shadow-sm">
-                    <h3 className="font-black text-2xl uppercase tracking-widest leading-none mb-1">Recusado</h3>
-                    <p className="font-bold text-[10px] uppercase tracking-wider">{tenant?.name}</p>
-                    <p className="font-mono text-[10px] font-bold mt-1 border-t border-red-600 pt-1">
-                      {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <div className="h-20 border-b border-black mb-2 relative">
-            </div>
+            <div className="h-16 border-b border-black mb-2 relative"></div>
             <p className="font-bold text-sm uppercase">Responsável da Oficina</p>
             <p className="text-xs text-neutral-500 mt-1">{tenant?.name}</p>
           </div>

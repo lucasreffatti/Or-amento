@@ -61,19 +61,28 @@ export default async function VehicleProfilePage(props: { params: Promise<{ id: 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Link href={`/customers/${vehicle.customerId}`} className="col-span-1 md:col-span-3 bg-white border border-neutral-200 rounded-xl p-6 hover:border-neutral-300 transition-colors group flex items-start gap-4">
+        <Link href={`/customers/${vehicle.customerId}`} className="col-span-1 md:col-span-3 bg-white border border-neutral-200 rounded-xl p-6 hover:border-neutral-300 transition-colors group flex items-start gap-4 shadow-sm">
           <div className="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center text-neutral-400 group-hover:text-neutral-900 group-hover:bg-neutral-200 transition-colors">
             <User className="w-5 h-5" />
           </div>
-          <div>
-            <span className="block text-[11px] font-semibold text-neutral-400 uppercase tracking-widest mb-1">Proprietário</span>
-            <span className="text-base font-medium text-neutral-900 group-hover:underline">{vehicle.customer.name}</span>
-            <div className="flex items-center gap-4 mt-1 text-sm text-neutral-500 font-mono">
+          <div className="flex-1">
+            <span className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Proprietário</span>
+            <span className="text-base font-semibold text-neutral-900 group-hover:underline">{vehicle.customer.name}</span>
+            <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-neutral-600 font-mono">
               <span>{vehicle.customer.phone}</span>
-              {vehicle.customer.document && <span>{vehicle.customer.document}</span>}
+              {vehicle.customer.document && <span>• {vehicle.customer.document}</span>}
             </div>
           </div>
         </Link>
+
+        {vehicle.notes && (
+          <div className="col-span-1 md:col-span-3 bg-amber-50/60 border border-amber-200/80 rounded-xl p-5 shadow-sm">
+            <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1 flex items-center gap-2">
+              Observações / Informações Adicionais do Veículo
+            </h3>
+            <p className="text-sm text-amber-950 whitespace-pre-wrap leading-relaxed">{vehicle.notes}</p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -12,9 +12,11 @@ export async function createChecklist(formData: FormData) {
   const customerId = formData.get('customerId') as string
   const budgetId = formData.get('budgetId') as string | null
   const fuelLevel = Number(formData.get('fuelLevel') || 0)
+  const reportedIssue = (formData.get('reportedIssue') as string) || ''
+  const additionalInfo = (formData.get('additionalInfo') as string) || ''
+  const obd2Codes = (formData.get('obd2Codes') as string) || ''
   
   // Extrai items (avarias/status de itens)
-  // Como é dinâmico, vamos assumir que mandam um JSON hidden ou campos específicos
   const itemsStatusRaw = formData.get('itemsStatus') as string
   let itemsStatus = {}
   try {
@@ -30,8 +32,10 @@ export async function createChecklist(formData: FormData) {
       customerId,
       fuelLevel,
       itemsStatus: JSON.stringify(itemsStatus),
-      imagesUrls: '[]', // Futuramente upload
-      reportedIssue: '',
+      imagesUrls: '[]',
+      reportedIssue,
+      additionalInfo,
+      obd2Codes,
     }
   })
 
@@ -58,6 +62,9 @@ export async function updateChecklist(id: string, formData: FormData) {
   const vehicleId = formData.get('vehicleId') as string
   const customerId = formData.get('customerId') as string
   const fuelLevel = Number(formData.get('fuelLevel') || 0)
+  const reportedIssue = (formData.get('reportedIssue') as string) || ''
+  const additionalInfo = (formData.get('additionalInfo') as string) || ''
+  const obd2Codes = (formData.get('obd2Codes') as string) || ''
   
   const itemsStatusRaw = formData.get('itemsStatus') as string
   let itemsStatus = {}
@@ -77,6 +84,9 @@ export async function updateChecklist(id: string, formData: FormData) {
       customerId,
       fuelLevel,
       itemsStatus: JSON.stringify(itemsStatus),
+      reportedIssue,
+      additionalInfo,
+      obd2Codes,
     }
   })
 

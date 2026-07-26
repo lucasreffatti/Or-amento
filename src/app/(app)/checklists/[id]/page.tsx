@@ -134,26 +134,26 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-6">
-          <div className="bg-white border border-neutral-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-5">
-            <h3 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Dados Básicos</h3>
+          <div className="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden p-5">
+            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-4">Dados Básicos</h3>
             
             <div className="space-y-4">
               <div>
-                <span className="text-[11px] text-neutral-400 block mb-0.5">Cliente</span>
-                <span className="text-[13px] font-medium text-neutral-900">{checklist.customer.name}</span>
-                <span className="text-[12px] text-neutral-500 block">{checklist.customer.phone}</span>
+                <span className="text-xs text-neutral-500 font-medium block mb-1">Cliente</span>
+                <span className="text-sm font-semibold text-neutral-900 block">{checklist.customer.name}</span>
+                <span className="text-sm text-neutral-600 block font-mono">{checklist.customer.phone}</span>
               </div>
               
-              <div>
-                <span className="text-[11px] text-neutral-400 block mb-0.5">Veículo</span>
-                <span className="text-[13px] font-medium text-neutral-900">{checklist.vehicle.brand} {checklist.vehicle.model}</span>
-                <span className="text-[12px] font-mono text-neutral-500 block">{checklist.vehicle.plate} • {checklist.vehicle.year}</span>
+              <div className="pt-3 border-t border-neutral-100">
+                <span className="text-xs text-neutral-500 font-medium block mb-1">Veículo</span>
+                <span className="text-sm font-semibold text-neutral-900 block">{checklist.vehicle.brand} {checklist.vehicle.model}</span>
+                <span className="text-sm font-mono text-neutral-600 block">{checklist.vehicle.plate} • {checklist.vehicle.year}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-neutral-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-5">
-            <h3 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Combustível</h3>
+          <div className="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden p-5">
+            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-4">Combustível</h3>
             
             {/* DASHBOARD FUEL GAUGE (VIEW ONLY) */}
             <div className="flex flex-col items-center bg-neutral-50/50 p-4 rounded-lg border border-neutral-100 shadow-inner">
@@ -190,33 +190,68 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
                   <div className="w-full h-3 bg-orange-500 rounded-t-full" />
                 </div>
               </div>
-              <div className="text-xl font-semibold text-neutral-900 font-mono tracking-tight bg-white px-3 py-0.5 rounded border border-neutral-200 shadow-sm">
+              <div className="text-xl font-bold text-neutral-900 font-mono tracking-tight bg-white px-3 py-1 rounded border border-neutral-200 shadow-sm">
                 {checklist.fuelLevel}%
               </div>
             </div>
           </div>
         </div>
 
-        <div className="md:col-span-2">
-          <div className="bg-white border border-neutral-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-neutral-100 bg-neutral-50/50">
-              <h2 className="text-[13px] font-semibold text-neutral-900 tracking-tight">Status de Itens</h2>
+        <div className="md:col-span-2 space-y-6">
+          {(checklist.reportedIssue || checklist.obd2Codes || checklist.additionalInfo) && (
+            <div className="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden p-5 space-y-4">
+              <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider border-b border-neutral-100 pb-2">
+                Observações & Informações Adicionais
+              </h3>
+              
+              {checklist.reportedIssue && (
+                <div>
+                  <span className="text-xs font-semibold text-neutral-500 block mb-1">Defeito Relatado / Queixa:</span>
+                  <p className="text-sm font-medium text-neutral-900 leading-relaxed bg-neutral-50 p-3 rounded-md border border-neutral-100 whitespace-pre-wrap">
+                    {checklist.reportedIssue}
+                  </p>
+                </div>
+              )}
+
+              {checklist.obd2Codes && (
+                <div>
+                  <span className="text-xs font-semibold text-neutral-500 block mb-1">Códigos OBD2 / Diagnóstico:</span>
+                  <span className="inline-block text-sm font-mono font-bold text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-md">
+                    {checklist.obd2Codes}
+                  </span>
+                </div>
+              )}
+
+              {checklist.additionalInfo && (
+                <div>
+                  <span className="text-xs font-semibold text-neutral-500 block mb-1">Informações Adicionais da Vistoria:</span>
+                  <p className="text-sm text-neutral-900 leading-relaxed bg-neutral-50 p-3 rounded-md border border-neutral-100 whitespace-pre-wrap">
+                    {checklist.additionalInfo}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-neutral-100 bg-neutral-50/50">
+              <h2 className="text-sm font-semibold text-neutral-900 tracking-tight">Status de Itens</h2>
             </div>
             
             <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
-              <tbody className="divide-y divide-neutral-50 bg-white">
+              <tbody className="divide-y divide-neutral-100 bg-white">
                 {Object.entries(itemsStatus).map(([item, status]) => (
                   <tr key={item} className="hover:bg-neutral-50/50 transition-colors">
-                    <td className="px-5 py-3.5 text-neutral-800 text-[13px] font-medium">{item}</td>
+                    <td className="px-5 py-3.5 text-neutral-900 text-sm font-medium">{item}</td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide shadow-sm ${
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold tracking-wide shadow-sm ${
                         status === 'OK' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                         status === 'AVARIA' ? 'bg-red-50 text-red-700 border border-red-200' :
-                        'bg-neutral-100 text-neutral-600 border border-neutral-200'
+                        'bg-neutral-100 text-neutral-700 border border-neutral-200'
                       }`}>
-                        {status === 'OK' && <CheckCircle2 className="w-3.5 h-3.5" />}
-                        {status === 'AVARIA' && <AlertTriangle className="w-3.5 h-3.5" />}
-                        {status === 'N/A' && <HelpCircle className="w-3.5 h-3.5" />}
+                        {status === 'OK' && <CheckCircle2 className="w-4 h-4" />}
+                        {status === 'AVARIA' && <AlertTriangle className="w-4 h-4" />}
+                        {status === 'N/A' && <HelpCircle className="w-4 h-4" />}
                         {status}
                       </span>
                     </td>
