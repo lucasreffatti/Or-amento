@@ -5,8 +5,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, FileText } from 'lucide-react'
 
-export default async function NewBudgetPage() {
+export default async function NewBudgetPage({ searchParams }: { searchParams: Promise<{ vehicleId?: string; customerId?: string; checklistId?: string }> }) {
   const session = await getSession()
+  const params = await searchParams
   
   // We need customers and vehicles to create a budget
   const customers = await prisma.customer.findMany({
@@ -24,17 +25,40 @@ export default async function NewBudgetPage() {
     const customerId = formData.get('customerId') as string
     const vehicleId = formData.get('vehicleId') as string
     const serviceType = formData.get('serviceType') as string
+    let checklistId = (formData.get('checklistId') as string) || null
     
     const tenant = await prisma.tenant.findFirst()
     
     let newBudgetId = ''
     
     if (tenant) {
+      // Se checklistId não veio no form, tenta encontrar checklist ativo para este veículo
+      if (!checklistId && vehicleId) {
+        const matchingChecklist = await prisma.checklist.findFirst({
+          where: { vehicleId, tenantId: session.tenantId },
+          orderBy: { createdAt: 'desc' }
+        })
+        if (matchingChecklist) {
+          checklistId = matchingChecklist.id
+        }
+      }
+
+      // Se a vistoria selecionada ou do veículo estiver RECUSADA, cria o orçamento já com status REJECTED
+      let initialStatus = 'DRAFT'
+      if (checklistId) {
+        const chk = await prisma.checklist.findUnique({ where: { id: checklistId } })
+        if (chk?.status === 'RECUSADO') {
+          initialStatus = 'REJECTED'
+        }
+      }
+
       const newBudget = await prisma.budget.create({
         data: {
           customerId,
           vehicleId,
           serviceType,
+          checklistId: checklistId || undefined,
+          status: initialStatus,
           tenantId: tenant.id,
           totalLabor: 0,
           totalParts: 0,
@@ -102,6 +126,9 @@ export default async function NewBudgetPage() {
           </div>
         ) : (
           <form action={createBudget} className="space-y-5">
+            {params.checklistId && (
+              <input type="hidden" name="checklistId" value={params.checklistId} />
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-1.5">
                 <label htmlFor="serviceType" className="text-[13px] font-medium text-neutral-700">Tipo de Orçamento *</label>
@@ -123,6 +150,7 @@ export default async function NewBudgetPage() {
                   id="customerId" 
                   name="customerId" 
                   required
+                  defaultValue={params.customerId || ''}
                   className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
                 >
                   <option value="">Selecione um cliente...</option>
@@ -138,6 +166,7 @@ export default async function NewBudgetPage() {
                   id="vehicleId" 
                   name="vehicleId" 
                   required
+                  defaultValue={params.vehicleId || ''}
                   className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
                 >
                   <option value="">Selecione um veículo...</option>

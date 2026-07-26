@@ -26,7 +26,7 @@ export default async function BudgetsPage(props: { searchParams: Promise<{ statu
 
   const budgets = await prisma.budget.findMany({
     where: whereClause,
-    include: { customer: true, vehicle: true },
+    include: { customer: true, vehicle: true, checklist: true },
     orderBy: { createdAt: 'desc' }
   })
 
@@ -145,19 +145,26 @@ export default async function BudgetsPage(props: { searchParams: Promise<{ statu
                   return (
                     <tr key={b.id} className="hover:bg-neutral-50/80 transition-colors group">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-mono font-medium shadow-sm ${
-                          displayStatus === 'DRAFT' ? 'bg-neutral-50 text-neutral-600 border border-neutral-200/80' :
-                          displayStatus === 'SENT' ? 'bg-blue-50 text-blue-700 border border-blue-200/80' :
-                          displayStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' :
-                          displayStatus === 'REJECTED' ? 'bg-red-50 text-red-700 border border-red-200/80' :
-                          'bg-amber-50 text-amber-700 border border-amber-200/80' // Vencido
-                        }`}>
-                          {displayStatus === 'DRAFT' ? 'RASCUNHO' : 
-                           displayStatus === 'SENT' ? 'ENVIADO' : 
-                           displayStatus === 'APPROVED' ? 'APROVADO' : 
-                           displayStatus === 'REJECTED' ? 'RECUSADO' : 
-                           'VENCIDO'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-mono font-medium shadow-sm ${
+                            displayStatus === 'DRAFT' ? 'bg-neutral-50 text-neutral-600 border border-neutral-200/80' :
+                            displayStatus === 'SENT' ? 'bg-blue-50 text-blue-700 border border-blue-200/80' :
+                            displayStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' :
+                            displayStatus === 'REJECTED' ? 'bg-red-50 text-red-700 border border-red-200/80' :
+                            'bg-amber-50 text-amber-700 border border-amber-200/80' // Vencido
+                          }`}>
+                            {displayStatus === 'DRAFT' ? 'RASCUNHO' : 
+                             displayStatus === 'SENT' ? 'ENVIADO' : 
+                             displayStatus === 'APPROVED' ? 'APROVADO' : 
+                             displayStatus === 'REJECTED' ? 'RECUSADO' : 
+                             'VENCIDO'}
+                          </span>
+                          {b.checklist?.status === 'RECUSADO' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 border border-red-300">
+                              <XCircle className="w-3 h-3 text-red-600" /> Vistoria Reprovada
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-neutral-900 text-[13px]">{b.customer.name}</div>

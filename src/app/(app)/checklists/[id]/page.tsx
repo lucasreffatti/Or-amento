@@ -101,7 +101,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
             </Link>
           ) : (
             <Link 
-              href={`/budgets/new?vehicleId=${checklist.vehicleId}&customerId=${checklist.customerId}`}
+              href={`/budgets/new?vehicleId=${checklist.vehicleId}&customerId=${checklist.customerId}&checklistId=${checklist.id}`}
               className="px-3 py-1.5 bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-100 transition-colors flex items-center gap-1.5"
             >
               <FileText className="w-4 h-4" /> Criar Orçamento

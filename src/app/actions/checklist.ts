@@ -87,11 +87,26 @@ export async function updateChecklist(id: string, formData: FormData) {
 export async function updateChecklistStatus(id: string, status: string) {
   const session = await getSession()
   
-  await prisma.checklist.update({
+  const updatedChecklist = await prisma.checklist.update({
     where: { id, tenantId: session.tenantId },
     data: { status }
   })
+
+  // Se a vistoria for recusada/reprovada, atualiza também o orçamento atrelado a ela
+  if (status === 'RECUSADO') {
+    await prisma.budget.updateMany({
+      where: {
+        tenantId: session.tenantId,
+        OR: [
+          { checklistId: id },
+          { vehicleId: updatedChecklist.vehicleId, status: { in: ['DRAFT', 'SENT'] } }
+        ]
+      },
+      data: { status: 'REJECTED' }
+    })
+  }
   
   revalidatePath('/checklists')
   revalidatePath(`/checklists/${id}`)
+  revalidatePath('/budgets')
 }

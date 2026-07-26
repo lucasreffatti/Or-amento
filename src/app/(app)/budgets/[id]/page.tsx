@@ -20,6 +20,7 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
     include: {
       customer: true,
       vehicle: true,
+      checklist: true,
       items: {
         orderBy: { id: 'asc' }
       }
@@ -29,6 +30,12 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
   if (!budget) {
     notFound()
   }
+
+  // Tenta encontrar uma vistoria para este veículo caso o orçamento não esteja diretamente vinculado pelo ID
+  const checklist = budget.checklist || await prisma.checklist.findFirst({
+    where: { vehicleId: budget.vehicleId, tenantId: session.tenantId },
+    orderBy: { createdAt: 'desc' }
+  })
 
   const isExpired = new Date(budget.validUntil) < new Date() && budget.status !== 'APPROVED';
   const displayStatus = isExpired ? 'EXPIRED' : budget.status;
@@ -49,21 +56,26 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-lg font-semibold text-neutral-900 tracking-tight flex items-center gap-2">
+            <h1 className="text-lg font-semibold text-neutral-900 tracking-tight flex items-center gap-2 flex-wrap">
               Orçamento <span className="text-neutral-400 font-mono text-[15px]">#{budget.id.substring(0,6).toUpperCase()}</span>
               {displayStatus === 'APPROVED' && (
-                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 ml-2">
+                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" /> Aprovado
                 </span>
               )}
               {displayStatus === 'REJECTED' && (
-                <span className="bg-red-50 text-red-700 border border-red-200/80 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 ml-2">
+                <span className="bg-red-50 text-red-700 border border-red-200/80 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
                   <XCircle className="w-3 h-3" /> Recusado
                 </span>
               )}
               {displayStatus === 'EXPIRED' && (
-                <span className="bg-amber-50 text-amber-700 border border-amber-200/80 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ml-2">
+                <span className="bg-amber-50 text-amber-700 border border-amber-200/80 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest">
                   Vencido
+                </span>
+              )}
+              {checklist?.status === 'RECUSADO' && (
+                <span className="bg-red-100 text-red-800 border border-red-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                  <XCircle className="w-3.5 h-3.5 text-red-600" /> Vistoria Reprovada
                 </span>
               )}
             </h1>
@@ -86,9 +98,13 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
 
           {displayStatus === 'SENT' && (
             <>
-              {budget.serviceType === 'INTERNAL' && !budget.checklistId ? (
+              {budget.serviceType === 'INTERNAL' && !checklist ? (
                 <div className="bg-white border border-neutral-200 text-neutral-400 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm flex items-center gap-1.5 cursor-not-allowed">
                   <CheckCircle2 className="w-4 h-4" /> Aprovar (Requer Vistoria)
+                </div>
+              ) : checklist?.status === 'RECUSADO' ? (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm flex items-center gap-1.5 cursor-not-allowed">
+                  <XCircle className="w-4 h-4 text-red-600" /> Aprovação Bloqueada (Vistoria Reprovada)
                 </div>
               ) : (
                 <form action={approve}>
@@ -130,7 +146,30 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
         </div>
       </header>
 
-      {/* Exibe aviso se aprovado, impedindo edição via builder logic if needed, mas BudgetBuilder já deve estar cuidando ou o usuário tem o aviso */}
+      {/* Exibe aviso de Vistoria Reprovada em destaque */}
+      {checklist?.status === 'RECUSADO' && (
+        <div className="bg-red-50 border border-red-200 text-red-900 px-5 py-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0 border border-red-200">
+               <XCircle className="w-6 h-6 text-red-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-red-900 text-sm">Vistoria Reprovada</h3>
+              <p className="text-red-700 mt-0.5 text-[13px] leading-relaxed">
+                A vistoria realizada neste veículo ({budget.vehicle.plate}) foi <span className="font-bold uppercase text-red-800">Reprovada/Recusada</span>.
+              </p>
+            </div>
+          </div>
+          <Link 
+            href={`/checklists/${checklist.id}`} 
+            className="bg-red-600 text-white px-4 py-2 rounded-md text-xs font-semibold hover:bg-red-700 transition-colors shadow-sm shrink-0 flex items-center justify-center gap-1.5 uppercase tracking-wide"
+          >
+            Ver Vistoria Reprovada
+          </Link>
+        </div>
+      )}
+
+      {/* Exibe aviso se aprovado */}
       {displayStatus === 'APPROVED' && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg text-[13px] flex items-center gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -141,7 +180,7 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
         </div>
       )}
 
-      {budget.serviceType === 'INTERNAL' && !budget.checklistId && (
+      {budget.serviceType === 'INTERNAL' && !checklist && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 px-5 py-4 rounded-lg flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="w-10 h-10 bg-amber-100/50 rounded-full flex items-center justify-center shrink-0">
              <AlertTriangle className="w-5 h-5 text-amber-600" />
@@ -161,13 +200,13 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
         </div>
       )}
       
-      {budget.serviceType === 'INTERNAL' && budget.checklistId && (
+      {budget.serviceType === 'INTERNAL' && checklist && checklist.status !== 'RECUSADO' && (
         <div className="bg-indigo-50 border border-indigo-200/60 text-indigo-800 px-4 py-3 rounded-lg flex items-center gap-3">
           <CheckCircle2 className="w-4 h-4 text-indigo-600" />
           <div className="flex-1">
-            <span className="text-[13px] font-medium">Vistoria de entrada registrada com sucesso.</span>
+            <span className="text-[13px] font-medium">Vistoria de entrada vinculada ({checklist.status}).</span>
           </div>
-          <Link href={`/checklists/${budget.checklistId}`} className="text-[12px] bg-white border border-indigo-100 text-indigo-600 px-3 py-1 rounded hover:bg-indigo-50 transition-colors font-medium shadow-sm">
+          <Link href={`/checklists/${checklist.id}`} className="text-[12px] bg-white border border-indigo-100 text-indigo-600 px-3 py-1 rounded hover:bg-indigo-50 transition-colors font-medium shadow-sm">
             Ver Documento
           </Link>
         </div>
