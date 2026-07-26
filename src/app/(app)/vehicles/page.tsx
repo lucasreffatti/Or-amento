@@ -54,47 +54,49 @@ export default async function VehiclesPage() {
             </p>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
-            <thead className="bg-white">
-              <tr>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Placa</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Modelo / Marca</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Proprietário</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100 bg-white">
-              {vehicles.map((v) => (
-                <tr key={v.id} className="hover:bg-neutral-50/80 transition-colors group cursor-pointer">
-                  <td className="px-6 py-4">
-                    <Link href={`/vehicles/${v.id}`} className="hover:opacity-80">
-                      <span className="font-mono text-neutral-900 font-bold tracking-widest text-[13px] bg-neutral-100 border border-neutral-200/80 px-2.5 py-1 rounded-md shadow-sm">
-                        {v.plate}
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 text-neutral-900 font-medium text-[13px]">
-                    {v.brand} {v.model} <span className="text-neutral-400 text-xs font-normal ml-1">({v.year})</span>
-                  </td>
-                  <td className="px-6 py-4 text-neutral-500 text-[13px]">
-                    {v.customer && (
-                      <Link href={`/customers/${v.customer.id}`} className="hover:underline hover:text-neutral-900 transition-colors">
-                        {v.customer.name}
-                      </Link>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <DeleteButton 
-                      id={v.id} 
-                      action={deleteVehicle} 
-                      entityName="este veículo" 
-                      className="opacity-0 group-hover:opacity-100 inline-flex" 
-                    />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
+              <thead className="bg-white">
+                <tr>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Placa</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Modelo / Marca</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Proprietário</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right whitespace-nowrap">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 bg-white">
+                {vehicles.map((v) => (
+                  <tr key={v.id} className="hover:bg-neutral-50/80 transition-colors group cursor-pointer">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Link href={`/vehicles/${v.id}`} className="hover:opacity-80">
+                        <span className="font-mono text-neutral-900 font-bold tracking-widest text-[13px] bg-neutral-100 border border-neutral-200/80 px-2.5 py-1 rounded-md shadow-sm">
+                          {v.plate}
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-neutral-900 font-medium text-[13px] whitespace-nowrap">
+                      {v.brand} {v.model} <span className="text-neutral-400 text-xs font-normal ml-1">({v.year})</span>
+                    </td>
+                    <td className="px-6 py-4 text-neutral-500 text-[13px] whitespace-nowrap">
+                      {v.customer && (
+                        <Link href={`/customers/${v.customer.id}`} className="hover:underline hover:text-neutral-900 transition-colors">
+                          {v.customer.name}
+                        </Link>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <DeleteButton 
+                        id={v.id} 
+                        action={deleteVehicle} 
+                        entityName="este veículo" 
+                        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 inline-flex" 
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

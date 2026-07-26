@@ -50,7 +50,7 @@ export default async function NewCustomerPage() {
         </div>
       </header>
 
-      <div className="bg-white border border-neutral-200/80 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-8">
+      <div className="bg-white border border-neutral-200/80 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-4 md:p-8">
         <div className="flex items-center gap-4 mb-8 pb-6 border-b border-neutral-100">
           <div className="w-12 h-12 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-center shadow-sm">
             <User className="w-5 h-5 text-neutral-400" />

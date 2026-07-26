@@ -61,7 +61,7 @@ export default async function NewVehiclePage() {
         </div>
       </header>
 
-      <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-6">
+      <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-100">
           <div className="w-10 h-10 bg-neutral-50 rounded-full border border-neutral-200 flex items-center justify-center">
             <Car className="w-5 h-5 text-neutral-400" />

@@ -81,45 +81,47 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
             <span className="text-[11px] font-medium text-neutral-500 font-mono bg-neutral-100/80 px-2 py-0.5 rounded-sm">R$ {totalLabor.toFixed(2)}</span>
           </div>
           
-          <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
-            <thead className="bg-white">
-              <tr>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider">Descrição</th>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-20 text-right">Qtd</th>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right">Preço Unit.</th>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right">Total</th>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-16 text-right"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-50 bg-white">
-              {labor.length === 0 ? (
-                <tr><td colSpan={5} className="px-5 py-8 text-center text-xs text-neutral-400 italic">Nenhum serviço adicionado.</td></tr>
-              ) : (
-                labor.map(item => (
-                  <tr key={item.id} className={`group hover:bg-neutral-50/50 transition-colors ${item.id.startsWith('temp') ? 'animate-pulse opacity-70' : ''}`}>
-                    <td className="px-5 py-2.5 text-neutral-800 text-[13px]">{item.description}</td>
-                    <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px]">{item.quantity}</td>
-                    <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px]">R$ {item.unitPrice.toFixed(2)}</td>
-                    <td className="px-5 py-2.5 text-neutral-900 font-medium text-right font-mono text-[11px]">R$ {(item.quantity * item.unitPrice).toFixed(2)}</td>
-                    <td className="px-5 py-2.5 text-right">
-                      <button 
-                        onClick={() => {
-                          startTransition(() => {
-                            modifyOptimisticItems({ type: 'delete', item })
-                          })
-                          removeBudgetItem(item.id, budget.id)
-                        }}
-                        disabled={item.id.startsWith('temp')}
-                        className="text-neutral-300 hover:text-red-500 transition-colors p-1 rounded-md opacity-0 group-hover:opacity-100 disabled:opacity-0"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
+              <thead className="bg-white">
+                <tr>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider whitespace-nowrap">Descrição</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-20 text-right whitespace-nowrap">Qtd</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Preço Unit.</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Total</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-16 text-right whitespace-nowrap"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-50 bg-white">
+                {labor.length === 0 ? (
+                  <tr><td colSpan={5} className="px-5 py-8 text-center text-xs text-neutral-400 italic">Nenhum serviço adicionado.</td></tr>
+                ) : (
+                  labor.map(item => (
+                    <tr key={item.id} className={`group hover:bg-neutral-50/50 transition-colors ${item.id.startsWith('temp') ? 'animate-pulse opacity-70' : ''}`}>
+                      <td className="px-5 py-2.5 text-neutral-800 text-[13px] whitespace-nowrap">{item.description}</td>
+                      <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px] whitespace-nowrap">{item.quantity}</td>
+                      <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px] whitespace-nowrap">R$ {item.unitPrice.toFixed(2)}</td>
+                      <td className="px-5 py-2.5 text-neutral-900 font-medium text-right font-mono text-[11px] whitespace-nowrap">R$ {(item.quantity * item.unitPrice).toFixed(2)}</td>
+                      <td className="px-5 py-2.5 text-right whitespace-nowrap">
+                        <button 
+                          onClick={() => {
+                            startTransition(() => {
+                              modifyOptimisticItems({ type: 'delete', item })
+                            })
+                            removeBudgetItem(item.id, budget.id)
+                          }}
+                          disabled={item.id.startsWith('temp')}
+                          className="text-neutral-300 hover:text-red-500 transition-colors p-1 rounded-md opacity-100 md:opacity-0 md:group-hover:opacity-100 disabled:opacity-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         {/* Tabela de Peças */}
@@ -129,45 +131,47 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
             <span className="text-[11px] font-medium text-neutral-500 font-mono bg-neutral-100/80 px-2 py-0.5 rounded-sm">R$ {totalParts.toFixed(2)}</span>
           </div>
           
-          <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
-            <thead className="bg-white">
-              <tr>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider">Descrição</th>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-20 text-right">Qtd</th>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right">Preço Unit.</th>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right">Total</th>
-                <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-16 text-right"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-50 bg-white">
-              {parts.length === 0 ? (
-                <tr><td colSpan={5} className="px-5 py-8 text-center text-xs text-neutral-400 italic">Nenhuma peça adicionada.</td></tr>
-              ) : (
-                parts.map(item => (
-                  <tr key={item.id} className={`group hover:bg-neutral-50/50 transition-colors ${item.id.startsWith('temp') ? 'animate-pulse opacity-70' : ''}`}>
-                    <td className="px-5 py-2.5 text-neutral-800 text-[13px]">{item.description}</td>
-                    <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px]">{item.quantity}</td>
-                    <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px]">R$ {item.unitPrice.toFixed(2)}</td>
-                    <td className="px-5 py-2.5 text-neutral-900 font-medium text-right font-mono text-[11px]">R$ {(item.quantity * item.unitPrice).toFixed(2)}</td>
-                    <td className="px-5 py-2.5 text-right">
-                      <button 
-                        onClick={() => {
-                          startTransition(() => {
-                            modifyOptimisticItems({ type: 'delete', item })
-                          })
-                          removeBudgetItem(item.id, budget.id)
-                        }}
-                        disabled={item.id.startsWith('temp')}
-                        className="text-neutral-300 hover:text-red-500 transition-colors p-1 rounded-md opacity-0 group-hover:opacity-100 disabled:opacity-0"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
+              <thead className="bg-white">
+                <tr>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider whitespace-nowrap">Descrição</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-20 text-right whitespace-nowrap">Qtd</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Preço Unit.</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Total</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-16 text-right whitespace-nowrap"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-50 bg-white">
+                {parts.length === 0 ? (
+                  <tr><td colSpan={5} className="px-5 py-8 text-center text-xs text-neutral-400 italic">Nenhuma peça adicionada.</td></tr>
+                ) : (
+                  parts.map(item => (
+                    <tr key={item.id} className={`group hover:bg-neutral-50/50 transition-colors ${item.id.startsWith('temp') ? 'animate-pulse opacity-70' : ''}`}>
+                      <td className="px-5 py-2.5 text-neutral-800 text-[13px] whitespace-nowrap">{item.description}</td>
+                      <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px] whitespace-nowrap">{item.quantity}</td>
+                      <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px] whitespace-nowrap">R$ {item.unitPrice.toFixed(2)}</td>
+                      <td className="px-5 py-2.5 text-neutral-900 font-medium text-right font-mono text-[11px] whitespace-nowrap">R$ {(item.quantity * item.unitPrice).toFixed(2)}</td>
+                      <td className="px-5 py-2.5 text-right whitespace-nowrap">
+                        <button 
+                          onClick={() => {
+                            startTransition(() => {
+                              modifyOptimisticItems({ type: 'delete', item })
+                            })
+                            removeBudgetItem(item.id, budget.id)
+                          }}
+                          disabled={item.id.startsWith('temp')}
+                          className="text-neutral-300 hover:text-red-500 transition-colors p-1 rounded-md opacity-100 md:opacity-0 md:group-hover:opacity-100 disabled:opacity-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         {/* Adicionar Novo Item */}

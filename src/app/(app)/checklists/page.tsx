@@ -49,21 +49,23 @@ export default async function ChecklistsPage() {
             </p>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
-            <thead className="bg-neutral-50/50">
-              <tr>
-                <th className="px-5 py-3 font-semibold text-neutral-500 text-[11px] uppercase tracking-wider">ID</th>
-                <th className="px-5 py-3 font-semibold text-neutral-500 text-[11px] uppercase tracking-wider">Veículo</th>
-                <th className="px-5 py-3 font-semibold text-neutral-500 text-[11px] uppercase tracking-wider">Nível Combustível</th>
-                <th className="px-5 py-3 font-semibold text-neutral-500 text-[11px] uppercase tracking-wider text-right">Data Inspeção</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100 bg-white">
-              {checklists.map((c) => (
-                <ChecklistRow key={c.id} checklist={c} />
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
+              <thead className="bg-neutral-50/50">
+                <tr>
+                  <th className="px-5 py-3 font-semibold text-neutral-500 text-[11px] uppercase tracking-wider whitespace-nowrap">ID</th>
+                  <th className="px-5 py-3 font-semibold text-neutral-500 text-[11px] uppercase tracking-wider whitespace-nowrap">Veículo</th>
+                  <th className="px-5 py-3 font-semibold text-neutral-500 text-[11px] uppercase tracking-wider whitespace-nowrap">Nível Combustível</th>
+                  <th className="px-5 py-3 font-semibold text-neutral-500 text-[11px] uppercase tracking-wider text-right whitespace-nowrap">Data Inspeção</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 bg-white">
+                {checklists.map((c) => (
+                  <ChecklistRow key={c.id} checklist={c} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

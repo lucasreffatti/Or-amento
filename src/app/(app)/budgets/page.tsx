@@ -126,67 +126,69 @@ export default async function BudgetsPage(props: { searchParams: Promise<{ statu
             </p>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
-            <thead className="bg-white">
-              <tr>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Status</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Cliente/Veículo</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Valor Final</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right">Validade</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100 bg-white">
-              {budgets.map((b) => {
-                const isExpired = new Date(b.validUntil) < new Date() && b.status !== 'APPROVED';
-                const displayStatus = isExpired ? 'VENCIDO' : b.status;
-                
-                return (
-                  <tr key={b.id} className="hover:bg-neutral-50/80 transition-colors group">
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-mono font-medium shadow-sm ${
-                        displayStatus === 'DRAFT' ? 'bg-neutral-50 text-neutral-600 border border-neutral-200/80' :
-                        displayStatus === 'SENT' ? 'bg-blue-50 text-blue-700 border border-blue-200/80' :
-                        displayStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' :
-                        displayStatus === 'REJECTED' ? 'bg-red-50 text-red-700 border border-red-200/80' :
-                        'bg-amber-50 text-amber-700 border border-amber-200/80' // Vencido
-                      }`}>
-                        {displayStatus === 'DRAFT' ? 'RASCUNHO' : 
-                         displayStatus === 'SENT' ? 'ENVIADO' : 
-                         displayStatus === 'APPROVED' ? 'APROVADO' : 
-                         displayStatus === 'REJECTED' ? 'RECUSADO' : 
-                         'VENCIDO'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-neutral-900 text-[13px]">{b.customer.name}</div>
-                      <div className="text-[12px] text-neutral-500 mt-0.5">{b.vehicle.plate} • {b.vehicle.brand}</div>
-                    </td>
-                    <td className="px-6 py-4 font-mono font-medium text-neutral-900 text-[13px]">
-                      R$ {b.finalTotal.toFixed(2)}
-                    </td>
-                    <td className={`px-6 py-4 font-mono text-[12px] text-right ${isExpired ? 'text-amber-600 font-semibold' : 'text-neutral-400'}`}>
-                      {new Date(b.validUntil).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
-                      <Link 
-                        href={`/budgets/${b.id}`} 
-                        className="text-[13px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
-                      >
-                        Abrir
-                      </Link>
-                      <DeleteButton 
-                        id={b.id} 
-                        action={deleteBudget} 
-                        entityName="este orçamento" 
-                        className="opacity-0 group-hover:opacity-100" 
-                      />
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
+              <thead className="bg-white">
+                <tr>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Status</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Cliente/Veículo</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Valor Final</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right whitespace-nowrap">Validade</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right whitespace-nowrap">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 bg-white">
+                {budgets.map((b) => {
+                  const isExpired = new Date(b.validUntil) < new Date() && b.status !== 'APPROVED';
+                  const displayStatus = isExpired ? 'VENCIDO' : b.status;
+                  
+                  return (
+                    <tr key={b.id} className="hover:bg-neutral-50/80 transition-colors group">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-mono font-medium shadow-sm ${
+                          displayStatus === 'DRAFT' ? 'bg-neutral-50 text-neutral-600 border border-neutral-200/80' :
+                          displayStatus === 'SENT' ? 'bg-blue-50 text-blue-700 border border-blue-200/80' :
+                          displayStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' :
+                          displayStatus === 'REJECTED' ? 'bg-red-50 text-red-700 border border-red-200/80' :
+                          'bg-amber-50 text-amber-700 border border-amber-200/80' // Vencido
+                        }`}>
+                          {displayStatus === 'DRAFT' ? 'RASCUNHO' : 
+                           displayStatus === 'SENT' ? 'ENVIADO' : 
+                           displayStatus === 'APPROVED' ? 'APROVADO' : 
+                           displayStatus === 'REJECTED' ? 'RECUSADO' : 
+                           'VENCIDO'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-neutral-900 text-[13px]">{b.customer.name}</div>
+                        <div className="text-[12px] text-neutral-500 mt-0.5">{b.vehicle.plate} • {b.vehicle.brand}</div>
+                      </td>
+                      <td className="px-6 py-4 font-mono font-medium text-neutral-900 text-[13px] whitespace-nowrap">
+                        R$ {b.finalTotal.toFixed(2)}
+                      </td>
+                      <td className={`px-6 py-4 font-mono text-[12px] text-right whitespace-nowrap ${isExpired ? 'text-amber-600 font-semibold' : 'text-neutral-400'}`}>
+                        {new Date(b.validUntil).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="px-6 py-4 text-right flex items-center justify-end gap-2 whitespace-nowrap">
+                        <Link 
+                          href={`/budgets/${b.id}`} 
+                          className="text-[13px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+                        >
+                          Abrir
+                        </Link>
+                        <DeleteButton 
+                          id={b.id} 
+                          action={deleteBudget} 
+                          entityName="este orçamento" 
+                          className="opacity-100 md:opacity-0 md:group-hover:opacity-100" 
+                        />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

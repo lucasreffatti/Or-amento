@@ -60,47 +60,49 @@ export default async function CustomersPage() {
             </Link>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
-            <thead className="bg-white">
-              <tr>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Nome</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Telefone</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Documento</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Cadastrado em</th>
-                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100 bg-white">
-              {customers.map((c) => (
-                <tr key={c.id} className="hover:bg-neutral-50/80 transition-colors group">
-                  <td className="px-6 py-4 font-medium text-neutral-900 text-[13px]">
-                    <Link href={`/customers/${c.id}`} className="hover:underline">
-                      {c.name}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 text-neutral-500 font-mono text-[13px]">{c.phone}</td>
-                  <td className="px-6 py-4 text-neutral-500 font-mono text-[13px]">{c.document || '-'}</td>
-                  <td className="px-6 py-4 text-neutral-400 font-mono text-[12px]">
-                    {new Date(c.createdAt).toLocaleDateString('pt-BR')}
-                  </td>
-                  <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
-                    <Link 
-                      href={`/customers/${c.id}/edit`}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Link>
-                    <DeleteButton 
-                      id={c.id} 
-                      action={deleteCustomer} 
-                      entityName="este cliente" 
-                      className="opacity-0 group-hover:opacity-100" 
-                    />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
+              <thead className="bg-white">
+                <tr>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Nome</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Telefone</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Documento</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Cadastrado em</th>
+                  <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right whitespace-nowrap">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 bg-white">
+                {customers.map((c) => (
+                  <tr key={c.id} className="hover:bg-neutral-50/80 transition-colors group">
+                    <td className="px-6 py-4 font-medium text-neutral-900 text-[13px] whitespace-nowrap">
+                      <Link href={`/customers/${c.id}`} className="hover:underline">
+                        {c.name}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-neutral-500 font-mono text-[13px] whitespace-nowrap">{c.phone}</td>
+                    <td className="px-6 py-4 text-neutral-500 font-mono text-[13px] whitespace-nowrap">{c.document || '-'}</td>
+                    <td className="px-6 py-4 text-neutral-400 font-mono text-[12px] whitespace-nowrap">
+                      {new Date(c.createdAt).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-6 py-4 text-right flex items-center justify-end gap-2 whitespace-nowrap">
+                      <Link 
+                        href={`/customers/${c.id}/edit`}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Link>
+                      <DeleteButton 
+                        id={c.id} 
+                        action={deleteCustomer} 
+                        entityName="este cliente" 
+                        className="opacity-100 md:opacity-0 md:group-hover:opacity-100" 
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
