@@ -5,39 +5,39 @@ import { DeleteButton } from '@/components/DeleteButton'
 import { deleteChecklist } from '@/app/actions/delete'
 
 export function ChecklistRow({ checklist }: { checklist: any }) {
-  const router = useRouter()
+ const router = useRouter()
 
-  return (
-    <tr 
-      onClick={() => router.push(`/checklists/${checklist.id}`)}
-      className="hover:bg-neutral-50 dark:bg-neutral-950/50/80 transition-colors group cursor-pointer"
-    >
-      <td className="px-5 py-3.5 font-mono text-neutral-500 dark:text-neutral-400 text-xs">#{checklist.id.substring(0,6)}</td>
-      <td className="px-5 py-3.5 text-neutral-900 dark:text-neutral-50 font-medium">
-        {checklist.vehicle.plate} <span className="text-neutral-400 dark:text-neutral-500 text-xs font-normal">({checklist.vehicle.model})</span>
-      </td>
-      <td className="px-5 py-3.5">
-        <div className="flex items-center gap-2">
-          <div className="h-1.5 w-16 bg-neutral-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-neutral-400 rounded-full" 
-              style={{ width: `${checklist.fuelLevel}%` }}
-            />
-          </div>
-          <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">{checklist.fuelLevel}%</span>
-        </div>
-      </td>
-      <td className="px-5 py-3.5 text-neutral-400 dark:text-neutral-500 font-mono text-[11px] text-right">
-        <div className="flex items-center justify-end gap-2">
-          <span>{new Date(checklist.createdAt).toLocaleDateString('pt-BR')}</span>
-          <DeleteButton 
-            id={checklist.id}
-            action={deleteChecklist}
-            entityName="esta vistoria"
-            className="opacity-0 group-hover:opacity-100 inline-flex"
-          />
-        </div>
-      </td>
-    </tr>
-  )
+ return (
+ <tr 
+ onClick={() => router.push(`/checklists/${checklist.id}`)}
+ className="hover:bg-neutral-50 dark:bg-black/50/80 transition-colors group cursor-pointer"
+ >
+ <td className="px-5 py-3.5 font-mono text-neutral-500 dark:text-neutral-400 text-xs">#{checklist.id.substring(0,6)}</td>
+ <td className="px-5 py-3.5 text-neutral-900 dark:text-neutral-50 font-medium">
+ {checklist.vehicle.plate} <span className="text-neutral-400 dark:text-neutral-500 text-xs font-normal">({checklist.vehicle.model})</span>
+ </td>
+ <td className="px-5 py-3.5">
+ <div className="flex items-center gap-2">
+ <div className="h-1.5 w-16 bg-neutral-200 rounded-full overflow-hidden">
+ <div 
+ className="h-full bg-neutral-400 rounded-full" 
+ style={{ width: `${checklist.fuelLevel}%` }}
+ />
+ </div>
+ <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">{checklist.fuelLevel}%</span>
+ </div>
+ </td>
+ <td className="px-5 py-3.5 text-neutral-400 dark:text-neutral-500 font-mono text-[11px] text-right">
+ <div className="flex items-center justify-end gap-2">
+ <span>{new Date(checklist.createdAt).toLocaleDateString('pt-BR')}</span>
+ <DeleteButton 
+ id={checklist.id}
+ action={deleteChecklist}
+ entityName="esta vistoria"
+ className="opacity-0 group-hover:opacity-100 inline-flex"
+ />
+ </div>
+ </td>
+ </tr>
+ )
 }
