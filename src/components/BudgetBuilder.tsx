@@ -244,7 +244,7 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
           
           <div className="mt-8 space-y-2.5">
             <Link 
-              href={`/print/${budget.id}`}
+              href={`/print/budgets/${budget.id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full bg-white text-black py-2.5 rounded-lg text-[13px] font-semibold hover:bg-neutral-200 transition-colors flex items-center justify-center shadow-sm"
