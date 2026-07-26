@@ -107,7 +107,7 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
             <Edit className="w-4 h-4" /> Editar Info
           </Link>
 
-          <Link href={`/budgets/${budget.id}/print`} target="_blank" className="bg-neutral-900 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-800 transition-colors flex items-center gap-1.5 ml-2">
+          <Link href={`/print/budgets/${budget.id}`} target="_blank" className="bg-neutral-900 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-800 transition-colors flex items-center gap-1.5 ml-2">
             <ExternalLink className="w-4 h-4" /> Imprimir
           </Link>
         </div>
