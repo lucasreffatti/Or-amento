@@ -83,3 +83,15 @@ export async function updateChecklist(id: string, formData: FormData) {
   revalidatePath(`/checklists/${id}`)
   redirect(`/checklists/${id}`)
 }
+
+export async function updateChecklistStatus(id: string, status: string) {
+  const session = await getSession()
+  
+  await prisma.checklist.update({
+    where: { id, tenantId: session.tenantId },
+    data: { status }
+  })
+  
+  revalidatePath('/checklists')
+  revalidatePath(`/checklists/${id}`)
+}
