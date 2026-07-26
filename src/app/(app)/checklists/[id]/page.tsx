@@ -2,9 +2,11 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Printer, FileText, CheckCircle2, AlertTriangle, HelpCircle, Edit } from 'lucide-react'
+import { ArrowLeft, Printer, FileText, CheckCircle2, XCircle, AlertTriangle, HelpCircle, Edit } from 'lucide-react'
 import { DeleteButton } from '@/components/DeleteButton'
 import { deleteChecklist } from '@/app/actions/delete'
+
+import { updateChecklistStatus } from '@/app/actions/checklist'
 
 export default async function ChecklistViewPage(props: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -32,8 +34,23 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
   const needleRotation = (checklist.fuelLevel / 100) * 180 - 90
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 pb-12 max-w-4xl">
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-neutral-100">
+    <div className="space-y-8 animate-in fade-in duration-300 pb-12 max-w-4xl relative">
+      {checklist.status === 'APROVADO' && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center overflow-hidden mix-blend-multiply opacity-20">
+          <div className="transform -rotate-12 border-8 border-emerald-500 text-emerald-500 text-[120px] font-black uppercase tracking-tighter p-8 rounded-3xl select-none backdrop-blur-sm shadow-2xl">
+            Aprovado
+          </div>
+        </div>
+      )}
+      {checklist.status === 'RECUSADO' && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center overflow-hidden mix-blend-multiply opacity-20">
+          <div className="transform -rotate-12 border-8 border-red-500 text-red-500 text-[120px] font-black uppercase tracking-tighter p-8 rounded-3xl select-none backdrop-blur-sm shadow-2xl">
+            Recusado
+          </div>
+        </div>
+      )}
+
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-neutral-100 relative z-10">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Link 
@@ -45,24 +62,61 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
             <span className="bg-neutral-100 text-neutral-600 border border-neutral-200 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest flex items-center gap-1">
               Checklist #{checklist.id.substring(0,6)}
             </span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest border ${
+              checklist.status === 'APROVADO' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+              checklist.status === 'RECUSADO' ? 'bg-red-50 text-red-700 border-red-200' :
+              'bg-amber-50 text-amber-700 border-amber-200'
+            }`}>
+              {checklist.status}
+            </span>
           </div>
           <h1 className="text-xl font-semibold text-neutral-900 tracking-tight">Vistoria de {checklist.vehicle.plate}</h1>
           <p className="text-sm text-neutral-500 mt-1">
             Realizada em {new Date(checklist.createdAt).toLocaleDateString('pt-BR')} às {new Date(checklist.createdAt).toLocaleTimeString('pt-BR')}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap items-center">
+          {checklist.status === 'PENDENTE' ? (
+            <>
+              <form action={async () => {
+                'use server'
+                await updateChecklistStatus(checklist.id, 'APROVADO')
+              }}>
+                <button type="submit" className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-[13px] font-medium hover:bg-emerald-100 transition-colors shadow-sm flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4" /> Aprovar
+                </button>
+              </form>
+              <form action={async () => {
+                'use server'
+                await updateChecklistStatus(checklist.id, 'RECUSADO')
+              }}>
+                <button type="submit" className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-md text-[13px] font-medium hover:bg-red-100 transition-colors shadow-sm flex items-center gap-1.5">
+                  <XCircle className="w-4 h-4" /> Recusar
+                </button>
+              </form>
+            </>
+          ) : (
+            <form action={async () => {
+              'use server'
+              await updateChecklistStatus(checklist.id, 'PENDENTE')
+            }}>
+              <button type="submit" className="px-3 py-1.5 bg-white text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-50 transition-colors shadow-sm flex items-center gap-1.5">
+                <ArrowLeft className="w-4 h-4" /> Reabrir
+              </button>
+            </form>
+          )}
+
           {checklist.budget ? (
             <Link 
               href={`/budgets/${checklist.budget.id}`}
-              className="px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-[13px] font-medium hover:bg-indigo-100 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-[13px] font-medium hover:bg-indigo-100 transition-colors flex items-center gap-1.5"
             >
-              <FileText className="w-4 h-4" /> Ver Orçamento
+              <FileText className="w-4 h-4" /> Orçamento
             </Link>
           ) : (
             <Link 
               href={`/budgets/new?vehicleId=${checklist.vehicleId}&customerId=${checklist.customerId}`}
-              className="px-4 py-2 bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-100 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-100 transition-colors flex items-center gap-1.5"
             >
               <FileText className="w-4 h-4" /> Criar Orçamento
             </Link>
@@ -70,7 +124,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
           
           <Link 
             href={`/checklists/${checklist.id}/edit`}
-            className="px-4 py-2 bg-white text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-50 transition-colors shadow-sm flex items-center gap-2"
+            className="px-3 py-1.5 bg-white text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-50 transition-colors shadow-sm flex items-center gap-1.5"
           >
             <Edit className="w-4 h-4" /> Editar
           </Link>
@@ -79,15 +133,15 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
             id={checklist.id}
             action={deleteChecklist}
             entityName="esta vistoria"
-            className="px-4 py-2 bg-white border border-neutral-200 shadow-sm"
+            className="px-3 py-1.5 bg-white border border-neutral-200 shadow-sm"
           />
 
           <Link 
             href={`/print/checklists/${checklist.id}`}
             target="_blank"
-            className="px-4 py-2 bg-neutral-900 text-white rounded-md text-[13px] font-medium hover:bg-neutral-800 transition-colors shadow-sm flex items-center gap-2"
+            className="px-3 py-1.5 bg-neutral-900 text-white rounded-md text-[13px] font-medium hover:bg-neutral-800 transition-colors shadow-sm flex items-center gap-1.5"
           >
-            <Printer className="w-4 h-4" /> Imprimir Vistoria
+            <Printer className="w-4 h-4" /> Imprimir
           </Link>
         </div>
       </header>

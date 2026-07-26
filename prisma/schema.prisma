@@ -84,6 +84,8 @@ model Checklist {
   itemsStatus   String   // JSON convertido para String para SQLite
   imagesUrls    String   @default("[]") // Lista convertida para String JSON
   
+  status        String   @default("PENDENTE") // PENDENTE, APROVADO, RECUSADO
+  
   customerSignature String? 
   budget        Budget?
   createdAt     DateTime @default(now())
