@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Printer, FileText, CheckCircle2, AlertTriangle, HelpCircle } from 'lucide-react'
+import { ArrowLeft, Printer, FileText, CheckCircle2, AlertTriangle, HelpCircle, Edit } from 'lucide-react'
 
 export default async function ChecklistViewPage(props: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -26,6 +26,8 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
   try {
     itemsStatus = JSON.parse(checklist.itemsStatus as string)
   } catch (e) {}
+
+  const needleRotation = (checklist.fuelLevel / 100) * 180 - 90
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300 pb-12 max-w-4xl">
@@ -63,6 +65,14 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
               <FileText className="w-4 h-4" /> Criar Orçamento
             </Link>
           )}
+          
+          <Link 
+            href={`/checklists/${checklist.id}/edit`}
+            className="px-4 py-2 bg-white text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-50 transition-colors shadow-sm flex items-center gap-2"
+          >
+            <Edit className="w-4 h-4" /> Editar
+          </Link>
+
           <Link 
             href={`/print/checklists/${checklist.id}`}
             target="_blank"
@@ -95,19 +105,43 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
 
           <div className="bg-white border border-neutral-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-5">
             <h3 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Combustível</h3>
-            <div className="flex flex-col items-center">
-              <div className="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden mb-2 border border-neutral-200/50">
+            
+            {/* DASHBOARD FUEL GAUGE (VIEW ONLY) */}
+            <div className="flex flex-col items-center bg-neutral-50/50 p-4 rounded-lg border border-neutral-100 shadow-inner">
+              <div className="relative w-40 h-20 overflow-hidden flex justify-center mb-2">
+                <svg viewBox="0 0 200 100" className="w-full h-full drop-shadow-sm">
+                  <path 
+                    d="M 20 90 A 70 70 0 0 1 180 90" 
+                    fill="none" 
+                    stroke="#e5e5e5" 
+                    strokeWidth="20" 
+                    strokeLinecap="round" 
+                  />
+                  <path 
+                    d="M 20 90 A 70 70 0 0 1 180 90" 
+                    fill="none" 
+                    stroke={checklist.fuelLevel < 20 ? '#ef4444' : checklist.fuelLevel < 40 ? '#f59e0b' : '#22c55e'} 
+                    strokeWidth="20" 
+                    strokeLinecap="round" 
+                    strokeDasharray="219.91" 
+                    strokeDashoffset={219.91 - (219.91 * (checklist.fuelLevel / 100))}
+                    className="transition-all duration-500 ease-out"
+                  />
+                  
+                  <text x="30" y="85" fontSize="12" fill="#737373" fontWeight="bold" fontFamily="monospace">E</text>
+                  <text x="92" y="35" fontSize="12" fill="#737373" fontWeight="bold" fontFamily="monospace">1/2</text>
+                  <text x="160" y="85" fontSize="12" fill="#737373" fontWeight="bold" fontFamily="monospace">F</text>
+                </svg>
+
                 <div 
-                  className="h-full bg-neutral-800 rounded-full" 
-                  style={{ width: `${checklist.fuelLevel}%` }}
-                />
+                  className="absolute bottom-0 w-1.5 h-14 bg-neutral-800 rounded-t-full origin-bottom shadow-md flex items-start justify-center"
+                  style={{ transform: `rotate(${needleRotation}deg)` }}
+                >
+                  <div className="absolute -bottom-1.5 w-4 h-4 bg-neutral-900 rounded-full border-[3px] border-neutral-100 shadow-sm" />
+                  <div className="w-full h-3 bg-orange-500 rounded-t-full" />
+                </div>
               </div>
-              <div className="w-full flex justify-between text-[10px] font-medium text-neutral-400 font-mono">
-                <span>E</span>
-                <span>1/2</span>
-                <span>F</span>
-              </div>
-              <div className="mt-3 text-2xl font-semibold text-neutral-900 font-mono tracking-tight">
+              <div className="text-xl font-semibold text-neutral-900 font-mono tracking-tight bg-white px-3 py-0.5 rounded border border-neutral-200 shadow-sm">
                 {checklist.fuelLevel}%
               </div>
             </div>

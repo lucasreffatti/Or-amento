@@ -51,3 +51,35 @@ export async function createChecklist(formData: FormData) {
     redirect(`/checklists/${checklist.id}`)
   }
 }
+
+export async function updateChecklist(id: string, formData: FormData) {
+  const session = await getSession()
+  
+  const vehicleId = formData.get('vehicleId') as string
+  const customerId = formData.get('customerId') as string
+  const fuelLevel = Number(formData.get('fuelLevel') || 0)
+  
+  const itemsStatusRaw = formData.get('itemsStatus') as string
+  let itemsStatus = {}
+  try {
+    if (itemsStatusRaw) itemsStatus = JSON.parse(itemsStatusRaw)
+  } catch (e) {
+    console.error('Invalid itemsStatus JSON')
+  }
+
+  await prisma.checklist.update({
+    where: { 
+      id,
+      tenantId: session.tenantId 
+    },
+    data: {
+      vehicleId,
+      customerId,
+      fuelLevel,
+      itemsStatus: JSON.stringify(itemsStatus),
+    }
+  })
+
+  revalidatePath(`/checklists/${id}`)
+  redirect(`/checklists/${id}`)
+}

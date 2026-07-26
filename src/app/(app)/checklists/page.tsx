@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, CheckCircle2, Search } from 'lucide-react'
+import { ChecklistRow } from '@/components/ChecklistRow'
 
 export default async function ChecklistsPage() {
   const session = await getSession()
@@ -59,26 +60,7 @@ export default async function ChecklistsPage() {
             </thead>
             <tbody className="divide-y divide-neutral-100 bg-white">
               {checklists.map((c) => (
-                <tr key={c.id} className="hover:bg-neutral-50/80 transition-colors group cursor-pointer">
-                  <td className="px-5 py-3.5 font-mono text-neutral-500 text-xs">#{c.id.substring(0,6)}</td>
-                  <td className="px-5 py-3.5 text-neutral-900 font-medium">
-                    {c.vehicle.plate} <span className="text-neutral-400 text-xs font-normal">({c.vehicle.model})</span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-16 bg-neutral-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-neutral-400 rounded-full" 
-                          style={{ width: `${c.fuelLevel}%` }}
-                        />
-                      </div>
-                      <span className="text-[11px] font-mono text-neutral-500">{c.fuelLevel}%</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5 text-neutral-400 font-mono text-[11px] text-right">
-                    {new Date(c.createdAt).toLocaleDateString('pt-BR')}
-                  </td>
-                </tr>
+                <ChecklistRow key={c.id} checklist={c} />
               ))}
             </tbody>
           </table>
