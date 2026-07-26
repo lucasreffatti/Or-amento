@@ -53,62 +53,62 @@ export default function RegisterPage() {
 
  return (
  <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-4 selection:bg-black selection:text-white ">
- <div className="max-w-md w-full bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-2xl shadow-xl overflow-hidden">
+ <div className="max-w-md w-full bg-white border border-neutral-200 rounded-2xl shadow-xl overflow-hidden">
  
  <div className="bg-black text-white p-8 text-center flex flex-col items-center justify-center border-b border-neutral-800">
- <div className="w-16 h-16 bg-white dark:bg-[#111111]/10 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md">
+ <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md">
  <UserPlus className="w-8 h-8 text-white " />
  </div>
  <h1 className="text-2xl font-black tracking-tight">Novo Acesso</h1>
- <p className="text-neutral-400 dark:text-neutral-500 text-sm mt-2 font-mono tracking-wider uppercase">Requer Código de Autorização</p>
+ <p className="text-neutral-400 text-sm mt-2 font-mono tracking-wider uppercase">Requer Código de Autorização</p>
  </div>
 
  <form action={handleRegister} className="p-8 space-y-5">
  
  <div className="space-y-1.5">
- <label className="text-[11px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest block">Nome Completo</label>
+ <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest block">Nome Completo</label>
  <div className="relative">
  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
- <Tag className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
+ <Tag className="h-4 w-4 text-neutral-400 " />
  </div>
  <input 
  type="text" 
  name="name"
  required
  placeholder="Seu nome"
- className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-black/50 border border-neutral-200 dark:border-[#222222] rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 dark:text-neutral-50"
+ className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 "
  />
  </div>
  </div>
 
  <div className="space-y-1.5">
- <label className="text-[11px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest block">Usuário de Acesso</label>
+ <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest block">Usuário de Acesso</label>
  <div className="relative">
  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
- <UserIcon className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
+ <UserIcon className="h-4 w-4 text-neutral-400 " />
  </div>
  <input 
  type="text" 
  name="username"
  required
  placeholder="Ex: joaomecanico"
- className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-black/50 border border-neutral-200 dark:border-[#222222] rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 dark:text-neutral-50"
+ className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 "
  />
  </div>
  </div>
 
  <div className="space-y-1.5">
- <label className="text-[11px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest block">Senha</label>
+ <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest block">Senha</label>
  <div className="relative">
  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
- <KeyRound className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
+ <KeyRound className="h-4 w-4 text-neutral-400 " />
  </div>
  <input 
  type="password" 
  name="password"
  required
  placeholder="••••••••"
- className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-black/50 border border-neutral-200 dark:border-[#222222] rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 dark:text-neutral-50"
+ className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 "
  />
  </div>
  </div>
@@ -137,8 +137,8 @@ export default function RegisterPage() {
  Validar e Criar Conta
  </button>
 
- <div className="pt-6 mt-6 border-t border-neutral-100 dark:border-[#222222]/50 text-center">
- <p className="text-sm text-neutral-500 dark:text-neutral-400">
+ <div className="pt-6 mt-6 border-t border-neutral-100 text-center">
+ <p className="text-sm text-neutral-500 ">
  Já tem cadastro?{' '}
  <Link href="/login" className="text-black font-semibold hover:underline">
  Voltar para o Login

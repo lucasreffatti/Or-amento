@@ -61,13 +61,13 @@ export default function ChecklistForm({
  
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
  <div className="space-y-1.5">
- <label htmlFor="customerId" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Cliente *</label>
+ <label htmlFor="customerId" className="text-[13px] font-medium text-neutral-700 ">Cliente *</label>
  <select 
  id="customerId" 
  name="customerId" 
  required
  defaultValue={initialData?.customerId ?? ""}
- className="w-full px-3 py-2 bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 dark:text-neutral-50"
+ className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 "
  >
  <option value="">Selecione um cliente...</option>
  {customers.map(c => (
@@ -77,13 +77,13 @@ export default function ChecklistForm({
  </div>
  
  <div className="space-y-1.5">
- <label htmlFor="vehicleId" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Veículo *</label>
+ <label htmlFor="vehicleId" className="text-[13px] font-medium text-neutral-700 ">Veículo *</label>
  <select 
  id="vehicleId" 
  name="vehicleId" 
  required
  defaultValue={initialData?.vehicleId ?? ""}
- className="w-full px-3 py-2 bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 dark:text-neutral-50"
+ className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 "
  >
  <option value="">Selecione um veículo...</option>
  {vehicles.map(v => (
@@ -93,14 +93,14 @@ export default function ChecklistForm({
  </div>
  </div>
 
- <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-[#222222]/50">
+ <div className="space-y-4 pt-4 border-t border-neutral-100 ">
  <div className="flex justify-between items-center mb-2">
- <label className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Painel de Combustível</label>
- <span className="text-[12px] font-mono text-neutral-500 dark:text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-sm">{fuelLevel}%</span>
+ <label className="text-[13px] font-medium text-neutral-700 ">Painel de Combustível</label>
+ <span className="text-[12px] font-mono text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-sm">{fuelLevel}%</span>
  </div>
  
  {/* DASHBOARD FUEL GAUGE */}
- <div className="flex flex-col items-center bg-neutral-50 dark:bg-black/50/50 p-6 rounded-lg border border-neutral-200 dark:border-[#222222] shadow-inner">
+ <div className="flex flex-col items-center bg-neutral-50 p-6 rounded-lg border border-neutral-200 shadow-inner">
  <div className="relative w-48 h-24 overflow-hidden flex justify-center">
  {/* Fundo do medidor */}
  <svg viewBox="0 0 200 100" className="w-full h-full drop-shadow-sm">
@@ -135,7 +135,7 @@ export default function ChecklistForm({
  style={{ transform: `rotate(${needleRotation}deg)` }}
  >
  {/* Eixo central */}
- <div className="absolute -bottom-2 w-6 h-6 bg-neutral-900 rounded-full border-4 border-neutral-100 dark:border-[#222222]/50 shadow-sm" />
+ <div className="absolute -bottom-2 w-6 h-6 bg-neutral-900 rounded-full border-4 border-neutral-100 shadow-sm" />
  {/* Ponta laranja do ponteiro */}
  <div className="w-full h-4 bg-orange-500 rounded-t-full" />
  </div>
@@ -151,18 +151,18 @@ export default function ChecklistForm({
  onChange={(e) => setFuelLevel(Number(e.target.value))}
  className="w-full max-w-[200px] h-2 mt-8 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-neutral-900 shadow-sm"
  />
- <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-2 uppercase tracking-widest font-semibold">Arraste para ajustar o nível</p>
+ <p className="text-[10px] text-neutral-400 mt-2 uppercase tracking-widest font-semibold">Arraste para ajustar o nível</p>
  </div>
  </div>
 
- <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-[#222222]/50">
- <label className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300 block">Itens da Vistoria</label>
+ <div className="space-y-4 pt-4 border-t border-neutral-100 ">
+ <label className="text-[13px] font-medium text-neutral-700 block">Itens da Vistoria</label>
  
- <div className="bg-neutral-50 dark:bg-black/50/50 border border-neutral-200 dark:border-[#222222] rounded-md overflow-hidden">
+ <div className="bg-neutral-50 border border-neutral-200 rounded-md overflow-hidden">
  {checklistItemsTemplate.map((item, idx) => (
- <div key={item} className={`flex items-center justify-between p-3 ${idx !== 0 ? 'border-t border-neutral-100 dark:border-[#222222]/50' : ''}`}>
- <span className="text-[13px] text-neutral-800 dark:text-neutral-200 font-medium">{item}</span>
- <div className="flex bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-md overflow-hidden shadow-sm">
+ <div key={item} className={`flex items-center justify-between p-3 ${idx !== 0 ? 'border-t border-neutral-100 ' : ''}`}>
+ <span className="text-[13px] text-neutral-800 font-medium">{item}</span>
+ <div className="flex bg-white border border-neutral-200 rounded-md overflow-hidden shadow-sm">
  {(['OK', 'AVARIA', 'N/A'] as const).map(status => {
  const isActive = itemsStatus[item] === status;
  return (
@@ -170,10 +170,10 @@ export default function ChecklistForm({
  key={status}
  type="button"
  onClick={() => handleStatusChange(item, status)}
- className={`px-3 py-1 text-[11px] font-bold transition-colors border-r last:border-r-0 border-neutral-100 dark:border-[#222222]/50 ${
+ className={`px-3 py-1 text-[11px] font-bold transition-colors border-r last:border-r-0 border-neutral-100 ${
  isActive 
  ? status === 'OK' ? 'bg-emerald-500 text-white ' : status === 'AVARIA' ? 'bg-red-500 text-white ' : 'bg-neutral-600 text-white '
- : 'bg-white dark:bg-[#111111] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:bg-black/50'
+ : 'bg-white text-neutral-500 hover:bg-neutral-50 '
  }`}
  >
  {status}
@@ -186,22 +186,22 @@ export default function ChecklistForm({
  </div>
  </div>
 
- <div className="space-y-1.5 pt-4 border-t border-neutral-100 dark:border-[#222222]/50">
- <label htmlFor="additionalInfo" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Observações / Informações Adicionais</label>
+ <div className="space-y-1.5 pt-4 border-t border-neutral-100 ">
+ <label htmlFor="additionalInfo" className="text-[13px] font-medium text-neutral-700 ">Observações / Informações Adicionais</label>
  <textarea 
  id="additionalInfo" 
  name="additionalInfo" 
  rows={3}
  defaultValue={initialData?.additionalInfo ?? ""}
  placeholder="Ex: Veículo apresenta riscos na porta traseira esquerda, manchas no banco do carona, etc."
- className="w-full px-3 py-2 bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 dark:text-neutral-500 resize-none"
+ className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 resize-none"
  />
  </div>
 
- <div className="pt-6 mt-6 border-t border-neutral-100 dark:border-[#222222]/50 flex justify-end gap-3">
+ <div className="pt-6 mt-6 border-t border-neutral-100 flex justify-end gap-3">
  <Link 
  href={budgetId ? `/budgets/${budgetId}` : (initialData ? `/checklists/${initialData.id}` : "/checklists")} 
- className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-md hover:bg-neutral-50 dark:bg-black/50 transition-colors"
+ className="px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-md hover:bg-neutral-50 transition-colors"
  >
  Cancelar
  </Link>

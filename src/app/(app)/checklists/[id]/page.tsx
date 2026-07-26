@@ -50,16 +50,16 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  </div>
  )}
 
- <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-neutral-100 dark:border-[#222222]/50 relative z-10">
+ <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-neutral-100 relative z-10">
  <div>
  <div className="flex items-center gap-3 mb-2">
  <Link 
  href="/checklists" 
- className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors text-neutral-500 dark:text-neutral-400"
+ className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors text-neutral-500 "
  >
  <ArrowLeft className="w-4 h-4" />
  </Link>
- <span className="bg-neutral-100 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-[#222222] text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest flex items-center gap-1">
+ <span className="bg-neutral-100 text-neutral-600 border border-neutral-200 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest flex items-center gap-1">
  Checklist #{checklist.id.substring(0,6)}
  </span>
  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest border ${
@@ -70,8 +70,8 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  {checklist.status}
  </span>
  </div>
- <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight">Vistoria de {checklist.vehicle.plate}</h1>
- <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+ <h1 className="text-xl font-semibold text-neutral-900 tracking-tight">Vistoria de {checklist.vehicle.plate}</h1>
+ <p className="text-sm text-neutral-500 mt-1">
  Realizada em {new Date(checklist.createdAt).toLocaleDateString('pt-BR')} às {new Date(checklist.createdAt).toLocaleTimeString('pt-BR')}
  </p>
  </div>
@@ -100,7 +100,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  'use server'
  await updateChecklistStatus(checklist.id, 'PENDENTE')
  }}>
- <button type="submit" className="px-3 py-1.5 bg-white dark:bg-[#111111] text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-[#222222] rounded-md text-[13px] font-medium hover:bg-neutral-50 dark:bg-black/50 transition-colors shadow-sm flex items-center gap-1.5">
+ <button type="submit" className="px-3 py-1.5 bg-white text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-50 transition-colors shadow-sm flex items-center gap-1.5">
  <ArrowLeft className="w-4 h-4" /> Reabrir
  </button>
  </form>
@@ -116,7 +116,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  ) : (
  <Link 
  href={`/budgets/new?vehicleId=${checklist.vehicleId}&customerId=${checklist.customerId}`}
- className="px-3 py-1.5 bg-neutral-50 dark:bg-black/50 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-[#222222] rounded-md text-[13px] font-medium hover:bg-neutral-100 transition-colors flex items-center gap-1.5"
+ className="px-3 py-1.5 bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-100 transition-colors flex items-center gap-1.5"
  >
  <FileText className="w-4 h-4" /> Criar Orçamento
  </Link>
@@ -124,7 +124,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  
  <Link 
  href={`/checklists/${checklist.id}/edit`}
- className="px-3 py-1.5 bg-white dark:bg-[#111111] text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-[#222222] rounded-md text-[13px] font-medium hover:bg-neutral-50 dark:bg-black/50 transition-colors shadow-sm flex items-center gap-1.5"
+ className="px-3 py-1.5 bg-white text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-50 transition-colors shadow-sm flex items-center gap-1.5"
  >
  <Edit className="w-4 h-4" /> Editar
  </Link>
@@ -133,7 +133,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  id={checklist.id}
  action={deleteChecklist}
  entityName="esta vistoria"
- className="px-3 py-1.5 bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] shadow-sm"
+ className="px-3 py-1.5 bg-white border border-neutral-200 shadow-sm"
  />
 
  <Link 
@@ -148,29 +148,29 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <div className="md:col-span-1 space-y-6">
- <div className="bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-5">
- <h3 className="text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-4">Dados Básicos</h3>
+ <div className="bg-white border border-neutral-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-5">
+ <h3 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Dados Básicos</h3>
  
  <div className="space-y-4">
  <div>
- <span className="text-[11px] text-neutral-400 dark:text-neutral-500 block mb-0.5">Cliente</span>
- <span className="text-[13px] font-medium text-neutral-900 dark:text-neutral-50">{checklist.customer.name}</span>
- <span className="text-[12px] text-neutral-500 dark:text-neutral-400 block">{checklist.customer.phone}</span>
+ <span className="text-[11px] text-neutral-400 block mb-0.5">Cliente</span>
+ <span className="text-[13px] font-medium text-neutral-900 ">{checklist.customer.name}</span>
+ <span className="text-[12px] text-neutral-500 block">{checklist.customer.phone}</span>
  </div>
  
  <div>
- <span className="text-[11px] text-neutral-400 dark:text-neutral-500 block mb-0.5">Veículo</span>
- <span className="text-[13px] font-medium text-neutral-900 dark:text-neutral-50">{checklist.vehicle.brand} {checklist.vehicle.model}</span>
- <span className="text-[12px] font-mono text-neutral-500 dark:text-neutral-400 block">{checklist.vehicle.plate} • {checklist.vehicle.year}</span>
+ <span className="text-[11px] text-neutral-400 block mb-0.5">Veículo</span>
+ <span className="text-[13px] font-medium text-neutral-900 ">{checklist.vehicle.brand} {checklist.vehicle.model}</span>
+ <span className="text-[12px] font-mono text-neutral-500 block">{checklist.vehicle.plate} • {checklist.vehicle.year}</span>
  </div>
  </div>
  </div>
 
- <div className="bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-5">
- <h3 className="text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-4">Combustível</h3>
+ <div className="bg-white border border-neutral-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden p-5">
+ <h3 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Combustível</h3>
  
  {/* DASHBOARD FUEL GAUGE (VIEW ONLY) */}
- <div className="flex flex-col items-center bg-neutral-50 dark:bg-black/50/50 p-4 rounded-lg border border-neutral-100 dark:border-[#222222]/50 shadow-inner">
+ <div className="flex flex-col items-center bg-neutral-50 p-4 rounded-lg border border-neutral-100 shadow-inner">
  <div className="relative w-40 h-20 overflow-hidden flex justify-center mb-2">
  <svg viewBox="0 0 200 100" className="w-full h-full drop-shadow-sm">
  <path 
@@ -200,11 +200,11 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  className="absolute bottom-0 w-1.5 h-14 bg-neutral-800 rounded-t-full origin-bottom shadow-md flex items-start justify-center"
  style={{ transform: `rotate(${needleRotation}deg)` }}
  >
- <div className="absolute -bottom-1.5 w-4 h-4 bg-neutral-900 rounded-full border-[3px] border-neutral-100 dark:border-[#222222]/50 shadow-sm" />
+ <div className="absolute -bottom-1.5 w-4 h-4 bg-neutral-900 rounded-full border-[3px] border-neutral-100 shadow-sm" />
  <div className="w-full h-3 bg-orange-500 rounded-t-full" />
  </div>
  </div>
- <div className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 font-mono tracking-tight bg-white dark:bg-[#111111] px-3 py-0.5 rounded border border-neutral-200 dark:border-[#222222] shadow-sm">
+ <div className="text-xl font-semibold text-neutral-900 font-mono tracking-tight bg-white px-3 py-0.5 rounded border border-neutral-200 shadow-sm">
  {checklist.fuelLevel}%
  </div>
  </div>
@@ -212,21 +212,21 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  </div>
 
  <div className="md:col-span-2">
- <div className="bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
- <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-[#222222]/50 bg-neutral-50 dark:bg-black/50/50">
- <h2 className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight">Status de Itens</h2>
+ <div className="bg-white border border-neutral-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
+ <div className="px-5 py-3.5 border-b border-neutral-100 bg-neutral-50 ">
+ <h2 className="text-[13px] font-semibold text-neutral-900 tracking-tight">Status de Itens</h2>
  </div>
  
  <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
- <tbody className="divide-y divide-neutral-50 bg-white dark:bg-[#111111]">
+ <tbody className="divide-y divide-neutral-50 bg-white ">
  {Object.entries(itemsStatus).map(([item, status]) => (
- <tr key={item} className="hover:bg-neutral-50 dark:bg-black/50/50 transition-colors">
- <td className="px-5 py-3.5 text-neutral-800 dark:text-neutral-200 text-[13px] font-medium">{item}</td>
+ <tr key={item} className="hover:bg-neutral-50 transition-colors">
+ <td className="px-5 py-3.5 text-neutral-800 text-[13px] font-medium">{item}</td>
  <td className="px-5 py-3.5 text-right">
  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide shadow-sm ${
  status === 'OK' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
  status === 'AVARIA' ? 'bg-red-50 text-red-700 border border-red-200' :
- 'bg-neutral-100 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-[#222222]'
+ 'bg-neutral-100 text-neutral-600 border border-neutral-200 '
  }`}>
  {status === 'OK' && <CheckCircle2 className="w-3.5 h-3.5" />}
  {status === 'AVARIA' && <AlertTriangle className="w-3.5 h-3.5" />}
@@ -241,11 +241,11 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
  </div>
  
  {checklist.additionalInfo && (
- <div className="bg-white dark:bg-[#111111] border border-neutral-200 dark:border-[#222222] rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden mt-6">
- <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-[#222222]/50 bg-neutral-50 dark:bg-black/50/50">
- <h2 className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight">Observações Adicionais</h2>
+ <div className="bg-white border border-neutral-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden mt-6">
+ <div className="px-5 py-3.5 border-b border-neutral-100 bg-neutral-50 ">
+ <h2 className="text-[13px] font-semibold text-neutral-900 tracking-tight">Observações Adicionais</h2>
  </div>
- <div className="p-5 text-[13px] text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
+ <div className="p-5 text-[13px] text-neutral-700 whitespace-pre-wrap">
  {checklist.additionalInfo}
  </div>
  </div>

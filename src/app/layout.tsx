@@ -19,8 +19,8 @@ export default function RootLayout({
 }>) {
  return (
  <html lang="pt-BR" suppressHydrationWarning>
- <body className={`${inter.variable} ${geistMono.variable} antialiased text-neutral-900 dark:text-neutral-50 dark:bg-black bg-[#FAFAFA]`}>
- <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+ <body className={`${inter.variable} ${geistMono.variable} antialiased text-neutral-900 bg-[#FAFAFA]`}>
+ <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false} disableTransitionOnChange>
  {children}
  </ThemeProvider>
  </body>

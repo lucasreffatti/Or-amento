@@ -33,7 +33,7 @@ export function DeleteButton({
  onClick={handleDelete}
  disabled={isPending}
  title="Excluir"
- className={`flex items-center gap-1.5 p-1.5 text-neutral-400 dark:text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 ${className}`}
+ className={`flex items-center gap-1.5 p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 ${className}`}
  >
  <Trash2 className="w-4 h-4" />
  {className.includes('px-') && <span>Excluir</span>}
