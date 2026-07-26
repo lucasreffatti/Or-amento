@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command } from 'lucide-react'
+import { logout } from '@/app/actions/auth'
 
-export default function Sidebar() {
+export default function Sidebar({ user }: { user?: { username: string, role: string } }) {
   const pathname = usePathname()
 
   const menus = [
@@ -65,16 +66,18 @@ export default function Sidebar() {
         </nav>
         
         <div className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-neutral-800/30 border border-neutral-800/50">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-neutral-700 to-neutral-500 text-white flex items-center justify-center text-[10px] font-bold shadow-inner">
-            AD
+          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-neutral-700 to-neutral-500 text-white flex items-center justify-center text-[10px] font-bold shadow-inner uppercase">
+            {user?.username ? user.username.substring(0, 2) : 'US'}
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-[12px] font-medium text-neutral-200 truncate">Admin Mock</p>
-            <p className="text-[10px] text-neutral-500 font-mono truncate">admin@oficina.com</p>
+            <p className="text-[12px] font-medium text-neutral-200 truncate">{user?.username || 'Usuário'}</p>
+            <p className="text-[10px] text-neutral-500 font-mono truncate">{user?.role || 'USER'}</p>
           </div>
-          <button className="text-neutral-500 hover:text-neutral-300 transition-colors">
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
+          <form action={logout}>
+            <button type="submit" className="text-neutral-500 hover:text-neutral-300 transition-colors" title="Sair">
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </form>
         </div>
       </div>
     </aside>

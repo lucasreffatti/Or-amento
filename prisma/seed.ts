@@ -12,14 +12,15 @@ async function main() {
   })
 
   await prisma.user.upsert({
-    where: { email: 'admin@oficina.com' },
+    where: { username: 'adminmock' },
     update: {},
     create: {
       id: 'user-1',
-      tenantId: tenant.id,
+      username: 'adminmock',
       email: 'admin@oficina.com',
-      name: 'Admin Mock',
+      name: 'Admin da Oficina',
       role: 'ADMIN',
+      tenantId: 'tenant-1'
     },
   })
   

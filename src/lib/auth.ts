@@ -1,18 +1,44 @@
 import { cookies } from 'next/headers'
+import { SignJWT, jwtVerify } from 'jose'
+import { redirect } from 'next/navigation'
 
-// Mock de sessão para o MVP
-// Na versão de produção, isso seria substituído por NextAuth.js ou similar.
+// In a real app, this should be in an environment variable
+// const secretKey = process.env.JWT_SECRET
+const secretKey = 'cybersecurity-super-secret-key-for-saas'
+const key = new TextEncoder().encode(secretKey)
+
+export async function encrypt(payload: any) {
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('24h') // 24 hours session
+    .sign(key)
+}
+
+export async function decrypt(input: string): Promise<any> {
+  try {
+    const { payload } = await jwtVerify(input, key, {
+      algorithms: ['HS256'],
+    })
+    return payload
+  } catch (error) {
+    return null
+  }
+}
+
 export async function getSession() {
   const cookieStore = await cookies()
-  const tenantId = cookieStore.get('mock_tenant_id')?.value
-  const userId = cookieStore.get('mock_user_id')?.value
+  const session = cookieStore.get('saas_session')?.value
+  
+  if (!session) redirect('/login')
 
-  // Se não tiver cookie (ex: primeiro acesso no MVP), vamos usar um mock fixo,
-  // ou poderíamos retornar null para forçar login.
-  // Como é um MVP rápido, vou retornar um id fixo "tenant-1" e "user-1" se não existir.
+  const parsed = await decrypt(session)
+  if (!parsed) redirect('/login')
+  
   return {
-    tenantId: tenantId || 'tenant-1',
-    userId: userId || 'user-1',
-    role: 'ADMIN'
+    userId: parsed.userId as string,
+    tenantId: parsed.tenantId as string,
+    role: parsed.role as string,
+    username: parsed.username as string,
   }
 }

@@ -28,9 +28,10 @@ model User {
   id        String   @id @default(cuid())
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  email     String   @unique
+  email     String?  // Made optional since we use username for login
+  username  String   @unique @default("sergiocar")
   name      String?
-  password  String   @default("") // Para MVP mockado
+  password  String   @default("") // Will hold bcrypt hash
   role      String   @default("USER") // ADMIN, USER
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
