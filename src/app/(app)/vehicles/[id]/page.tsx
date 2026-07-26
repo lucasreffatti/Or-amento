@@ -31,7 +31,7 @@ export default async function VehicleProfilePage(props: { params: Promise<{ id: 
   if (!vehicle) notFound()
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full">
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link 

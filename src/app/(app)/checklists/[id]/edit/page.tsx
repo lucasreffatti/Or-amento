@@ -29,7 +29,7 @@ export default async function EditChecklistPage(props: { params: Promise<{ id: s
   })
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 max-w-3xl">
+    <div className="space-y-8 animate-in fade-in duration-300 w-full">
       <header className="flex items-center gap-4 pb-4 border-b border-neutral-100">
         <Link 
           href={`/checklists/${checklist.id}`} 

@@ -37,7 +37,7 @@ export default async function CustomerProfilePage(props: { params: Promise<{ id:
   if (!customer) notFound()
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full">
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link 

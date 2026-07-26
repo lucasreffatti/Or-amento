@@ -31,7 +31,7 @@ export default async function EditBudgetPage(props: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="max-w-2xl mx-auto animate-in fade-in duration-300">
+    <div className="w-full animate-in fade-in duration-300">
       <header className="flex items-center gap-4 pb-6 border-b border-neutral-200/60 mb-8">
         <Link 
           href={`/budgets/${budget.id}`} 
