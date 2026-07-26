@@ -27,12 +27,12 @@ export default async function ChecklistsPage() {
               className="pl-9 pr-4 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 transition-colors w-64"
             />
           </div>
-          <button 
-            className="bg-neutral-900 text-white px-4 py-2 text-sm font-medium rounded-md hover:bg-neutral-800 transition-colors shadow-sm flex items-center gap-2 opacity-50 cursor-not-allowed"
-            title="Em breve"
+          <Link 
+            href="/checklists/new"
+            className="bg-neutral-900 text-white px-4 py-2 text-sm font-medium rounded-md hover:bg-neutral-800 transition-colors shadow-sm flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> Novo Checklist
-          </button>
+          </Link>
         </div>
       </header>
 

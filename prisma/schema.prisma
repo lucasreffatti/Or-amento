@@ -85,6 +85,7 @@ model Checklist {
   imagesUrls    String   @default("[]") // Lista convertida para String JSON
   
   customerSignature String? 
+  budget        Budget?
   createdAt     DateTime @default(now())
 }
 
@@ -98,6 +99,7 @@ model Budget {
   customer      Customer @relation(fields: [customerId], references: [id])
   
   status        String   @default("DRAFT") // DRAFT, SENT, PARTIALLY_APPROVED, APPROVED, REJECTED
+  serviceType   String   @default("INTERNAL") // INTERNAL, EXTERNAL
   validUntil    DateTime
   totalLabor    Float    @default(0)
   totalParts    Float    @default(0)
@@ -105,6 +107,9 @@ model Budget {
   finalTotal    Float    @default(0)
   
   externalLink  String?  @unique 
+  checklistId   String?  @unique
+  checklist     Checklist? @relation(fields: [checklistId], references: [id])
+
   
   items         BudgetItem[]
   createdAt     DateTime @default(now())

@@ -3,21 +3,23 @@ import { getSession } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, FileText, Search, Clock, CheckCircle2, XCircle, Send } from 'lucide-react'
 
-export default async function BudgetsPage(props: { searchParams: Promise<{ status?: string }> }) {
+export default async function BudgetsPage(props: { searchParams: Promise<{ status?: string, type?: string }> }) {
   const searchParams = await props.searchParams
   const session = await getSession()
   
   const statusFilter = searchParams.status
+  const typeFilter = searchParams.type || 'INTERNAL'
 
-  const whereClause: any = { tenantId: session.tenantId }
+  const whereClause: any = { 
+    tenantId: session.tenantId,
+    serviceType: typeFilter
+  }
   
   if (statusFilter === 'EXPIRED') {
     whereClause.validUntil = { lt: new Date() }
     whereClause.status = { not: 'APPROVED' }
   } else if (statusFilter) {
     whereClause.status = statusFilter
-    // Se não for 'Vencidos', não mostrar os vencidos a menos que seja aprovado? 
-    // Para simplificar, o filtro direto de status já funciona.
   }
 
   const budgets = await prisma.budget.findMany({
@@ -65,14 +67,38 @@ export default async function BudgetsPage(props: { searchParams: Promise<{ statu
         </div>
       </header>
 
+      {/* Main Mode Toggle: Na Oficina vs Balcão */}
+      <div className="flex gap-2">
+        <Link 
+          href={`/budgets?type=INTERNAL${statusFilter ? `&status=${statusFilter}` : ''}`}
+          className={`px-5 py-2 text-[13px] font-medium rounded-md transition-colors ${
+            typeFilter === 'INTERNAL' 
+              ? 'bg-neutral-900 text-white shadow-sm' 
+              : 'bg-white text-neutral-600 hover:bg-neutral-50 border border-neutral-200'
+          }`}
+        >
+          Na Oficina (Requer Vistoria)
+        </Link>
+        <Link 
+          href={`/budgets?type=EXTERNAL${statusFilter ? `&status=${statusFilter}` : ''}`}
+          className={`px-5 py-2 text-[13px] font-medium rounded-md transition-colors ${
+            typeFilter === 'EXTERNAL' 
+              ? 'bg-neutral-900 text-white shadow-sm' 
+              : 'bg-white text-neutral-600 hover:bg-neutral-50 border border-neutral-200'
+          }`}
+        >
+          Orçamentos de Balcão (Avulso)
+        </Link>
+      </div>
+
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide border-b border-neutral-200/60">
+      <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide border-b border-neutral-200/60 mt-4">
         {tabs.map(tab => {
           const isActive = (statusFilter || '') === tab.value
           return (
             <Link 
               key={tab.label}
-              href={`/budgets${tab.value ? `?status=${tab.value}` : ''}`}
+              href={`/budgets?type=${typeFilter}${tab.value ? `&status=${tab.value}` : ''}`}
               className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-t-lg transition-colors border-b-2 ${
                 isActive 
                   ? 'border-neutral-900 text-neutral-900 bg-neutral-50/50' 

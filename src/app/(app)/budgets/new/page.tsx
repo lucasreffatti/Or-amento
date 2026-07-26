@@ -23,6 +23,7 @@ export default async function NewBudgetPage() {
     'use server'
     const customerId = formData.get('customerId') as string
     const vehicleId = formData.get('vehicleId') as string
+    const serviceType = formData.get('serviceType') as string
     
     const tenant = await prisma.tenant.findFirst()
     
@@ -33,6 +34,7 @@ export default async function NewBudgetPage() {
         data: {
           customerId,
           vehicleId,
+          serviceType,
           tenantId: tenant.id,
           totalLabor: 0,
           totalParts: 0,
@@ -101,6 +103,20 @@ export default async function NewBudgetPage() {
         ) : (
           <form action={createBudget} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label htmlFor="serviceType" className="text-[13px] font-medium text-neutral-700">Tipo de Orçamento *</label>
+                <select 
+                  id="serviceType" 
+                  name="serviceType" 
+                  required
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
+                >
+                  <option value="INTERNAL">Serviço Interno (Veículo na Oficina)</option>
+                  <option value="EXTERNAL">Orçamento de Balcão (Apenas Cotação)</option>
+                </select>
+                <p className="text-[11px] text-neutral-500">Serviços internos exigem vistoria de entrada (Checklist) antes da aprovação.</p>
+              </div>
+
               <div className="space-y-1.5">
                 <label htmlFor="customerId" className="text-[13px] font-medium text-neutral-700">Cliente *</label>
                 <select 
