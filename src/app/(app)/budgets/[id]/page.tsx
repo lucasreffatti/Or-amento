@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { ArrowLeft, CheckCircle2, XCircle, Send, Edit, ExternalLink, AlertTriangle } from 'lucide-react'
 import BudgetBuilder from '@/components/BudgetBuilder'
 import { updateBudgetStatus } from '@/app/actions/budget'
+import { DeleteButton } from '@/components/DeleteButton'
+import { deleteBudget } from '@/app/actions/delete'
 
 export default async function BudgetDetailsPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -114,6 +116,13 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
           <Link href={`/budgets/${budget.id}/edit`} className="bg-white border border-neutral-200 text-neutral-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-50 transition-colors flex items-center gap-1.5">
             <Edit className="w-4 h-4" /> Editar Info
           </Link>
+
+          <DeleteButton 
+            id={budget.id} 
+            action={deleteBudget} 
+            entityName="este orçamento" 
+            className="px-3 py-1.5 bg-white border border-neutral-200 shadow-sm"
+          />
 
           <Link href={`/print/budgets/${budget.id}`} target="_blank" className="bg-neutral-900 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-800 transition-colors flex items-center gap-1.5 ml-2">
             <ExternalLink className="w-4 h-4" /> Imprimir

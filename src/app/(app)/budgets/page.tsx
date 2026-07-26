@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, FileText, Search, Clock, CheckCircle2, XCircle, Send } from 'lucide-react'
+import { DeleteButton } from '@/components/DeleteButton'
+import { deleteBudget } from '@/app/actions/delete'
 
 export default async function BudgetsPage(props: { searchParams: Promise<{ status?: string, type?: string }> }) {
   const searchParams = await props.searchParams
@@ -166,13 +168,19 @@ export default async function BudgetsPage(props: { searchParams: Promise<{ statu
                     <td className={`px-6 py-4 font-mono text-[12px] text-right ${isExpired ? 'text-amber-600 font-semibold' : 'text-neutral-400'}`}>
                       {new Date(b.validUntil).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
                       <Link 
                         href={`/budgets/${b.id}`} 
                         className="text-[13px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
                       >
                         Abrir
                       </Link>
+                      <DeleteButton 
+                        id={b.id} 
+                        action={deleteBudget} 
+                        entityName="este orçamento" 
+                        className="opacity-0 group-hover:opacity-100" 
+                      />
                     </td>
                   </tr>
                 )

@@ -105,7 +105,7 @@ export default function ChecklistForm({
             {/* Fundo do medidor */}
             <svg viewBox="0 0 200 100" className="w-full h-full drop-shadow-sm">
               <path 
-                d="M 20 90 A 70 70 0 0 1 180 90" 
+                d="M 20 90 A 80 80 0 0 1 180 90" 
                 fill="none" 
                 stroke="#e5e5e5" 
                 strokeWidth="20" 
@@ -113,13 +113,13 @@ export default function ChecklistForm({
               />
               {/* Parte preenchida dependendo do nível */}
               <path 
-                d="M 20 90 A 70 70 0 0 1 180 90" 
+                d="M 20 90 A 80 80 0 0 1 180 90" 
                 fill="none" 
                 stroke={fuelLevel < 20 ? '#ef4444' : fuelLevel < 40 ? '#f59e0b' : '#22c55e'} 
                 strokeWidth="20" 
                 strokeLinecap="round" 
-                strokeDasharray="219.91" 
-                strokeDashoffset={219.91 - (219.91 * (fuelLevel / 100))}
+                strokeDasharray="251.32" 
+                strokeDashoffset={251.32 - (251.32 * (fuelLevel / 100))}
                 className="transition-all duration-500 ease-out"
               />
               

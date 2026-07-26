@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, Car, Search, Sparkles } from 'lucide-react'
+import { DeleteButton } from '@/components/DeleteButton'
+import { deleteVehicle } from '@/app/actions/delete'
 
 export default async function VehiclesPage() {
   const session = await getSession()
@@ -58,6 +60,7 @@ export default async function VehiclesPage() {
                 <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Placa</th>
                 <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Modelo / Marca</th>
                 <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100">Proprietário</th>
+                <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 bg-white">
@@ -72,6 +75,14 @@ export default async function VehiclesPage() {
                     {v.brand} {v.model} <span className="text-neutral-400 text-xs font-normal ml-1">({v.year})</span>
                   </td>
                   <td className="px-6 py-4 text-neutral-500 text-[13px]">{v.customer?.name}</td>
+                  <td className="px-6 py-4 text-right">
+                    <DeleteButton 
+                      id={v.id} 
+                      action={deleteVehicle} 
+                      entityName="este veículo" 
+                      className="opacity-0 group-hover:opacity-100 inline-flex" 
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

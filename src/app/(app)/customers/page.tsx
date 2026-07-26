@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, Users, Search, Edit2, Sparkles } from 'lucide-react'
+import { DeleteButton } from '@/components/DeleteButton'
+import { deleteCustomer } from '@/app/actions/delete'
 
 export default async function CustomersPage() {
   const session = await getSession()
@@ -77,13 +79,19 @@ export default async function CustomersPage() {
                   <td className="px-6 py-4 text-neutral-400 font-mono text-[12px]">
                     {new Date(c.createdAt).toLocaleDateString('pt-BR')}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
                     <Link 
                       href={`/customers/${c.id}/edit`}
                       className="inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Link>
+                    <DeleteButton 
+                      id={c.id} 
+                      action={deleteCustomer} 
+                      entityName="este cliente" 
+                      className="opacity-0 group-hover:opacity-100" 
+                    />
                   </td>
                 </tr>
               ))}

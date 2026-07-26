@@ -3,6 +3,8 @@ import { getSession } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Printer, FileText, CheckCircle2, AlertTriangle, HelpCircle, Edit } from 'lucide-react'
+import { DeleteButton } from '@/components/DeleteButton'
+import { deleteChecklist } from '@/app/actions/delete'
 
 export default async function ChecklistViewPage(props: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -72,6 +74,13 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
           >
             <Edit className="w-4 h-4" /> Editar
           </Link>
+          
+          <DeleteButton 
+            id={checklist.id}
+            action={deleteChecklist}
+            entityName="esta vistoria"
+            className="px-4 py-2 bg-white border border-neutral-200 shadow-sm"
+          />
 
           <Link 
             href={`/print/checklists/${checklist.id}`}
@@ -111,20 +120,20 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
               <div className="relative w-40 h-20 overflow-hidden flex justify-center mb-2">
                 <svg viewBox="0 0 200 100" className="w-full h-full drop-shadow-sm">
                   <path 
-                    d="M 20 90 A 70 70 0 0 1 180 90" 
+                    d="M 20 90 A 80 80 0 0 1 180 90" 
                     fill="none" 
                     stroke="#e5e5e5" 
                     strokeWidth="20" 
                     strokeLinecap="round" 
                   />
                   <path 
-                    d="M 20 90 A 70 70 0 0 1 180 90" 
+                    d="M 20 90 A 80 80 0 0 1 180 90" 
                     fill="none" 
                     stroke={checklist.fuelLevel < 20 ? '#ef4444' : checklist.fuelLevel < 40 ? '#f59e0b' : '#22c55e'} 
                     strokeWidth="20" 
                     strokeLinecap="round" 
-                    strokeDasharray="219.91" 
-                    strokeDashoffset={219.91 - (219.91 * (checklist.fuelLevel / 100))}
+                    strokeDasharray="251.32" 
+                    strokeDashoffset={251.32 - (251.32 * (checklist.fuelLevel / 100))}
                     className="transition-all duration-500 ease-out"
                   />
                   

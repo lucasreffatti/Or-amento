@@ -1,6 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { DeleteButton } from '@/components/DeleteButton'
+import { deleteChecklist } from '@/app/actions/delete'
 
 export function ChecklistRow({ checklist }: { checklist: any }) {
   const router = useRouter()
@@ -26,7 +28,15 @@ export function ChecklistRow({ checklist }: { checklist: any }) {
         </div>
       </td>
       <td className="px-5 py-3.5 text-neutral-400 font-mono text-[11px] text-right">
-        {new Date(checklist.createdAt).toLocaleDateString('pt-BR')}
+        <div className="flex items-center justify-end gap-2">
+          <span>{new Date(checklist.createdAt).toLocaleDateString('pt-BR')}</span>
+          <DeleteButton 
+            id={checklist.id}
+            action={deleteChecklist}
+            entityName="esta vistoria"
+            className="opacity-0 group-hover:opacity-100 inline-flex"
+          />
+        </div>
       </td>
     </tr>
   )
