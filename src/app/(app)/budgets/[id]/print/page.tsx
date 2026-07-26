@@ -29,15 +29,43 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
   const parts = budget.items.filter(i => i.type === 'PART')
   const labor = budget.items.filter(i => i.type === 'LABOR')
 
+  const isExpired = new Date(budget.validUntil) < new Date() && budget.status !== 'APPROVED';
+  const showGiantStamp = budget.status === 'REJECTED' || isExpired || budget.status === 'DRAFT' || budget.status === 'SENT';
+
+  let stampText = '';
+  let stampColor = '';
+  
+  if (budget.status === 'REJECTED') {
+    stampText = 'RECUSADO';
+    stampColor = 'border-red-600 text-red-600';
+  } else if (isExpired) {
+    stampText = 'VENCIDO';
+    stampColor = 'border-amber-600 text-amber-600';
+  } else if (budget.status === 'DRAFT' || budget.status === 'SENT') {
+    stampText = 'PENDENTE';
+    stampColor = 'border-blue-600 text-blue-600';
+  }
+
   return (
     <div className="bg-white text-black min-h-screen font-sans p-8 print:p-0 text-sm relative">
       <AutoPrint />
       
       {/* Container A4 format */}
-      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 relative">
+      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 relative overflow-hidden">
+        
+        {/* GIANT STAMP */}
+        {showGiantStamp && (
+          <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.15]">
+            <div className={`border-[12px] ${stampColor} rounded-3xl p-8`} style={{ transform: 'rotate(-30deg)' }}>
+              <h2 className={`font-black text-[120px] uppercase tracking-[0.2em] leading-none ${stampColor}`}>
+                {stampText}
+              </h2>
+            </div>
+          </div>
+        )}
         
         {/* CABEÇALHO DO DOCUMENTO */}
-        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4">
+        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4 relative z-10">
           <div className="flex-1">
             <h1 className="text-2xl font-bold uppercase tracking-tight">{budget.tenant.name}</h1>
             <div className="text-xs mt-1 space-y-0.5 text-black">
