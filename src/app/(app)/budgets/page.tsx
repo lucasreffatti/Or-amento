@@ -1,18 +1,42 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
-import { Plus, FileText, Search, Sparkles } from 'lucide-react'
+import { Plus, FileText, Search, Clock, CheckCircle2, XCircle, Send } from 'lucide-react'
 
-export default async function BudgetsPage() {
+export default async function BudgetsPage(props: { searchParams: Promise<{ status?: string }> }) {
+  const searchParams = await props.searchParams
   const session = await getSession()
+  
+  const statusFilter = searchParams.status
+
+  const whereClause: any = { tenantId: session.tenantId }
+  
+  if (statusFilter === 'EXPIRED') {
+    whereClause.validUntil = { lt: new Date() }
+    whereClause.status = { not: 'APPROVED' }
+  } else if (statusFilter) {
+    whereClause.status = statusFilter
+    // Se não for 'Vencidos', não mostrar os vencidos a menos que seja aprovado? 
+    // Para simplificar, o filtro direto de status já funciona.
+  }
+
   const budgets = await prisma.budget.findMany({
-    where: { tenantId: session.tenantId },
+    where: whereClause,
     include: { customer: true, vehicle: true },
     orderBy: { createdAt: 'desc' }
   })
 
+  const tabs = [
+    { label: 'Todos', value: '', icon: null },
+    { label: 'Rascunhos', value: 'DRAFT', icon: <FileText className="w-3.5 h-3.5" /> },
+    { label: 'Enviados', value: 'SENT', icon: <Send className="w-3.5 h-3.5" /> },
+    { label: 'Aprovados', value: 'APPROVED', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+    { label: 'Recusados', value: 'REJECTED', icon: <XCircle className="w-3.5 h-3.5" /> },
+    { label: 'Vencidos', value: 'EXPIRED', icon: <Clock className="w-3.5 h-3.5" /> },
+  ]
+
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 pb-12">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-neutral-200/60">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -41,6 +65,27 @@ export default async function BudgetsPage() {
         </div>
       </header>
 
+      {/* Tabs */}
+      <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide border-b border-neutral-200/60">
+        {tabs.map(tab => {
+          const isActive = (statusFilter || '') === tab.value
+          return (
+            <Link 
+              key={tab.label}
+              href={`/budgets${tab.value ? `?status=${tab.value}` : ''}`}
+              className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-t-lg transition-colors border-b-2 ${
+                isActive 
+                  ? 'border-neutral-900 text-neutral-900 bg-neutral-50/50' 
+                  : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50/50'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </Link>
+          )
+        })}
+      </div>
+
       <div className="border border-neutral-200/80 bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
         {budgets.length === 0 ? (
           <div className="p-16 flex flex-col items-center justify-center text-center bg-neutral-50/30">
@@ -49,14 +94,8 @@ export default async function BudgetsPage() {
             </div>
             <h3 className="text-[14px] font-semibold text-neutral-900">Nenhum orçamento</h3>
             <p className="text-[13px] text-neutral-500 mt-1.5 max-w-sm leading-relaxed">
-              Nenhum orçamento foi gerado ainda. Crie um novo orçamento associando um cliente e um veículo.
+              {statusFilter ? 'Nenhum orçamento encontrado com este status.' : 'Nenhum orçamento foi gerado ainda.'}
             </p>
-            <Link 
-              href="/budgets/new" 
-              className="mt-6 bg-white border border-neutral-200 text-neutral-900 px-5 py-2.5 text-[13px] font-medium rounded-lg hover:bg-neutral-50 hover:border-neutral-300 transition-all shadow-sm flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4 text-neutral-400" /> Criar Orçamento
-            </Link>
           </div>
         ) : (
           <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
@@ -70,37 +109,48 @@ export default async function BudgetsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 bg-white">
-              {budgets.map((b) => (
-                <tr key={b.id} className="hover:bg-neutral-50/80 transition-colors group">
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-mono font-medium shadow-sm ${
-                      b.status === 'DRAFT' ? 'bg-neutral-50 text-neutral-600 border border-neutral-200/80' :
-                      b.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' :
-                      'bg-amber-50 text-amber-700 border border-amber-200/80'
-                    }`}>
-                      {b.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-neutral-900 text-[13px]">{b.customer.name}</div>
-                    <div className="text-[12px] text-neutral-500 mt-0.5">{b.vehicle.plate} • {b.vehicle.brand}</div>
-                  </td>
-                  <td className="px-6 py-4 font-mono font-medium text-neutral-900 text-[13px]">
-                    R$ {b.finalTotal.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 text-neutral-400 font-mono text-[12px] text-right">
-                    {new Date(b.validUntil).toLocaleDateString('pt-BR')}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <Link 
-                      href={`/budgets/${b.id}`} 
-                      className="text-[13px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
-                    >
-                      Abrir
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {budgets.map((b) => {
+                const isExpired = new Date(b.validUntil) < new Date() && b.status !== 'APPROVED';
+                const displayStatus = isExpired ? 'VENCIDO' : b.status;
+                
+                return (
+                  <tr key={b.id} className="hover:bg-neutral-50/80 transition-colors group">
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-mono font-medium shadow-sm ${
+                        displayStatus === 'DRAFT' ? 'bg-neutral-50 text-neutral-600 border border-neutral-200/80' :
+                        displayStatus === 'SENT' ? 'bg-blue-50 text-blue-700 border border-blue-200/80' :
+                        displayStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' :
+                        displayStatus === 'REJECTED' ? 'bg-red-50 text-red-700 border border-red-200/80' :
+                        'bg-amber-50 text-amber-700 border border-amber-200/80' // Vencido
+                      }`}>
+                        {displayStatus === 'DRAFT' ? 'RASCUNHO' : 
+                         displayStatus === 'SENT' ? 'ENVIADO' : 
+                         displayStatus === 'APPROVED' ? 'APROVADO' : 
+                         displayStatus === 'REJECTED' ? 'RECUSADO' : 
+                         'VENCIDO'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-neutral-900 text-[13px]">{b.customer.name}</div>
+                      <div className="text-[12px] text-neutral-500 mt-0.5">{b.vehicle.plate} • {b.vehicle.brand}</div>
+                    </td>
+                    <td className="px-6 py-4 font-mono font-medium text-neutral-900 text-[13px]">
+                      R$ {b.finalTotal.toFixed(2)}
+                    </td>
+                    <td className={`px-6 py-4 font-mono text-[12px] text-right ${isExpired ? 'text-amber-600 font-semibold' : 'text-neutral-400'}`}>
+                      {new Date(b.validUntil).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link 
+                        href={`/budgets/${b.id}`} 
+                        className="text-[13px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+                      >
+                        Abrir
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
@@ -108,3 +158,4 @@ export default async function BudgetsPage() {
     </div>
   )
 }
+

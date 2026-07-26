@@ -38,7 +38,7 @@ export default async function Dashboard() {
             </span>
           </div>
           <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight">Visão Geral</h1>
-          <p className="text-[13px] text-neutral-500 mt-1">Bem-vindo à OficinaSaaS. Aqui está o resumo operacional em tempo real.</p>
+          <p className="text-[13px] text-neutral-500 mt-1">Bem-vindo à Auto Elétrica Sérgio Car. Aqui está o resumo operacional em tempo real.</p>
         </div>
         <div className="font-mono text-[11px] font-medium bg-white border border-neutral-200 px-3 py-2 rounded-md text-neutral-600 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex items-center gap-2">
           <span className="relative flex h-2 w-2">

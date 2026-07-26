@@ -22,7 +22,7 @@ export default function Sidebar() {
           <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.15)]">
             <Command className="w-4 h-4 text-black" strokeWidth={2.5} />
           </div>
-          <span className="text-[14px] font-semibold tracking-tight text-white">OficinaSaaS</span>
+          <span className="text-[14px] font-semibold tracking-tight text-white">Sérgio Car</span>
         </Link>
         <span className="font-mono text-[9px] bg-neutral-800 text-neutral-400 px-1.5 py-0.5 rounded uppercase tracking-widest border border-neutral-700">
           PRO

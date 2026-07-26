@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"], variable: '--font-sans' });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  title: "Oficina SaaS B2B",
+  title: "Auto Elétrica Sérgio Car",
   description: "Plataforma de Gestão Multi-Tenant",
 };
 

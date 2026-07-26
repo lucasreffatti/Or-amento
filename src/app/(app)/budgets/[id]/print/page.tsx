@@ -30,20 +30,20 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
   const labor = budget.items.filter(i => i.type === 'LABOR')
 
   return (
-    <div className="bg-white text-black min-h-screen font-sans p-8 print:p-0 text-sm">
+    <div className="bg-white text-black min-h-screen font-sans p-8 print:p-0 text-sm relative">
       <AutoPrint />
       
       {/* Container A4 format */}
-      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0">
+      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 relative">
         
         {/* CABEÇALHO DO DOCUMENTO */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold uppercase tracking-tight">{budget.tenant.name}</h1>
+            <h1 className="text-2xl font-bold uppercase tracking-tight">Auto Elétrica Sérgio Car</h1>
             <div className="text-xs mt-1 space-y-0.5 text-black">
-              <p>CNPJ: 00.000.000/0001-00 (Exemplo)</p>
-              <p>Endereço: Rua Fictícia, 123 - Centro, Cidade/UF</p>
-              <p>Telefone: (00) 00000-0000</p>
+              <p>CNPJ: 22.980.022/0001-06</p>
+              <p>Endereço: Santa Catarina Palhoça, nº 4198 - CEP 88131-400</p>
+              {/* <p>Telefone: (00) 00000-0000</p> */}
             </div>
           </div>
           <div className="w-[300px] border border-black p-3 text-center bg-gray-50">
@@ -189,10 +189,26 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         </div>
 
         {/* ASSINATURAS */}
-        <div className="grid grid-cols-2 gap-16 mt-8 pt-8">
-          <div className="text-center text-xs">
+        <div className="grid grid-cols-2 gap-16 mt-8 pt-8 relative">
+          
+          {/* CARIMBO AUTOMÁTICO SE APROVADO */}
+          {budget.status === 'APPROVED' && (
+            <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none opacity-80" style={{ transform: 'translate(-50%, -50%) rotate(-15deg)' }}>
+              <div className="border-4 border-red-600 rounded-lg p-2 text-red-600 inline-block bg-white/60 backdrop-blur-[1px]">
+                <div className="border-2 border-red-600 rounded p-4 text-center">
+                  <h3 className="font-black text-2xl uppercase tracking-widest leading-none mb-1">Aprovado</h3>
+                  <p className="font-bold text-[10px] uppercase tracking-wider">Auto Elétrica Sérgio Car</p>
+                  <p className="font-mono text-[10px] font-bold mt-1 border-t border-red-600 pt-1">
+                    {new Date(budget.updatedAt).toLocaleDateString('pt-BR')} {new Date(budget.updatedAt).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="text-center text-xs relative">
             <div className="border-b border-black mb-1 w-full"></div>
-            <p className="font-bold uppercase">{budget.tenant.name}</p>
+            <p className="font-bold uppercase">Auto Elétrica Sérgio Car</p>
             <p className="text-gray-600">Assinatura da Oficina / Técnico Responsável</p>
             <p className="text-gray-400 mt-2">___/___/______</p>
           </div>
