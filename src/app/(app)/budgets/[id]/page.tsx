@@ -175,24 +175,24 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
 
       <div className="relative mt-4">
         {/* WATERMARK STAMPS */}
-        <div className="pointer-events-none absolute inset-0 flex items-start justify-center overflow-hidden z-50 pt-48 select-none">
+        <div className="pointer-events-none absolute inset-0 flex items-start justify-center overflow-hidden z-10 pt-48 select-none">
           {displayStatus === 'REJECTED' && (
-            <div className="transform -rotate-12 border-[10px] border-red-600/20 text-red-600/20 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest backdrop-blur-[1px]">
+            <div className="transform -rotate-12 border-[10px] border-red-600/10 text-red-600/10 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
               RECUSADO
             </div>
           )}
           {displayStatus === 'EXPIRED' && (
-            <div className="transform -rotate-12 border-[10px] border-amber-600/20 text-amber-600/20 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest backdrop-blur-[1px]">
+            <div className="transform -rotate-12 border-[10px] border-amber-600/10 text-amber-600/10 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
               VENCIDO
             </div>
           )}
           {(displayStatus === 'DRAFT' || displayStatus === 'SENT') && (
-            <div className="transform -rotate-12 border-[10px] border-neutral-500/10 text-neutral-500/10 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest backdrop-blur-[1px]">
+            <div className="transform -rotate-12 border-[10px] border-neutral-500/5 text-neutral-500/5 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
               PENDENTE
             </div>
           )}
           {displayStatus === 'APPROVED' && (
-            <div className="transform -rotate-12 border-[10px] border-emerald-600/10 text-emerald-600/10 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest backdrop-blur-[1px]">
+            <div className="transform -rotate-12 border-[10px] border-emerald-600/5 text-emerald-600/5 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
               APROVADO
             </div>
           )}
