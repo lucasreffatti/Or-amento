@@ -39,11 +39,11 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         {/* CABEÇALHO DO DOCUMENTO */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold uppercase tracking-tight">Auto Elétrica Sérgio Car</h1>
+            <h1 className="text-2xl font-bold uppercase tracking-tight">{budget.tenant.name}</h1>
             <div className="text-xs mt-1 space-y-0.5 text-black">
-              <p>CNPJ: 22.980.022/0001-06</p>
-              <p>Endereço: Santa Catarina Palhoça, nº 4198 - CEP 88131-400</p>
-              {/* <p>Telefone: (00) 00000-0000</p> */}
+              {budget.tenant.document && <p>CNPJ: {budget.tenant.document}</p>}
+              {budget.tenant.address && <p>Endereço: {budget.tenant.address}</p>}
+              {budget.tenant.phone && <p>Telefone: {budget.tenant.phone}</p>}
             </div>
           </div>
           <div className="w-[300px] border border-black p-3 text-center bg-gray-50">
@@ -197,7 +197,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
               <div className="border-4 border-red-600 rounded-lg p-2 text-red-600 inline-block bg-white/60 backdrop-blur-[1px]">
                 <div className="border-2 border-red-600 rounded p-4 text-center">
                   <h3 className="font-black text-2xl uppercase tracking-widest leading-none mb-1">Aprovado</h3>
-                  <p className="font-bold text-[10px] uppercase tracking-wider">Auto Elétrica Sérgio Car</p>
+                  <p className="font-bold text-[10px] uppercase tracking-wider">{budget.tenant.name}</p>
                   <p className="font-mono text-[10px] font-bold mt-1 border-t border-red-600 pt-1">
                     {new Date(budget.updatedAt).toLocaleDateString('pt-BR')} {new Date(budget.updatedAt).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
                   </p>
@@ -208,7 +208,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
 
           <div className="text-center text-xs relative">
             <div className="border-b border-black mb-1 w-full"></div>
-            <p className="font-bold uppercase">Auto Elétrica Sérgio Car</p>
+            <p className="font-bold uppercase">{budget.tenant.name}</p>
             <p className="text-gray-600">Assinatura da Oficina / Técnico Responsável</p>
             <p className="text-gray-400 mt-2">___/___/______</p>
           </div>

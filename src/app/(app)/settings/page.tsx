@@ -45,34 +45,36 @@ export default async function SettingsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[12px] font-medium text-neutral-700">CNPJ (Fixo no código)</label>
+                <label className="text-[12px] font-medium text-neutral-700">CNPJ</label>
                 <input 
                   type="text" 
-                  disabled
-                  value="22.980.022/0001-06"
-                  className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-500 outline-none cursor-not-allowed font-mono"
+                  name="document"
+                  defaultValue={tenant.document || ''}
+                  placeholder="00.000.000/0001-00"
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all font-mono"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[12px] font-medium text-neutral-700">Telefone (Contato Oficial)</label>
+                <label className="text-[12px] font-medium text-neutral-700">Telefone</label>
                 <input 
                   type="text" 
-                  disabled
-                  placeholder="(48) 99999-9999"
-                  className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-500 outline-none cursor-not-allowed font-mono"
+                  name="phone"
+                  defaultValue={tenant.phone || ''}
+                  placeholder="(00) 00000-0000"
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all font-mono"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[12px] font-medium text-neutral-700">Endereço Fiscal (Fixo no código)</label>
+              <label className="text-[12px] font-medium text-neutral-700">Endereço</label>
               <input 
                 type="text" 
-                disabled
-                value="Santa Catarina Palhoça, nº 4198 - CEP 88131-400"
-                className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-500 outline-none cursor-not-allowed"
+                name="address"
+                defaultValue={tenant.address || ''}
+                placeholder="Ex: Rua Fictícia, 123 - Centro, Cidade/UF"
+                className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all"
               />
-              <p className="text-[11px] text-neutral-400 mt-1">Alguns dados estão hardcoded na impressão por segurança no MVP. Desenvolvedor tem acesso total ao código.</p>
             </div>
 
             <div className="pt-4 border-t border-neutral-100 flex justify-end">
