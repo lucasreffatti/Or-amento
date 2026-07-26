@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  customers  Customer[]
+  vehicles   Vehicle[]
+  checklists Checklist[]
+  budgets    Budget[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  email     String   @unique
+  name      String?
+  password  String   @default("") // Para MVP mockado
+  role      String   @default("USER") // ADMIN, USER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  phone     String   
+  email     String?
+  document  String?  
+  createdAt DateTime @default(now())
+  
+  vehicles   Vehicle[]
+  budgets    Budget[]
+  checklists Checklist[]
+}
+
+model Vehicle {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  plate      String   @unique 
+  brand      String      
+  model      String
+  year       Int
+  engineType String   // GASOLINE, DIESEL, FLEX, HYBRID
+  mileage    Int?
+  
+  checklists Checklist[]
+  budgets    Budget[]
+}
+
+model Checklist {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  vehicleId     String
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  
+  fuelLevel     Int      
+  reportedIssue String   
+  obd2Codes     String?  
+  
+  itemsStatus   String   // JSON convertido para String para SQLite
+  imagesUrls    String   @default("[]") // Lista convertida para String JSON
+  
+  customerSignature String? 
+  createdAt     DateTime @default(now())
+}
+
+model Budget {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  vehicleId     String
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  
+  status        String   @default("DRAFT") // DRAFT, SENT, PARTIALLY_APPROVED, APPROVED, REJECTED
+  validUntil    DateTime
+  totalLabor    Float    @default(0)
+  totalParts    Float    @default(0)
+  discount      Float    @default(0)
+  finalTotal    Float    @default(0)
+  
+  externalLink  String?  @unique 
+  
+  items         BudgetItem[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model BudgetItem {
+  id            String   @id @default(cuid())
+  budgetId      String
+  budget        Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  
+  type          String   // "PART" ou "LABOR"
+  description   String   
+  quantity      Int      @default(1)
+  unitCost      Float    
+  unitPrice     Float    
+  approved      Boolean  @default(true) 
+}

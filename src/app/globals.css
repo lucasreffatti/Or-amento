@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-[#FAFAFA] text-neutral-900 antialiased selection:bg-neutral-900 selection:text-white;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
