@@ -33,6 +33,22 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
     <div className="bg-white min-h-screen text-black font-sans print:p-0 p-8 flex justify-center">
       <div className="w-[210mm] min-h-[297mm] bg-white print:shadow-none shadow-xl border border-neutral-200 print:border-none p-10 relative">
         
+        {/* CARIMBOS (WATERMARK) */}
+        {checklist.status === 'APROVADO' && (
+          <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center overflow-hidden mix-blend-multiply opacity-20 print:opacity-30">
+            <div className="transform -rotate-12 border-[12px] border-emerald-500 text-emerald-500 text-[140px] font-black uppercase tracking-tighter p-10 rounded-3xl select-none">
+              Aprovado
+            </div>
+          </div>
+        )}
+        {checklist.status === 'RECUSADO' && (
+          <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center overflow-hidden mix-blend-multiply opacity-20 print:opacity-30">
+            <div className="transform -rotate-12 border-[12px] border-red-500 text-red-500 text-[140px] font-black uppercase tracking-tighter p-10 rounded-3xl select-none">
+              Recusado
+            </div>
+          </div>
+        )}
+
         {/* CABEÇALHO DA OFICINA */}
         <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
           <div className="flex items-center gap-4">
