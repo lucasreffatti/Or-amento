@@ -29,7 +29,7 @@ export default async function PublicBudgetPage(props: { params: Promise<{ id: st
     <div className="bg-gray-100 text-black min-h-screen font-sans py-8 px-4 sm:p-8 text-sm flex justify-center">
       
       {/* Container A4 format */}
-      <div className="max-w-[210mm] w-full bg-white shadow-xl p-8 sm:p-12">
+      <div className="max-w-[210mm] w-full bg-white dark:bg-neutral-900 shadow-xl p-8 sm:p-12">
         
         {/* CABEÇALHO DO DOCUMENTO */}
         <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-black pb-4 mb-4 gap-4">
@@ -79,7 +79,7 @@ export default async function PublicBudgetPage(props: { params: Promise<{ id: st
               <tr className="bg-gray-100 border-b border-black text-left">
                 <th colSpan={4} className="p-1.5 uppercase tracking-wider border-black">1. Discriminação da Mão de Obra (Serviços)</th>
               </tr>
-              <tr className="border-b border-black bg-white">
+              <tr className="border-b border-black bg-white dark:bg-neutral-900">
                 <th className="p-1.5 border-r border-black w-auto">Descrição do Serviço</th>
                 <th className="p-1.5 border-r border-black w-16 text-center">Qtd</th>
                 <th className="p-1.5 border-r border-black w-28 text-right">V. Unitário (R$)</th>
@@ -118,7 +118,7 @@ export default async function PublicBudgetPage(props: { params: Promise<{ id: st
               <tr className="bg-gray-100 border-b border-black text-left">
                 <th colSpan={4} className="p-1.5 uppercase tracking-wider border-black">2. Discriminação dos Materiais e Peças</th>
               </tr>
-              <tr className="border-b border-black bg-white">
+              <tr className="border-b border-black bg-white dark:bg-neutral-900">
                 <th className="p-1.5 border-r border-black w-auto">Descrição da Peça</th>
                 <th className="p-1.5 border-r border-black w-16 text-center">Qtd</th>
                 <th className="p-1.5 border-r border-black w-28 text-right">V. Unitário (R$)</th>

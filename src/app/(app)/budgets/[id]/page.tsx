@@ -40,17 +40,17 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300 max-w-5xl mx-auto pb-24">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200/60">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800/60">
         <div className="flex items-center gap-4">
           <Link 
             href="/budgets" 
-            className="w-8 h-8 flex items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm hover:bg-neutral-50 transition-colors text-neutral-600"
+            className="w-8 h-8 flex items-center justify-center rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm hover:bg-neutral-50 dark:bg-neutral-950/50 transition-colors text-neutral-600 dark:text-neutral-400"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-lg font-semibold text-neutral-900 tracking-tight flex items-center gap-2">
-              Orçamento <span className="text-neutral-400 font-mono text-[15px]">#{budget.id.substring(0,6).toUpperCase()}</span>
+            <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center gap-2">
+              Orçamento <span className="text-neutral-400 dark:text-neutral-500 font-mono text-[15px]">#{budget.id.substring(0,6).toUpperCase()}</span>
               {displayStatus === 'APPROVED' && (
                 <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 ml-2">
                   <CheckCircle2 className="w-3 h-3" /> Aprovado
@@ -67,17 +67,17 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
                 </span>
               )}
             </h1>
-            <p className="text-[13px] text-neutral-500 mt-0.5">
+            <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-0.5">
               {budget.serviceType === 'INTERNAL' ? 'Na Oficina' : 'Balcão'} • {budget.customer.name} - {budget.vehicle.plate} ({budget.vehicle.model})
             </p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
           {displayStatus === 'DRAFT' && (
             <>
               <form action={markAsSent}>
-                <button type="submit" className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1.5">
+                <button type="submit" className="bg-blue-600 text-white dark:text-neutral-900 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1.5">
                   <Send className="w-4 h-4" /> Enviar
                 </button>
               </form>
@@ -87,18 +87,18 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
           {displayStatus === 'SENT' && (
             <>
               {budget.serviceType === 'INTERNAL' && !budget.checklistId ? (
-                <div className="bg-white border border-neutral-200 text-neutral-400 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm flex items-center gap-1.5 cursor-not-allowed">
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-400 dark:text-neutral-500 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm flex items-center gap-1.5 cursor-not-allowed">
                   <CheckCircle2 className="w-4 h-4" /> Aprovar (Requer Vistoria)
                 </div>
               ) : (
                 <form action={approve}>
-                  <button type="submit" className="bg-emerald-600 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-emerald-700 transition-colors flex items-center gap-1.5">
+                  <button type="submit" className="bg-emerald-600 text-white dark:text-neutral-900 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-emerald-700 transition-colors flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4" /> Aprovar
                   </button>
                 </form>
               )}
               <form action={reject}>
-                <button type="submit" className="bg-white border border-red-200 text-red-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-red-50 transition-colors flex items-center gap-1.5">
+                <button type="submit" className="bg-white dark:bg-neutral-900 border border-red-200 text-red-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-red-50 transition-colors flex items-center gap-1.5">
                   <XCircle className="w-4 h-4" /> Recusar
                 </button>
               </form>
@@ -107,13 +107,13 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
 
           {(displayStatus === 'APPROVED' || displayStatus === 'REJECTED' || displayStatus === 'EXPIRED') && (
             <form action={backToDraft}>
-              <button type="submit" className="bg-white border border-neutral-200 text-neutral-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-50 transition-colors">
+              <button type="submit" className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-50 dark:bg-neutral-950/50 transition-colors">
                 Reabrir
               </button>
             </form>
           )}
 
-          <Link href={`/budgets/${budget.id}/edit`} className="bg-white border border-neutral-200 text-neutral-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-50 transition-colors flex items-center gap-1.5">
+          <Link href={`/budgets/${budget.id}/edit`} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-50 dark:bg-neutral-950/50 transition-colors flex items-center gap-1.5">
             <Edit className="w-4 h-4" /> Editar Info
           </Link>
 
@@ -121,10 +121,10 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
             id={budget.id} 
             action={deleteBudget} 
             entityName="este orçamento" 
-            className="px-3 py-1.5 bg-white border border-neutral-200 shadow-sm"
+            className="px-3 py-1.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm"
           />
 
-          <Link href={`/print/budgets/${budget.id}`} target="_blank" className="bg-neutral-900 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-800 transition-colors flex items-center gap-1.5 ml-2">
+          <Link href={`/print/budgets/${budget.id}`} target="_blank" className="bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-800 transition-colors flex items-center gap-1.5 ml-2">
             <ExternalLink className="w-4 h-4" /> Imprimir
           </Link>
         </div>
@@ -154,7 +154,7 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
           </div>
           <Link 
             href={`/checklists/new?budgetId=${budget.id}&vehicleId=${budget.vehicleId}&customerId=${budget.customerId}`} 
-            className="bg-amber-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-amber-700 transition-colors shadow-sm shrink-0 flex items-center justify-center"
+            className="bg-amber-600 text-white dark:text-neutral-900 px-4 py-2 rounded-md text-sm font-medium hover:bg-amber-700 transition-colors shadow-sm shrink-0 flex items-center justify-center"
           >
             Realizar Vistoria
           </Link>
@@ -167,7 +167,7 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
           <div className="flex-1">
             <span className="text-[13px] font-medium">Vistoria de entrada registrada com sucesso.</span>
           </div>
-          <Link href={`/checklists/${budget.checklistId}`} className="text-[12px] bg-white border border-indigo-100 text-indigo-600 px-3 py-1 rounded hover:bg-indigo-50 transition-colors font-medium shadow-sm">
+          <Link href={`/checklists/${budget.checklistId}`} className="text-[12px] bg-white dark:bg-neutral-900 border border-indigo-100 text-indigo-600 px-3 py-1 rounded hover:bg-indigo-50 transition-colors font-medium shadow-sm">
             Ver Documento
           </Link>
         </div>
@@ -187,7 +187,7 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
             </div>
           )}
           {(displayStatus === 'DRAFT' || displayStatus === 'SENT') && (
-            <div className="transform -rotate-12 border-[10px] border-neutral-500/5 text-neutral-500/5 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
+            <div className="transform -rotate-12 border-[10px] border-neutral-500/5 text-neutral-500 dark:text-neutral-400/5 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
               PENDENTE
             </div>
           )}

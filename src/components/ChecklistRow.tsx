@@ -10,11 +10,11 @@ export function ChecklistRow({ checklist }: { checklist: any }) {
   return (
     <tr 
       onClick={() => router.push(`/checklists/${checklist.id}`)}
-      className="hover:bg-neutral-50/80 transition-colors group cursor-pointer"
+      className="hover:bg-neutral-50 dark:bg-neutral-950/50/80 transition-colors group cursor-pointer"
     >
-      <td className="px-5 py-3.5 font-mono text-neutral-500 text-xs">#{checklist.id.substring(0,6)}</td>
-      <td className="px-5 py-3.5 text-neutral-900 font-medium">
-        {checklist.vehicle.plate} <span className="text-neutral-400 text-xs font-normal">({checklist.vehicle.model})</span>
+      <td className="px-5 py-3.5 font-mono text-neutral-500 dark:text-neutral-400 text-xs">#{checklist.id.substring(0,6)}</td>
+      <td className="px-5 py-3.5 text-neutral-900 dark:text-neutral-50 font-medium">
+        {checklist.vehicle.plate} <span className="text-neutral-400 dark:text-neutral-500 text-xs font-normal">({checklist.vehicle.model})</span>
       </td>
       <td className="px-5 py-3.5">
         <div className="flex items-center gap-2">
@@ -24,10 +24,10 @@ export function ChecklistRow({ checklist }: { checklist: any }) {
               style={{ width: `${checklist.fuelLevel}%` }}
             />
           </div>
-          <span className="text-[11px] font-mono text-neutral-500">{checklist.fuelLevel}%</span>
+          <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">{checklist.fuelLevel}%</span>
         </div>
       </td>
-      <td className="px-5 py-3.5 text-neutral-400 font-mono text-[11px] text-right">
+      <td className="px-5 py-3.5 text-neutral-400 dark:text-neutral-500 font-mono text-[11px] text-right">
         <div className="flex items-center justify-end gap-2">
           <span>{new Date(checklist.createdAt).toLocaleDateString('pt-BR')}</span>
           <DeleteButton 

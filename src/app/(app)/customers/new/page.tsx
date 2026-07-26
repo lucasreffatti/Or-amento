@@ -32,10 +32,10 @@ export default async function NewCustomerPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 max-w-3xl mx-auto pb-12">
-      <header className="flex items-center gap-4 pb-6 border-b border-neutral-200/60">
+      <header className="flex items-center gap-4 pb-6 border-b border-neutral-200 dark:border-neutral-800/60">
         <Link 
           href="/customers" 
-          className="w-8 h-8 flex items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm hover:bg-neutral-50 transition-colors text-neutral-600"
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm hover:bg-neutral-50 dark:bg-neutral-950/50 transition-colors text-neutral-600 dark:text-neutral-400"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
@@ -45,81 +45,81 @@ export default async function NewCustomerPage() {
               <User className="w-3 h-3" /> Cadastro
             </span>
           </div>
-          <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight">Novo Cliente</h1>
-          <p className="text-[13px] text-neutral-500 mt-1">Adicione um novo cliente à base de dados.</p>
+          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight">Novo Cliente</h1>
+          <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-1">Adicione um novo cliente à base de dados.</p>
         </div>
       </header>
 
-      <div className="bg-white border border-neutral-200/80 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-4 md:p-8">
-        <div className="flex items-center gap-4 mb-8 pb-6 border-b border-neutral-100">
-          <div className="w-12 h-12 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-center shadow-sm">
-            <User className="w-5 h-5 text-neutral-400" />
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800/80 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-4 md:p-8">
+        <div className="flex items-center gap-4 mb-8 pb-6 border-b border-neutral-100 dark:border-neutral-800/50">
+          <div className="w-12 h-12 bg-neutral-50 dark:bg-neutral-950/50 rounded-xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-center shadow-sm">
+            <User className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />
           </div>
           <div>
-            <h2 className="text-[14px] font-semibold text-neutral-900">Informações Pessoais</h2>
-            <p className="text-[13px] text-neutral-500 mt-0.5">Dados de contato e identificação</p>
+            <h2 className="text-[14px] font-semibold text-neutral-900 dark:text-neutral-50">Informações Pessoais</h2>
+            <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-0.5">Dados de contato e identificação</p>
           </div>
         </div>
 
         <form action={createCustomer} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Nome Completo *</label>
+              <label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">Nome Completo *</label>
               <input 
                 type="text" 
                 id="name" 
                 name="name" 
                 required
                 placeholder="Ex: João Silva"
-                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400"
+                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 dark:border-neutral-800 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400 dark:text-neutral-500"
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="document" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">CPF/CNPJ</label>
+              <label htmlFor="document" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">CPF/CNPJ</label>
               <input 
                 type="text" 
                 id="document" 
                 name="document" 
                 placeholder="000.000.000-00"
-                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400 font-mono"
+                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 dark:border-neutral-800 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400 dark:text-neutral-500 font-mono"
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="phone" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Telefone *</label>
+              <label htmlFor="phone" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">Telefone *</label>
               <input 
                 type="text" 
                 id="phone" 
                 name="phone" 
                 required
                 placeholder="(00) 00000-0000"
-                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400 font-mono"
+                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 dark:border-neutral-800 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400 dark:text-neutral-500 font-mono"
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">E-mail</label>
+              <label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">E-mail</label>
               <input 
                 type="email" 
                 id="email" 
                 name="email" 
                 placeholder="joao@exemplo.com"
-                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400"
+                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 dark:border-neutral-800 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400 dark:text-neutral-500"
               />
             </div>
           </div>
 
-          <div className="pt-8 mt-8 border-t border-neutral-100 flex justify-end gap-3">
+          <div className="pt-8 mt-8 border-t border-neutral-100 dark:border-neutral-800/50 flex justify-end gap-3">
             <Link 
               href="/customers" 
-              className="px-5 py-2.5 text-[13px] font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 hover:border-neutral-300 transition-all shadow-sm"
+              className="px-5 py-2.5 text-[13px] font-medium text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:bg-neutral-950/50 hover:border-neutral-300 transition-all shadow-sm"
             >
               Cancelar
             </Link>
             <button 
               type="submit"
-              className="px-5 py-2.5 text-[13px] font-medium text-white bg-neutral-900 rounded-lg hover:bg-neutral-800 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
+              className="px-5 py-2.5 text-[13px] font-medium text-white dark:text-neutral-900 bg-neutral-900 dark:bg-neutral-50 rounded-lg hover:bg-neutral-800 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
             >
               Salvar Cliente
             </button>

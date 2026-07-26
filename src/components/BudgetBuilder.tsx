@@ -75,33 +75,33 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
       <div className="lg:col-span-2 space-y-6">
         
         {/* Tabela de Mão de Obra */}
-        <section className="bg-white border border-neutral-200/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-neutral-100 bg-neutral-50/50 flex justify-between items-center">
-            <h2 className="text-[13px] font-semibold text-neutral-900 tracking-tight">Mão de Obra (Serviços)</h2>
-            <span className="text-[11px] font-medium text-neutral-500 font-mono bg-neutral-100/80 px-2 py-0.5 rounded-sm">R$ {totalLabor.toFixed(2)}</span>
+        <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50 dark:bg-neutral-950/50/50 flex justify-between items-center">
+            <h2 className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight">Mão de Obra (Serviços)</h2>
+            <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 font-mono bg-neutral-100/80 px-2 py-0.5 rounded-sm">R$ {totalLabor.toFixed(2)}</span>
           </div>
           
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
-              <thead className="bg-white">
+              <thead className="bg-white dark:bg-neutral-900">
                 <tr>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider whitespace-nowrap">Descrição</th>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-20 text-right whitespace-nowrap">Qtd</th>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Preço Unit.</th>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Total</th>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-16 text-right whitespace-nowrap"></th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider whitespace-nowrap">Descrição</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider w-20 text-right whitespace-nowrap">Qtd</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Preço Unit.</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Total</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider w-16 text-right whitespace-nowrap"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-50 bg-white">
+              <tbody className="divide-y divide-neutral-50 bg-white dark:bg-neutral-900">
                 {labor.length === 0 ? (
-                  <tr><td colSpan={5} className="px-5 py-8 text-center text-xs text-neutral-400 italic">Nenhum serviço adicionado.</td></tr>
+                  <tr><td colSpan={5} className="px-5 py-8 text-center text-xs text-neutral-400 dark:text-neutral-500 italic">Nenhum serviço adicionado.</td></tr>
                 ) : (
                   labor.map(item => (
-                    <tr key={item.id} className={`group hover:bg-neutral-50/50 transition-colors ${item.id.startsWith('temp') ? 'animate-pulse opacity-70' : ''}`}>
-                      <td className="px-5 py-2.5 text-neutral-800 text-[13px] whitespace-nowrap">{item.description}</td>
-                      <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px] whitespace-nowrap">{item.quantity}</td>
-                      <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px] whitespace-nowrap">R$ {item.unitPrice.toFixed(2)}</td>
-                      <td className="px-5 py-2.5 text-neutral-900 font-medium text-right font-mono text-[11px] whitespace-nowrap">R$ {(item.quantity * item.unitPrice).toFixed(2)}</td>
+                    <tr key={item.id} className={`group hover:bg-neutral-50 dark:bg-neutral-950/50/50 transition-colors ${item.id.startsWith('temp') ? 'animate-pulse opacity-70' : ''}`}>
+                      <td className="px-5 py-2.5 text-neutral-800 dark:text-neutral-200 text-[13px] whitespace-nowrap">{item.description}</td>
+                      <td className="px-5 py-2.5 text-neutral-500 dark:text-neutral-400 text-right font-mono text-[11px] whitespace-nowrap">{item.quantity}</td>
+                      <td className="px-5 py-2.5 text-neutral-500 dark:text-neutral-400 text-right font-mono text-[11px] whitespace-nowrap">R$ {item.unitPrice.toFixed(2)}</td>
+                      <td className="px-5 py-2.5 text-neutral-900 dark:text-neutral-50 font-medium text-right font-mono text-[11px] whitespace-nowrap">R$ {(item.quantity * item.unitPrice).toFixed(2)}</td>
                       <td className="px-5 py-2.5 text-right whitespace-nowrap">
                         <button 
                           onClick={() => {
@@ -125,33 +125,33 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
         </section>
 
         {/* Tabela de Peças */}
-        <section className="bg-white border border-neutral-200/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-neutral-100 bg-neutral-50/50 flex justify-between items-center">
-            <h2 className="text-[13px] font-semibold text-neutral-900 tracking-tight">Peças e Produtos</h2>
-            <span className="text-[11px] font-medium text-neutral-500 font-mono bg-neutral-100/80 px-2 py-0.5 rounded-sm">R$ {totalParts.toFixed(2)}</span>
+        <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50 dark:bg-neutral-950/50/50 flex justify-between items-center">
+            <h2 className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight">Peças e Produtos</h2>
+            <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 font-mono bg-neutral-100/80 px-2 py-0.5 rounded-sm">R$ {totalParts.toFixed(2)}</span>
           </div>
           
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
-              <thead className="bg-white">
+              <thead className="bg-white dark:bg-neutral-900">
                 <tr>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider whitespace-nowrap">Descrição</th>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-20 text-right whitespace-nowrap">Qtd</th>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Preço Unit.</th>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Total</th>
-                  <th className="px-5 py-2 font-medium text-neutral-400 text-[10px] uppercase tracking-wider w-16 text-right whitespace-nowrap"></th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider whitespace-nowrap">Descrição</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider w-20 text-right whitespace-nowrap">Qtd</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Preço Unit.</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider w-32 text-right whitespace-nowrap">Total</th>
+                  <th className="px-5 py-2 font-medium text-neutral-400 dark:text-neutral-500 text-[10px] uppercase tracking-wider w-16 text-right whitespace-nowrap"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-50 bg-white">
+              <tbody className="divide-y divide-neutral-50 bg-white dark:bg-neutral-900">
                 {parts.length === 0 ? (
-                  <tr><td colSpan={5} className="px-5 py-8 text-center text-xs text-neutral-400 italic">Nenhuma peça adicionada.</td></tr>
+                  <tr><td colSpan={5} className="px-5 py-8 text-center text-xs text-neutral-400 dark:text-neutral-500 italic">Nenhuma peça adicionada.</td></tr>
                 ) : (
                   parts.map(item => (
-                    <tr key={item.id} className={`group hover:bg-neutral-50/50 transition-colors ${item.id.startsWith('temp') ? 'animate-pulse opacity-70' : ''}`}>
-                      <td className="px-5 py-2.5 text-neutral-800 text-[13px] whitespace-nowrap">{item.description}</td>
-                      <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px] whitespace-nowrap">{item.quantity}</td>
-                      <td className="px-5 py-2.5 text-neutral-500 text-right font-mono text-[11px] whitespace-nowrap">R$ {item.unitPrice.toFixed(2)}</td>
-                      <td className="px-5 py-2.5 text-neutral-900 font-medium text-right font-mono text-[11px] whitespace-nowrap">R$ {(item.quantity * item.unitPrice).toFixed(2)}</td>
+                    <tr key={item.id} className={`group hover:bg-neutral-50 dark:bg-neutral-950/50/50 transition-colors ${item.id.startsWith('temp') ? 'animate-pulse opacity-70' : ''}`}>
+                      <td className="px-5 py-2.5 text-neutral-800 dark:text-neutral-200 text-[13px] whitespace-nowrap">{item.description}</td>
+                      <td className="px-5 py-2.5 text-neutral-500 dark:text-neutral-400 text-right font-mono text-[11px] whitespace-nowrap">{item.quantity}</td>
+                      <td className="px-5 py-2.5 text-neutral-500 dark:text-neutral-400 text-right font-mono text-[11px] whitespace-nowrap">R$ {item.unitPrice.toFixed(2)}</td>
+                      <td className="px-5 py-2.5 text-neutral-900 dark:text-neutral-50 font-medium text-right font-mono text-[11px] whitespace-nowrap">R$ {(item.quantity * item.unitPrice).toFixed(2)}</td>
                       <td className="px-5 py-2.5 text-right whitespace-nowrap">
                         <button 
                           onClick={() => {
@@ -175,39 +175,39 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
         </section>
 
         {/* Adicionar Novo Item */}
-        <section className="bg-white border border-neutral-200/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5">
-          <h2 className="text-[13px] font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+        <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5">
+          <h2 className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-50 mb-4 flex items-center gap-2">
             Adicionar Item
-            <span className="px-1.5 py-0.5 rounded-sm bg-neutral-100 text-neutral-500 text-[9px] uppercase tracking-wider font-mono">Instant</span >
+            <span className="px-1.5 py-0.5 rounded-sm bg-neutral-100 text-neutral-500 dark:text-neutral-400 text-[9px] uppercase tracking-wider font-mono">Instant</span >
           </h2>
           <form ref={formRef} action={handleAdd} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
             <input type="hidden" name="budgetId" value={budget.id} />
             
             <div className="md:col-span-3 space-y-1.5">
-              <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Tipo</label>
-              <select name="type" className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all">
+              <label className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Tipo</label>
+              <select name="type" className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-md text-[13px] text-neutral-900 dark:text-neutral-50 outline-none focus:border-neutral-400 focus:bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-100 transition-all">
                 <option value="LABOR">Mão de Obra</option>
                 <option value="PART">Peça / Produto</option>
               </select>
             </div>
 
             <div className="md:col-span-4 space-y-1.5">
-              <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Descrição</label>
-              <input required type="text" name="description" placeholder="Ex: Troca de óleo" className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all placeholder:text-neutral-400" />
+              <label className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Descrição</label>
+              <input required type="text" name="description" placeholder="Ex: Troca de óleo" className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-md text-[13px] text-neutral-900 dark:text-neutral-50 outline-none focus:border-neutral-400 focus:bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-100 transition-all placeholder:text-neutral-400 dark:text-neutral-500" />
             </div>
 
             <div className="md:col-span-2 space-y-1.5">
-              <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Qtd</label>
-              <input required type="number" name="quantity" defaultValue={1} min={1} className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all font-mono" />
+              <label className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Qtd</label>
+              <input required type="number" name="quantity" defaultValue={1} min={1} className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-md text-[13px] text-neutral-900 dark:text-neutral-50 outline-none focus:border-neutral-400 focus:bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-100 transition-all font-mono" />
             </div>
 
             <div className="md:col-span-2 space-y-1.5">
-              <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Preço Unit.</label>
-              <input required type="number" name="unitPrice" step="0.01" min="0" placeholder="0.00" className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all font-mono" />
+              <label className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Preço Unit.</label>
+              <input required type="number" name="unitPrice" step="0.01" min="0" placeholder="0.00" className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-md text-[13px] text-neutral-900 dark:text-neutral-50 outline-none focus:border-neutral-400 focus:bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-100 transition-all font-mono" />
             </div>
 
             <div className="md:col-span-1">
-              <button type="submit" className="w-full h-[36px] bg-neutral-900 text-white rounded-md hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center">
+              <button type="submit" className="w-full h-[36px] bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 rounded-md hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center">
                 <Plus className="w-4 h-4" />
               </button>
             </div>
@@ -217,31 +217,31 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
 
       {/* Lado Direito: Resumo */}
       <div className="lg:col-span-1">
-        <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl shadow-xl p-6 text-white sticky top-6">
+        <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl shadow-xl p-6 text-white dark:text-neutral-900 sticky top-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-widest">Resumo Financeiro</h2>
+            <h2 className="text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">Resumo Financeiro</h2>
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
           </div>
           
           <div className="space-y-4">
             <div className="flex justify-between items-center text-[13px]">
-              <span className="text-neutral-400">Subtotal Serviços</span>
+              <span className="text-neutral-400 dark:text-neutral-500">Subtotal Serviços</span>
               <span className="font-mono text-neutral-100">R$ {totalLabor.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center text-[13px]">
-              <span className="text-neutral-400">Subtotal Peças</span>
+              <span className="text-neutral-400 dark:text-neutral-500">Subtotal Peças</span>
               <span className="font-mono text-neutral-100">R$ {totalParts.toFixed(2)}</span>
             </div>
             
             <div className="flex justify-between items-center text-[13px]">
-              <span className="text-neutral-500">Descontos</span>
-              <span className="font-mono text-neutral-400">- R$ {budget.discount.toFixed(2)}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">Descontos</span>
+              <span className="font-mono text-neutral-400 dark:text-neutral-500">- R$ {budget.discount.toFixed(2)}</span>
             </div>
             
             <div className="pt-5 mt-5 border-t border-neutral-800">
               <div className="flex justify-between items-end">
-                <span className="text-xs font-medium text-neutral-400">Total Líquido</span>
-                <span className="text-2xl font-mono font-medium text-white tracking-tight">R$ {finalTotal.toFixed(2)}</span>
+                <span className="text-xs font-medium text-neutral-400 dark:text-neutral-500">Total Líquido</span>
+                <span className="text-2xl font-mono font-medium text-white dark:text-neutral-900 tracking-tight">R$ {finalTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -251,7 +251,7 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
               href={`/print/budgets/${budget.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full bg-white text-black py-2.5 rounded-lg text-[13px] font-semibold hover:bg-neutral-200 transition-colors flex items-center justify-center shadow-sm"
+              className="w-full bg-white dark:bg-neutral-900 text-black py-2.5 rounded-lg text-[13px] font-semibold hover:bg-neutral-200 transition-colors flex items-center justify-center shadow-sm"
             >
               Gerar PDF Comercial
             </Link>

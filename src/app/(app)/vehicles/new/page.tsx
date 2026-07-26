@@ -24,6 +24,7 @@ export default async function NewVehiclePage() {
     const engineType = formData.get('engineType') as string
     const mileageStr = formData.get('mileage') as string
     const mileage = mileageStr ? parseInt(mileageStr, 10) : null
+    const notes = formData.get('notes') as string || null
     
     const tenant = await prisma.tenant.findFirst()
     
@@ -37,7 +38,8 @@ export default async function NewVehiclePage() {
           model,
           year,
           engineType,
-          mileage
+          mileage,
+          notes
         }
       })
     }
@@ -48,34 +50,34 @@ export default async function NewVehiclePage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300 max-w-2xl">
-      <header className="flex items-center gap-4 pb-4 border-b border-neutral-100">
+      <header className="flex items-center gap-4 pb-4 border-b border-neutral-100 dark:border-neutral-800/50">
         <Link 
           href="/vehicles" 
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors text-neutral-500"
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-500 dark:text-neutral-400"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-xl font-semibold text-neutral-900 tracking-tight">Novo Veículo</h1>
-          <p className="text-sm text-neutral-500 mt-1">Cadastre um novo veículo e vincule a um cliente.</p>
+          <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight">Novo Veículo</h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Cadastre um novo veículo e vincule a um cliente.</p>
         </div>
       </header>
 
-      <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-4 sm:p-6">
-        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-100">
-          <div className="w-10 h-10 bg-neutral-50 rounded-full border border-neutral-200 flex items-center justify-center">
-            <Car className="w-5 h-5 text-neutral-400" />
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-100 dark:border-neutral-800/50">
+          <div className="w-10 h-10 bg-neutral-50 dark:bg-neutral-950/50 rounded-full border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+            <Car className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />
           </div>
           <div>
-            <h2 className="text-sm font-medium text-neutral-900">Informações do Veículo</h2>
-            <p className="text-xs text-neutral-500">Dados cadastrais da frota</p>
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">Informações do Veículo</h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">Dados cadastrais da frota</p>
           </div>
         </div>
 
         {customers.length === 0 ? (
-          <div className="py-8 text-center bg-neutral-50 border border-neutral-100 rounded-md">
-            <p className="text-sm text-neutral-600 font-medium">Falta cliente</p>
-            <p className="text-xs text-neutral-500 mt-1 max-w-xs mx-auto">
+          <div className="py-8 text-center bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-100 dark:border-neutral-800/50 rounded-md">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Falta cliente</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xs mx-auto">
               Para cadastrar um veículo, você precisa ter pelo menos 1 cliente cadastrado no sistema.
             </p>
             <div className="mt-4 flex justify-center">
@@ -89,12 +91,12 @@ export default async function NewVehiclePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               
               <div className="space-y-1.5 sm:col-span-2">
-                <label htmlFor="customerId" className="text-[13px] font-medium text-neutral-700">Proprietário (Cliente) *</label>
+                <label htmlFor="customerId" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Proprietário (Cliente) *</label>
                 <select 
                   id="customerId" 
                   name="customerId" 
                   required
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 dark:text-neutral-50"
                 >
                   <option value="">Selecione o proprietário...</option>
                   {customers.map(c => (
@@ -104,43 +106,43 @@ export default async function NewVehiclePage() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="plate" className="text-[13px] font-medium text-neutral-700">Placa *</label>
+                <label htmlFor="plate" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Placa *</label>
                 <input 
                   type="text" 
                   id="plate" 
                   name="plate" 
                   required
                   placeholder="ABC-1234"
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 font-mono uppercase"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 dark:text-neutral-500 font-mono uppercase"
                 />
               </div>
               
               <div className="space-y-1.5">
-                <label htmlFor="brand" className="text-[13px] font-medium text-neutral-700">Marca *</label>
+                <label htmlFor="brand" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Marca *</label>
                 <input 
                   type="text" 
                   id="brand" 
                   name="brand" 
                   required
                   placeholder="Ex: Toyota"
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 dark:text-neutral-500"
                 />
               </div>
               
               <div className="space-y-1.5">
-                <label htmlFor="model" className="text-[13px] font-medium text-neutral-700">Modelo *</label>
+                <label htmlFor="model" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Modelo *</label>
                 <input 
                   type="text" 
                   id="model" 
                   name="model" 
                   required
                   placeholder="Ex: Corolla XEI"
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 dark:text-neutral-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="year" className="text-[13px] font-medium text-neutral-700">Ano *</label>
+                <label htmlFor="year" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Ano *</label>
                 <input 
                   type="number" 
                   id="year" 
@@ -149,17 +151,17 @@ export default async function NewVehiclePage() {
                   min="1950"
                   max={new Date().getFullYear() + 1}
                   placeholder="Ex: 2020"
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 font-mono"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 dark:text-neutral-500 font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="engineType" className="text-[13px] font-medium text-neutral-700">Motor/Combustível *</label>
+                <label htmlFor="engineType" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Motor/Combustível *</label>
                 <select 
                   id="engineType" 
                   name="engineType" 
                   required
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 dark:text-neutral-50"
                 >
                   <option value="FLEX">Flex</option>
                   <option value="GASOLINE">Gasolina</option>
@@ -171,28 +173,39 @@ export default async function NewVehiclePage() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="mileage" className="text-[13px] font-medium text-neutral-700">Quilometragem</label>
+                <label htmlFor="mileage" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Quilometragem</label>
                 <input 
                   type="number" 
                   id="mileage" 
                   name="mileage" 
                   placeholder="Ex: 45000"
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 font-mono"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 dark:text-neutral-500 font-mono"
+                />
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <label htmlFor="notes" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Observações / Informações Adicionais</label>
+                <textarea 
+                  id="notes" 
+                  name="notes" 
+                  rows={3}
+                  placeholder="Informações extras sobre o veículo..."
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 dark:text-neutral-500 resize-none"
                 />
               </div>
 
             </div>
 
-            <div className="pt-6 mt-6 border-t border-neutral-100 flex justify-end gap-3">
+            <div className="pt-6 mt-6 border-t border-neutral-100 dark:border-neutral-800/50 flex justify-end gap-3">
               <Link 
                 href="/vehicles" 
-                className="px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-md hover:bg-neutral-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md hover:bg-neutral-50 dark:bg-neutral-950/50 transition-colors"
               >
                 Cancelar
               </Link>
               <button 
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors shadow-sm"
+                className="px-4 py-2 text-sm font-medium text-white dark:text-neutral-900 bg-neutral-900 dark:bg-neutral-50 rounded-md hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Salvar Veículo
               </button>

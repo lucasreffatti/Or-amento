@@ -57,34 +57,34 @@ export default async function NewBudgetPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300 max-w-2xl">
-      <header className="flex items-center gap-4 pb-4 border-b border-neutral-100">
+      <header className="flex items-center gap-4 pb-4 border-b border-neutral-100 dark:border-neutral-800/50">
         <Link 
           href="/budgets" 
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors text-neutral-500"
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-500 dark:text-neutral-400"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-xl font-semibold text-neutral-900 tracking-tight">Novo Orçamento</h1>
-          <p className="text-sm text-neutral-500 mt-1">Inicie um novo orçamento vinculando cliente e veículo.</p>
+          <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 tracking-tight">Novo Orçamento</h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Inicie um novo orçamento vinculando cliente e veículo.</p>
         </div>
       </header>
 
-      <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-6">
-        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-100">
-          <div className="w-10 h-10 bg-neutral-50 rounded-full border border-neutral-200 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-neutral-400" />
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm p-6">
+        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-100 dark:border-neutral-800/50">
+          <div className="w-10 h-10 bg-neutral-50 dark:bg-neutral-950/50 rounded-full border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+            <FileText className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />
           </div>
           <div>
-            <h2 className="text-sm font-medium text-neutral-900">Vínculos Iniciais</h2>
-            <p className="text-xs text-neutral-500">Selecione o cliente e o veículo correspondente</p>
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">Vínculos Iniciais</h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">Selecione o cliente e o veículo correspondente</p>
           </div>
         </div>
 
         {customers.length === 0 || vehicles.length === 0 ? (
-          <div className="py-8 text-center bg-neutral-50 border border-neutral-100 rounded-md">
-            <p className="text-sm text-neutral-600 font-medium">Faltam cadastros base</p>
-            <p className="text-xs text-neutral-500 mt-1 max-w-xs mx-auto">
+          <div className="py-8 text-center bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-100 dark:border-neutral-800/50 rounded-md">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Faltam cadastros base</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xs mx-auto">
               Para criar um orçamento, você precisa ter pelo menos 1 cliente e 1 veículo cadastrados no sistema.
             </p>
             <div className="mt-4 flex justify-center gap-3">
@@ -104,26 +104,26 @@ export default async function NewBudgetPage() {
           <form action={createBudget} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label htmlFor="serviceType" className="text-[13px] font-medium text-neutral-700">Tipo de Orçamento *</label>
+                <label htmlFor="serviceType" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Tipo de Orçamento *</label>
                 <select 
                   id="serviceType" 
                   name="serviceType" 
                   required
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 dark:text-neutral-50"
                 >
                   <option value="INTERNAL">Serviço Interno (Veículo na Oficina)</option>
                   <option value="EXTERNAL">Orçamento de Balcão (Apenas Cotação)</option>
                 </select>
-                <p className="text-[11px] text-neutral-500">Serviços internos exigem vistoria de entrada (Checklist) antes da aprovação.</p>
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400">Serviços internos exigem vistoria de entrada (Checklist) antes da aprovação.</p>
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="customerId" className="text-[13px] font-medium text-neutral-700">Cliente *</label>
+                <label htmlFor="customerId" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Cliente *</label>
                 <select 
                   id="customerId" 
                   name="customerId" 
                   required
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 dark:text-neutral-50"
                 >
                   <option value="">Selecione um cliente...</option>
                   {customers.map(c => (
@@ -133,12 +133,12 @@ export default async function NewBudgetPage() {
               </div>
               
               <div className="space-y-1.5">
-                <label htmlFor="vehicleId" className="text-[13px] font-medium text-neutral-700">Veículo *</label>
+                <label htmlFor="vehicleId" className="text-[13px] font-medium text-neutral-700 dark:text-neutral-300">Veículo *</label>
                 <select 
                   id="vehicleId" 
                   name="vehicleId" 
                   required
-                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 dark:text-neutral-50"
                 >
                   <option value="">Selecione um veículo...</option>
                   {vehicles.map(v => (
@@ -148,16 +148,16 @@ export default async function NewBudgetPage() {
               </div>
             </div>
 
-            <div className="pt-6 mt-6 border-t border-neutral-100 flex justify-end gap-3">
+            <div className="pt-6 mt-6 border-t border-neutral-100 dark:border-neutral-800/50 flex justify-end gap-3">
               <Link 
                 href="/budgets" 
-                className="px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-md hover:bg-neutral-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md hover:bg-neutral-50 dark:bg-neutral-950/50 transition-colors"
               >
                 Cancelar
               </Link>
               <button 
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors shadow-sm"
+                className="px-4 py-2 text-sm font-medium text-white dark:text-neutral-900 bg-neutral-900 dark:bg-neutral-50 rounded-md hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Criar Rascunho
               </button>

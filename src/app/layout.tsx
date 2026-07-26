@@ -10,15 +10,19 @@ export const metadata: Metadata = {
   description: "Plataforma de Gestão Multi-Tenant",
 };
 
+import { ThemeProvider } from '@/components/ThemeProvider';
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${inter.variable} ${geistMono.variable} antialiased text-neutral-900`}>
-        {children}
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className={`${inter.variable} ${geistMono.variable} antialiased text-neutral-900 dark:text-neutral-50 dark:bg-neutral-950 bg-[#FAFAFA]`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

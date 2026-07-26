@@ -23,6 +23,8 @@ export async function createChecklist(formData: FormData) {
     console.error('Invalid itemsStatus JSON')
   }
 
+  const additionalInfo = formData.get('additionalInfo') as string || null
+
   const checklist = await prisma.checklist.create({
     data: {
       tenantId: session.tenantId,
@@ -32,6 +34,7 @@ export async function createChecklist(formData: FormData) {
       itemsStatus: JSON.stringify(itemsStatus),
       imagesUrls: '[]', // Futuramente upload
       reportedIssue: '',
+      additionalInfo,
     }
   })
 
@@ -67,6 +70,8 @@ export async function updateChecklist(id: string, formData: FormData) {
     console.error('Invalid itemsStatus JSON')
   }
 
+  const additionalInfo = formData.get('additionalInfo') as string || null
+
   await prisma.checklist.update({
     where: { 
       id,
@@ -77,6 +82,7 @@ export async function updateChecklist(id: string, formData: FormData) {
       customerId,
       fuelLevel,
       itemsStatus: JSON.stringify(itemsStatus),
+      additionalInfo,
     }
   })
 

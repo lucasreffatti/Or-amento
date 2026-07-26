@@ -64,6 +64,7 @@ model Vehicle {
   year       Int
   engineType String   // GASOLINE, DIESEL, FLEX, HYBRID
   mileage    Int?
+  notes      String?
   
   checklists Checklist[]
   budgets    Budget[]
@@ -84,6 +85,7 @@ model Checklist {
   
   itemsStatus   String   // JSON convertido para String para SQLite
   imagesUrls    String   @default("[]") // Lista convertida para String JSON
+  additionalInfo String?
   
   status        String   @default("PENDENTE") // PENDENTE, APROVADO, RECUSADO
   

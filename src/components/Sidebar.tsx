@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X, Sun, Moon } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 
 export default function Sidebar({ user }: { user?: { username: string, role: string } }) {
   const pathname = usePathname()
+  const { theme, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
 
   const menus = [
@@ -128,6 +130,21 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
             <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
               {user?.username || 'Usuário'} ({user?.role || 'USER'})
             </span>
+          </div>
+
+          <div className="hidden md:block w-full">
+            <button 
+              type="button" 
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="w-full flex justify-center p-2 text-neutral-500 hover:bg-neutral-800/50 hover:text-white rounded-lg transition-colors group relative" 
+              title="Tema"
+            >
+              <Sun className="w-4 h-4 shrink-0 hidden dark:block" />
+              <Moon className="w-4 h-4 shrink-0 block dark:hidden" />
+              <span className="hidden md:block absolute left-12 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                Alternar Tema
+              </span>
+            </button>
           </div>
 
           <form action={logout} className="hidden md:block w-full">
