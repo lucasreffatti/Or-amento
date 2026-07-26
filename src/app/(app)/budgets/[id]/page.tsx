@@ -186,11 +186,6 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
               VENCIDO
             </div>
           )}
-          {(displayStatus === 'DRAFT' || displayStatus === 'SENT') && (
-            <div className="transform -rotate-12 border-[10px] border-amber-600/20 text-amber-600/20 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
-              PENDENTE
-            </div>
-          )}
           {displayStatus === 'APPROVED' && (
             <div className="transform -rotate-12 border-[10px] border-emerald-600/20 text-emerald-600/20 rounded-3xl px-10 py-4 text-7xl md:text-8xl font-black uppercase tracking-widest">
               APROVADO

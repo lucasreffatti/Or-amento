@@ -30,7 +30,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
   const labor = budget.items.filter(i => i.type === 'LABOR')
 
   const isExpired = new Date(budget.validUntil) < new Date() && budget.status !== 'APPROVED';
-  const showGiantStamp = budget.status === 'REJECTED' || isExpired || budget.status === 'DRAFT' || budget.status === 'SENT';
+  const showGiantStamp = budget.status === 'REJECTED' || isExpired;
 
   let stampText = '';
   let stampColor = '';
@@ -41,9 +41,6 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
   } else if (isExpired) {
     stampText = 'VENCIDO';
     stampColor = 'border-amber-600 text-amber-600';
-  } else if (budget.status === 'DRAFT' || budget.status === 'SENT') {
-    stampText = 'PENDENTE';
-    stampColor = 'border-blue-600 text-blue-600';
   }
 
   return (
