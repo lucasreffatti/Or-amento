@@ -29,21 +29,49 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
   const parts = budget.items.filter(i => i.type === 'PART')
   const labor = budget.items.filter(i => i.type === 'LABOR')
 
+  const isExpired = new Date(budget.validUntil) < new Date() && budget.status !== 'APPROVED';
+  const showGiantStamp = budget.status === 'REJECTED' || isExpired || budget.status === 'DRAFT' || budget.status === 'SENT';
+
+  let stampText = '';
+  let stampColor = '';
+  
+  if (budget.status === 'REJECTED') {
+    stampText = 'RECUSADO';
+    stampColor = 'border-red-600 text-red-600';
+  } else if (isExpired) {
+    stampText = 'VENCIDO';
+    stampColor = 'border-amber-600 text-amber-600';
+  } else if (budget.status === 'DRAFT' || budget.status === 'SENT') {
+    stampText = 'PENDENTE';
+    stampColor = 'border-blue-600 text-blue-600';
+  }
+
   return (
-    <div className="bg-white text-black min-h-screen font-sans p-8 print:p-0 text-sm">
+    <div className="bg-white text-black min-h-screen font-sans p-8 print:p-0 text-sm relative">
       <AutoPrint />
       
       {/* Container A4 format */}
-      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0">
+      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 relative overflow-hidden">
+        
+        {/* GIANT STAMP */}
+        {showGiantStamp && (
+          <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.15]">
+            <div className={`border-[12px] ${stampColor} rounded-3xl p-8`} style={{ transform: 'rotate(-30deg)' }}>
+              <h2 className={`font-black text-[120px] uppercase tracking-[0.2em] leading-none ${stampColor}`}>
+                {stampText}
+              </h2>
+            </div>
+          </div>
+        )}
         
         {/* CABEÇALHO DO DOCUMENTO */}
-        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4">
+        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4 relative z-10">
           <div className="flex-1">
             <h1 className="text-2xl font-bold uppercase tracking-tight">{budget.tenant.name}</h1>
             <div className="text-xs mt-1 space-y-0.5 text-black">
-              <p>CNPJ: 00.000.000/0001-00 (Exemplo)</p>
-              <p>Endereço: Rua Fictícia, 123 - Centro, Cidade/UF</p>
-              <p>Telefone: (00) 00000-0000</p>
+              {budget.tenant.document && <p>CNPJ: {budget.tenant.document}</p>}
+              {budget.tenant.address && <p>Endereço: {budget.tenant.address}</p>}
+              {budget.tenant.phone && <p>Telefone: {budget.tenant.phone}</p>}
             </div>
           </div>
           <div className="w-[300px] border border-black p-3 text-center bg-gray-50">
@@ -57,7 +85,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         </div>
 
         {/* DADOS DO CLIENTE E VEÍCULO */}
-        <div className="border border-black mb-6">
+        <div className="border border-black mb-6 relative z-10">
           <div className="bg-gray-100 border-b border-black px-2 py-1 font-bold text-xs uppercase tracking-wider">
             Identificação do Consumidor e Veículo
           </div>
@@ -78,7 +106,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         </div>
 
         {/* DISCRIMINAÇÃO DOS SERVIÇOS (MÃO DE OBRA) */}
-        <div className="mb-4">
+        <div className="mb-4 relative z-10">
           <table className="w-full text-xs border-collapse border border-black">
             <thead>
               <tr className="bg-gray-100 border-b border-black text-left">
@@ -117,7 +145,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         </div>
 
         {/* DISCRIMINAÇÃO DOS MATERIAIS (PEÇAS) */}
-        <div className="mb-6">
+        <div className="mb-6 relative z-10">
           <table className="w-full text-xs border-collapse border border-black">
             <thead>
               <tr className="bg-gray-100 border-b border-black text-left">
@@ -156,8 +184,8 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         </div>
 
         {/* TOTAIS FINANCEIROS */}
-        <div className="flex justify-end mb-8">
-          <table className="w-64 text-sm border-collapse border-2 border-black">
+        <div className="flex justify-end mb-8 relative z-10">
+          <table className="w-64 text-sm border-collapse border-2 border-black bg-white">
             <tbody>
               {budget.discount > 0 && (
                 <tr className="border-b border-black">
@@ -174,7 +202,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         </div>
 
         {/* TERMOS LEGAIS E GARANTIA (ART 40 CDC) */}
-        <div className="border border-black p-3 text-[10px] leading-relaxed mb-12 text-justify">
+        <div className="border border-black p-3 text-[10px] leading-relaxed mb-12 text-justify relative z-10 bg-white">
           <p className="font-bold uppercase text-[11px] mb-1">Termos e Condições (Conforme Art. 40 do Código de Defesa do Consumidor - Lei 8.078/90)</p>
           <p>
             1. O presente orçamento tem validade até a data indicada no cabeçalho. Após este prazo, os valores de peças e mão de obra estão sujeitos a reajustes.<br />
@@ -189,14 +217,30 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         </div>
 
         {/* ASSINATURAS */}
-        <div className="grid grid-cols-2 gap-16 mt-8 pt-8">
-          <div className="text-center text-xs">
+        <div className="grid grid-cols-2 gap-16 mt-8 pt-8 relative z-10">
+          
+          {/* CARIMBO AUTOMÁTICO SE APROVADO */}
+          {budget.status === 'APPROVED' && (
+            <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none opacity-80" style={{ transform: 'translate(-50%, -50%) rotate(-15deg)' }}>
+              <div className="border-4 border-red-600 rounded-lg p-2 text-red-600 inline-block bg-white/60 backdrop-blur-[1px]">
+                <div className="border-2 border-red-600 rounded p-4 text-center">
+                  <h3 className="font-black text-2xl uppercase tracking-widest leading-none mb-1">Aprovado</h3>
+                  <p className="font-bold text-[10px] uppercase tracking-wider">{budget.tenant.name}</p>
+                  <p className="font-mono text-[10px] font-bold mt-1 border-t border-red-600 pt-1">
+                    {new Date(budget.updatedAt).toLocaleDateString('pt-BR')} {new Date(budget.updatedAt).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="text-center text-xs relative">
             <div className="border-b border-black mb-1 w-full"></div>
             <p className="font-bold uppercase">{budget.tenant.name}</p>
             <p className="text-gray-600">Assinatura da Oficina / Técnico Responsável</p>
             <p className="text-gray-400 mt-2">___/___/______</p>
           </div>
-          <div className="text-center text-xs">
+          <div className="text-center text-xs relative">
             <div className="border-b border-black mb-1 w-full"></div>
             <p className="font-bold uppercase">{budget.customer.name}</p>
             <p className="text-gray-600">De Acordo / Autorização de Execução</p>
