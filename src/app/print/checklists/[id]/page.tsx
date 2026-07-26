@@ -33,22 +33,6 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
     <div className="bg-white min-h-screen text-black font-sans print:p-0 p-8 flex justify-center">
       <div className="w-[210mm] min-h-[297mm] bg-white print:shadow-none shadow-xl border border-neutral-200 print:border-none p-10 relative">
         
-        {/* CARIMBOS (WATERMARK) */}
-        {checklist.status === 'APROVADO' && (
-          <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center overflow-hidden mix-blend-multiply opacity-20 print:opacity-30">
-            <div className="transform -rotate-12 border-[12px] border-emerald-500 text-emerald-500 text-[140px] font-black uppercase tracking-tighter p-10 rounded-3xl select-none">
-              Aprovado
-            </div>
-          </div>
-        )}
-        {checklist.status === 'RECUSADO' && (
-          <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center overflow-hidden mix-blend-multiply opacity-20 print:opacity-30">
-            <div className="transform -rotate-12 border-[12px] border-red-500 text-red-500 text-[140px] font-black uppercase tracking-tighter p-10 rounded-3xl select-none">
-              Recusado
-            </div>
-          </div>
-        )}
-
         {/* CABEÇALHO DA OFICINA */}
         <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
           <div className="flex items-center gap-4">
@@ -147,7 +131,35 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
             <p className="font-bold text-sm uppercase">Assinatura do Cliente</p>
             <p className="text-xs text-neutral-500 mt-1">Declaro estar ciente e de acordo com o estado do veículo descrito acima no momento da entrega à oficina.</p>
           </div>
-          <div className="text-center">
+          <div className="text-center relative">
+            {/* CARIMBO AUTOMÁTICO DE ASSINATURA */}
+            {checklist.status === 'APROVADO' && (
+              <div className="absolute top-0 left-1/2 z-20 pointer-events-none opacity-80" style={{ transform: 'translate(-50%, -20%) rotate(-15deg)' }}>
+                <div className="border-4 border-emerald-600 rounded-lg p-2 text-emerald-600 inline-block bg-white/70 backdrop-blur-[2px]">
+                  <div className="border-2 border-emerald-600 rounded p-4 text-center shadow-sm">
+                    <h3 className="font-black text-2xl uppercase tracking-widest leading-none mb-1">Aprovado</h3>
+                    <p className="font-bold text-[10px] uppercase tracking-wider">{tenant?.name}</p>
+                    <p className="font-mono text-[10px] font-bold mt-1 border-t border-emerald-600 pt-1">
+                      {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {checklist.status === 'RECUSADO' && (
+              <div className="absolute top-0 left-1/2 z-20 pointer-events-none opacity-80" style={{ transform: 'translate(-50%, -20%) rotate(-15deg)' }}>
+                <div className="border-4 border-red-600 rounded-lg p-2 text-red-600 inline-block bg-white/70 backdrop-blur-[2px]">
+                  <div className="border-2 border-red-600 rounded p-4 text-center shadow-sm">
+                    <h3 className="font-black text-2xl uppercase tracking-widest leading-none mb-1">Recusado</h3>
+                    <p className="font-bold text-[10px] uppercase tracking-wider">{tenant?.name}</p>
+                    <p className="font-mono text-[10px] font-bold mt-1 border-t border-red-600 pt-1">
+                      {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="h-20 border-b border-black mb-2 relative">
             </div>
             <p className="font-bold text-sm uppercase">Responsável da Oficina</p>
