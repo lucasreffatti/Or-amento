@@ -197,6 +197,7 @@ model StockItem {
   supplier    Supplier? @relation(fields: [supplierId], references: [id])
   code        String   // SKU / Código de Barras / Referência
   description String
+  itemType    String   @default("FIXO") // FIXO (Prateleira / Permanente) ou ROTATIVO (Encomenda / Direta)
   ncm         String?  @default("8708.29.99") // NCM para autopeças
   cest        String?  // Código Especificador da Substituição Tributária
   unit        String   @default("UN") // UN, PÇ, LT, KG, CX, JG

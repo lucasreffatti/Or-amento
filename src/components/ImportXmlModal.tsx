@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { UploadCloud, FileCode2, CheckCircle2, AlertCircle, Building2, PackageCheck, ArrowRight, RefreshCw, X, Percent } from 'lucide-react'
+import { UploadCloud, FileCode2, CheckCircle2, AlertCircle, Building2, PackageCheck, RefreshCw, X, Percent, Layers, RotateCw, Package } from 'lucide-react'
 import { parseNfeXmlAction, processStockEntryImport, ParsedXmlData, ImportItemChoice } from '@/app/actions/stockEntry'
 
 interface ImportXmlModalProps {
@@ -17,7 +17,8 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
   const [error, setError] = useState<string | null>(null)
   const [parsedData, setParsedData] = useState<ParsedXmlData | null>(null)
   const [itemChoices, setItemChoices] = useState<ImportItemChoice[]>([])
-  const [defaultMargin, setDefaultMargin] = useState<number>(60) // Margem de lucro padrão (%)
+  const [defaultMargin, setDefaultMargin] = useState<number>(60)
+  const [globalType, setGlobalType] = useState<'FIXO' | 'ROTATIVO'>('FIXO')
 
   if (!isOpen) return null
 
@@ -42,7 +43,6 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
 
         setParsedData(parsed)
 
-        // Inicializar opções dos itens com a margem atual configurada
         const initialChoices: ImportItemChoice[] = parsed.items.map(item => {
           const calculatedSalePrice = Math.round(item.costPrice * (1 + defaultMargin / 100) * 100) / 100
           return {
@@ -53,6 +53,7 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
             quantity: item.quantity,
             costPrice: item.costPrice,
             salePrice: calculatedSalePrice,
+            itemType: globalType,
             action: item.matchedStockItemId ? 'UPDATE_EXISTING' : 'CREATE_NEW',
             existingStockItemId: item.matchedStockItemId || undefined
           }
@@ -79,6 +80,19 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
         }))
       )
     }
+  }
+
+  const handleGlobalTypeChange = (type: 'FIXO' | 'ROTATIVO') => {
+    setGlobalType(type)
+    setItemChoices(prev => prev.map(item => ({ ...item, itemType: type })))
+  }
+
+  const handleItemTypeChange = (index: number, type: 'FIXO' | 'ROTATIVO') => {
+    setItemChoices(prev => {
+      const next = [...prev]
+      next[index] = { ...next[index], itemType: type }
+      return next
+    })
   }
 
   const handleActionChange = (index: number, action: 'CREATE_NEW' | 'UPDATE_EXISTING', stockItemId?: string) => {
@@ -139,7 +153,7 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
             </div>
             <div>
               <h2 className="text-base font-bold text-neutral-900">Importador de XML NF-e de Compra</h2>
-              <p className="text-xs text-neutral-500">Entrada automática de peças e cadastro de fornecedor de autopeças.</p>
+              <p className="text-xs text-neutral-500">Entrada de peças, conciliação Fixo/Rotativo e cadastro de fornecedor.</p>
             </div>
           </div>
           <button onClick={onClose} className="text-neutral-400 hover:text-neutral-700">
@@ -195,19 +209,19 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
                 <p className="font-bold flex items-center gap-1.5 text-blue-800">
                   <CheckCircle2 className="w-3.5 h-3.5" /> 1. Fornecedor Automático
                 </p>
-                <p className="text-neutral-600">Cadastra Razão Social, CNPJ e endereço do distribuidor de autopeças.</p>
+                <p className="text-neutral-600">Cadastra CNPJ, Razão Social e cidade do distribuidor de autopeças.</p>
               </div>
               <div className="space-y-1">
                 <p className="font-bold flex items-center gap-1.5 text-blue-800">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 2. Conciliação de Peças
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 2. Fixo vs Rotativo
                 </p>
-                <p className="text-neutral-600">Vincula o saldo a uma peça existente ou cria uma peça nova no estoque.</p>
+                <p className="text-neutral-600">Separe peças de prateleira das encomendadas direto para o cliente.</p>
               </div>
               <div className="space-y-1">
                 <p className="font-bold flex items-center gap-1.5 text-blue-800">
                   <CheckCircle2 className="w-3.5 h-3.5" /> 3. Margem Ajustável
                 </p>
-                <p className="text-neutral-600">Aplica a margem de lucro selecionada (%) sobre o custo das peças.</p>
+                <p className="text-neutral-600">Aplica a margem de lucro (%) desejada sobre os custos das peças.</p>
               </div>
             </div>
           </div>
@@ -239,44 +253,78 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
               </div>
             </div>
 
-            {/* Controle Global da Margem de Lucro */}
-            <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 text-blue-900">
-                <Percent className="w-4 h-4 text-blue-600 shrink-0" />
-                <div>
-                  <span className="font-bold">Margem de Lucro Padrão da Oficina</span>
-                  <p className="text-neutral-500 text-[11px]">Recalcula automaticamente o preço de venda de todas as peças.</p>
+            {/* Painel de Controles Globais (Margem + Tipo de Estoque) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Margem de Lucro */}
+              <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-blue-900">
+                  <Percent className="w-4 h-4 text-blue-600 shrink-0" />
+                  <div>
+                    <span className="font-bold">Margem de Lucro (%)</span>
+                    <p className="text-neutral-500 text-[11px]">Recalcular preço de venda</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-neutral-600 font-medium">Margem:</span>
-                <div className="relative flex items-center">
+                <div className="flex items-center gap-2">
                   <input
                     type="number"
                     min="0"
                     max="1000"
                     value={defaultMargin}
                     onChange={(e) => handleGlobalMarginChange(parseFloat(e.target.value) || 0)}
-                    className="w-20 bg-white border border-blue-300 rounded-lg px-2.5 py-1 text-right font-bold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-16 bg-white border border-blue-300 rounded px-2 py-1 text-right font-bold text-blue-900 focus:outline-none"
                   />
-                  <span className="ml-1 text-blue-900 font-bold">%</span>
+                  <span className="text-blue-900 font-bold">%</span>
+                  <div className="flex gap-1 ml-1">
+                    {[50, 60, 100].map(m => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => handleGlobalMarginChange(m)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                          defaultMargin === m ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-neutral-700 border-neutral-300'
+                        }`}
+                      >
+                        {m}%
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex gap-1 ml-2">
-                  {[40, 50, 60, 70, 100].map(m => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => handleGlobalMarginChange(m)}
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
-                        defaultMargin === m
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100'
-                      }`}
-                    >
-                      {m}%
-                    </button>
-                  ))}
+              </div>
+
+              {/* Classificação Global Fixo vs Rotativo */}
+              <div className="bg-purple-50/60 border border-purple-200 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-purple-900">
+                  <Layers className="w-4 h-4 text-purple-600 shrink-0" />
+                  <div>
+                    <span className="font-bold">Tipo de Destino da Nota</span>
+                    <p className="text-neutral-500 text-[11px]">Aplicar a todas as peças</p>
+                  </div>
+                </div>
+
+                <div className="flex bg-white border border-purple-200 rounded-lg p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => handleGlobalTypeChange('FIXO')}
+                    className={`px-2.5 py-1 rounded text-xs font-bold transition-all flex items-center gap-1 ${
+                      globalType === 'FIXO'
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'text-neutral-600 hover:text-neutral-900'
+                    }`}
+                  >
+                    <Package className="w-3 h-3" /> Fixo (Prateleira)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleGlobalTypeChange('ROTATIVO')}
+                    className={`px-2.5 py-1 rounded text-xs font-bold transition-all flex items-center gap-1 ${
+                      globalType === 'ROTATIVO'
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'text-neutral-600 hover:text-neutral-900'
+                    }`}
+                  >
+                    <RotateCw className="w-3 h-3" /> Rotativo (Encomenda)
+                  </button>
                 </div>
               </div>
             </div>
@@ -287,7 +335,7 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
                 <h3 className="text-xs uppercase font-bold text-neutral-500 tracking-wider">
                   Itens Identificados no XML ({parsedData.items.length} peças)
                 </h3>
-                <span className="text-xs text-neutral-500">Altere a margem acima ou edite o valor direto na tabela:</span>
+                <span className="text-xs text-neutral-500">Defina individualmente se a peça vai para prateleira (Fixo) ou encomenda (Rotativo):</span>
               </div>
 
               <div className="border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
@@ -295,21 +343,35 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
                   <table className="w-full text-left text-xs text-neutral-700">
                     <thead className="bg-neutral-50/80 text-neutral-500 font-semibold uppercase border-b border-neutral-200">
                       <tr>
-                        <th className="p-2.5">SKU Distribuidora</th>
-                        <th className="p-2.5">Descrição da Peça (XML)</th>
+                        <th className="p-2.5">SKU / Descrição</th>
+                        <th className="p-2.5 text-center">Tipo Estoque</th>
                         <th className="p-2.5 text-center">Qtd</th>
                         <th className="p-2.5 text-right">Custo Un.</th>
-                        <th className="p-2.5 text-right">Venda Un. (Com Margem)</th>
+                        <th className="p-2.5 text-right">Venda Un.</th>
                         <th className="p-2.5">Ação de Entrada</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-100 bg-white">
                       {itemChoices.map((item, idx) => (
                         <tr key={idx} className="hover:bg-neutral-50/80 transition-colors">
-                          <td className="p-2.5 font-mono font-bold text-neutral-900">{item.code}</td>
                           <td className="p-2.5">
-                            <div className="font-semibold text-neutral-900">{item.description}</div>
-                            <div className="text-[10px] text-neutral-500 font-mono">NCM: {item.ncm}</div>
+                            <div className="font-bold text-neutral-900 font-mono text-[11px]">{item.code}</div>
+                            <div className="font-semibold text-neutral-800">{item.description}</div>
+                            <div className="text-[10px] text-neutral-400 font-mono">NCM: {item.ncm}</div>
+                          </td>
+                          <td className="p-2.5 text-center">
+                            <select
+                              value={item.itemType}
+                              onChange={(e) => handleItemTypeChange(idx, e.target.value as any)}
+                              className={`border rounded px-2 py-1 text-xs font-bold focus:outline-none ${
+                                item.itemType === 'FIXO'
+                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                                  : 'bg-purple-50 border-purple-300 text-purple-800'
+                              }`}
+                            >
+                              <option value="FIXO">📦 Fixo (Prateleira)</option>
+                              <option value="ROTATIVO">🔄 Rotativo (Encomenda)</option>
+                            </select>
                           </td>
                           <td className="p-2.5 text-center font-bold font-mono">
                             <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded">
@@ -396,7 +458,7 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
                   ) : (
                     <>
                       <PackageCheck className="w-4 h-4 text-emerald-400" />
-                      <span>Confirmar Entrada & Dar Baixa no Saldo</span>
+                      <span>Confirmar Entrada no Estoque</span>
                     </>
                   )}
                 </button>

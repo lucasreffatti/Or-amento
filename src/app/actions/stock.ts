@@ -20,6 +20,7 @@ export async function createStockItem(formData: FormData) {
 
   const code = (formData.get('code') as string)?.trim()
   const description = (formData.get('description') as string)?.trim()
+  const itemType = (formData.get('itemType') as string)?.trim() || 'FIXO'
   const ncm = (formData.get('ncm') as string)?.trim() || '8708.29.99'
   const cest = (formData.get('cest') as string)?.trim() || null
   const unit = (formData.get('unit') as string)?.trim() || 'UN'
@@ -37,6 +38,7 @@ export async function createStockItem(formData: FormData) {
       tenantId: session.tenantId,
       code,
       description,
+      itemType,
       ncm,
       cest,
       unit,
@@ -57,6 +59,7 @@ export async function updateStockItem(id: string, formData: FormData) {
 
   const code = (formData.get('code') as string)?.trim()
   const description = (formData.get('description') as string)?.trim()
+  const itemType = (formData.get('itemType') as string)?.trim() || 'FIXO'
   const ncm = (formData.get('ncm') as string)?.trim() || '8708.29.99'
   const cest = (formData.get('cest') as string)?.trim() || null
   const unit = (formData.get('unit') as string)?.trim() || 'UN'
@@ -70,6 +73,7 @@ export async function updateStockItem(id: string, formData: FormData) {
     data: {
       code,
       description,
+      itemType,
       ncm,
       cest,
       unit,

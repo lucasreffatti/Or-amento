@@ -39,7 +39,7 @@ export interface ParsedXmlData {
   items: ParsedXmlItem[]
 }
 
-// Helper para extrair conteúdo de tag XML via Regex sem depender de biblioteca nativa
+// Helper para extrair conteúdo de tag XML via Regex
 function getTagValue(xml: string, tag: string): string {
   const match = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'))
   return match ? match[1].trim() : ''
@@ -59,7 +59,6 @@ export async function parseNfeXmlAction(xmlContent: string): Promise<ParsedXmlDa
   }
 
   if (!nfeKey) {
-    // Fallback: Gerar chave temporária baseada na nota se não encontrar a chave completa
     const nNF = getTagValue(xmlContent, 'nNF') || '0'
     nfeKey = `TEMP_${Date.now()}_${nNF}`
   }
@@ -108,7 +107,6 @@ export async function parseNfeXmlAction(xmlContent: string): Promise<ParsedXmlDa
   const detMatches = xmlContent.match(/<det[^>]*>([\s\S]*?)<\/det>/gi) || []
   const items: ParsedXmlItem[] = []
 
-  // Buscar itens existentes no estoque do tenant para tentar conciliação prévia
   const existingStock = await prisma.stockItem.findMany({
     where: { tenantId: session.tenantId }
   })
@@ -125,10 +123,8 @@ export async function parseNfeXmlAction(xmlContent: string): Promise<ParsedXmlDa
     const costPrice = parseFloat(getTagValue(prodXml, 'vUnCom') || '0')
     const totalPrice = parseFloat(getTagValue(prodXml, 'vProd') || '0')
 
-    // Sugestão de Preço de Venda com margem padrão de +60%
     const suggestedSalePrice = Math.round(costPrice * 1.6 * 100) / 100
 
-    // Tentar encontrar peça idêntica no estoque pelo código SKU ou por NCM + descrição aproximada
     const matchedItem = existingStock.find(i => 
       i.code.toLowerCase() === code.toLowerCase() || 
       i.description.toLowerCase().trim() === description.toLowerCase().trim()
@@ -167,6 +163,7 @@ export interface ImportItemChoice {
   quantity: number
   costPrice: number
   salePrice: number
+  itemType: 'FIXO' | 'ROTATIVO'
   action: 'CREATE_NEW' | 'UPDATE_EXISTING'
   existingStockItemId?: string
 }
@@ -244,13 +241,14 @@ export async function processStockEntryImport(data: {
   // 4. Processar cada Peça (Criar Nova ou Atualizar Existente)
   for (const item of data.items) {
     let stockItemId = item.existingStockItemId
+    const targetType = item.itemType || 'FIXO'
 
     if (item.action === 'UPDATE_EXISTING' && stockItemId) {
-      // Incrementar saldo e atualizar preço de custo e venda
       await prisma.stockItem.update({
         where: { id: stockItemId },
         data: {
-          quantity: { increment: item.quantity },
+          itemType: targetType,
+          quantity: targetType === 'FIXO' ? { increment: item.quantity } : { increment: 0 },
           costPrice: item.costPrice,
           salePrice: item.salePrice > 0 ? item.salePrice : undefined,
           ncm: item.ncm || undefined,
@@ -258,8 +256,6 @@ export async function processStockEntryImport(data: {
         }
       })
     } else {
-      // Criar nova peça no Estoque
-      // Garantir SKU único
       let codeToUse = item.code || `SKU-${Date.now().toString().slice(-6)}`
       const existingCode = await prisma.stockItem.findUnique({
         where: { tenantId_code: { tenantId: session.tenantId, code: codeToUse } }
@@ -275,19 +271,19 @@ export async function processStockEntryImport(data: {
           supplierId: supplier.id,
           code: codeToUse,
           description: item.description,
+          itemType: targetType,
           ncm: item.ncm || '8708.29.99',
           unit: item.unit || 'UN',
           costPrice: item.costPrice,
           salePrice: item.salePrice > 0 ? item.salePrice : item.costPrice * 1.5,
-          quantity: item.quantity,
-          minQuantity: 2
+          quantity: targetType === 'FIXO' ? item.quantity : 0, // Se rotativo, saldo 0 pois sai no mesmo dia
+          minQuantity: targetType === 'FIXO' ? 2 : 0
         }
       })
 
       stockItemId = newStockItem.id
     }
 
-    // Registrar o item na tabela StockEntryItem
     await prisma.stockEntryItem.create({
       data: {
         stockEntryId: stockEntry.id,
@@ -305,4 +301,21 @@ export async function processStockEntryImport(data: {
 
   revalidatePath('/stock')
   return { success: true, entryId: stockEntry.id, supplierName: supplier.name }
+}
+
+export async function getStockEntriesAction() {
+  const session = await getSession()
+
+  return prisma.stockEntry.findMany({
+    where: { tenantId: session.tenantId },
+    include: {
+      supplier: true,
+      items: {
+        include: {
+          stockItem: true
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  })
 }

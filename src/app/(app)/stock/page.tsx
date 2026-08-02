@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { getStockEntriesAction } from '@/app/actions/stockEntry'
 import StockClient from './StockClient'
 
 export default async function StockPage() {
@@ -11,5 +12,7 @@ export default async function StockPage() {
     orderBy: { description: 'asc' }
   })
 
-  return <StockClient initialItems={items} />
+  const entries = await getStockEntriesAction()
+
+  return <StockClient initialItems={items} initialEntries={entries} />
 }
