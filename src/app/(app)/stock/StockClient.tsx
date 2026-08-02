@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, AlertTriangle, Package, DollarSign, ArrowUpRight, Edit2, Trash2, ShieldAlert } from 'lucide-react'
+import { Plus, Search, AlertTriangle, Package, DollarSign, ArrowUpRight, Edit2, Trash2, ShieldAlert, FileCode2 } from 'lucide-react'
 import { createStockItem, updateStockItem, deleteStockItem, adjustStockQuantity } from '@/app/actions/stock'
+import { ImportXmlModal } from '@/components/ImportXmlModal'
 
 interface StockItem {
   id: string
@@ -22,6 +23,7 @@ export default function StockClient({ initialItems }: { initialItems: StockItem[
   const [search, setSearch] = useState('')
   const [showLowStockOnly, setShowLowStockOnly] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isXmlModalOpen, setIsXmlModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<StockItem | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -67,13 +69,25 @@ export default function StockClient({ initialItems }: { initialItems: StockItem[
           <h1 className="text-xl font-semibold text-neutral-900 tracking-tight">Gestão de Estoque & Peças Fiscais</h1>
           <p className="text-sm text-neutral-500 mt-1">Controle de saldo em tempo real, NCM fiscal para NF-e e alerta de reposição.</p>
         </div>
-        <button
-          onClick={handleOpenCreate}
-          className="bg-neutral-900 text-white px-4 py-2 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center gap-2 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Cadastrar Nova Peça</span>
-        </button>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsXmlModalOpen(true)}
+            className="bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-200 px-3.5 py-2 text-[13px] font-medium rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 shrink-0"
+            title="Importar XML da Distribuidora para dar entrada de estoque e cadastrar fornecedor"
+          >
+            <FileCode2 className="w-4 h-4 text-blue-600" />
+            <span>Importar Nota de Compra (XML)</span>
+          </button>
+
+          <button
+            onClick={handleOpenCreate}
+            className="bg-neutral-900 text-white px-4 py-2 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center gap-2 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Cadastrar Nova Peça</span>
+          </button>
+        </div>
       </div>
 
       {/* Cards de Métricas */}
@@ -236,7 +250,17 @@ export default function StockClient({ initialItems }: { initialItems: StockItem[
         </div>
       </div>
 
-      {/* Modal de Cadastro / Edição */}
+      {/* Modal de Importação de XML */}
+      <ImportXmlModal
+        isOpen={isXmlModalOpen}
+        onClose={() => setIsXmlModalOpen(false)}
+        existingStockItems={items}
+        onSuccess={() => {
+          window.location.reload()
+        }}
+      />
+
+      {/* Modal de Cadastro / Edição Manual */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white border border-neutral-200 rounded-xl w-full max-w-lg overflow-hidden shadow-2xl space-y-4 p-6 text-neutral-900">

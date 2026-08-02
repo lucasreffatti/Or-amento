@@ -27,13 +27,15 @@ model Tenant {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  users      User[]
-  customers  Customer[]
-  vehicles   Vehicle[]
-  checklists Checklist[]
-  budgets    Budget[]
-  stockItems StockItem[]
-  invoices   Invoice[]
+  users        User[]
+  customers    Customer[]
+  vehicles     Vehicle[]
+  checklists   Checklist[]
+  budgets      Budget[]
+  stockItems   StockItem[]
+  invoices     Invoice[]
+  suppliers    Supplier[]
+  stockEntries StockEntry[]
 }
 
 model User {
@@ -163,10 +165,36 @@ model BudgetItem {
   approved    Boolean    @default(true) 
 }
 
+model Supplier {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  name         String   // Razão Social
+  tradeName    String?  // Nome Fantasia
+  document     String   // CNPJ
+  ie           String?  // Inscrição Estadual
+  phone        String?
+  email        String?
+  address      String?
+  city         String?
+  state        String?
+  cep          String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stockEntries StockEntry[]
+  stockItems   StockItem[]
+
+  @@unique([tenantId, document])
+}
+
 model StockItem {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
   code        String   // SKU / Código de Barras / Referência
   description String
   ncm         String?  @default("8708.29.99") // NCM para autopeças
@@ -180,8 +208,45 @@ model StockItem {
   updatedAt   DateTime @updatedAt
 
   budgetItems BudgetItem[]
+  entryItems  StockEntryItem[]
 
   @@unique([tenantId, code])
+}
+
+model StockEntry {
+  id           String           @id @default(cuid())
+  tenantId     String
+  tenant       Tenant           @relation(fields: [tenantId], references: [id])
+  supplierId   String
+  supplier     Supplier         @relation(fields: [supplierId], references: [id])
+  
+  nfeKey       String           // Chave de 44 dígitos da nota do fornecedor
+  nfeNumber    String           // Número da Nota Fiscal
+  nfeSeries    String?          @default("1")
+  issueDate    DateTime?
+  totalAmount  Float            @default(0)
+  
+  items        StockEntryItem[]
+
+  createdAt    DateTime         @default(now())
+
+  @@unique([tenantId, nfeKey])
+}
+
+model StockEntryItem {
+  id                  String     @id @default(cuid())
+  stockEntryId        String
+  stockEntry          StockEntry @relation(fields: [stockEntryId], references: [id], onDelete: Cascade)
+  stockItemId         String?
+  stockItem           StockItem? @relation(fields: [stockItemId], references: [id])
+
+  supplierProductCode String     // Código cProd da Distribuidora
+  description         String     // Descrição no XML
+  ncm                 String?
+  unit                String     @default("UN")
+  quantity            Int        @default(1)
+  costUnitPrice       Float      @default(0)
+  totalPrice          Float      @default(0)
 }
 
 model Invoice {
