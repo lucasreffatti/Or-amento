@@ -27,7 +27,7 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
   return (
     <>
       {/* TopBar (Mobile Only) */}
-      <div className="md:hidden flex items-center justify-between bg-[#0A0A0A] text-white p-4 border-b border-neutral-800">
+      <div className="md:hidden flex items-center justify-between bg-[#0A0A0A] text-white p-4 border-b border-neutral-800 shrink-0">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
             <Command className="w-3.5 h-3.5 text-black" strokeWidth={2.5} />
