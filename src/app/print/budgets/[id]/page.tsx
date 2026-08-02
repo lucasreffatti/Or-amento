@@ -30,18 +30,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
   const labor = budget.items.filter(i => i.type === 'LABOR')
 
   const isExpired = new Date(budget.validUntil) < new Date() && budget.status !== 'APPROVED';
-  const showGiantStamp = budget.status === 'REJECTED' || isExpired;
 
-  let stampText = '';
-  let stampColor = '';
-  
-  if (budget.status === 'REJECTED') {
-    stampText = 'RECUSADO';
-    stampColor = 'border-red-600 text-red-600';
-  } else if (isExpired) {
-    stampText = 'VENCIDO';
-    stampColor = 'border-amber-600 text-amber-600';
-  }
 
   return (
     <div className="bg-white text-black min-h-screen font-sans p-8 print:p-0 text-sm relative">
@@ -206,20 +195,6 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         <div className="grid grid-cols-2 gap-16 mt-8 pt-8 relative z-10">
           
           <div className="text-center text-xs relative">
-            {/* CARIMBO AUTOMÁTICO SE APROVADO */}
-            {budget.status === 'APPROVED' && (
-              <div className="absolute top-1/2 left-1/2 z-20 pointer-events-none opacity-80" style={{ transform: 'translate(-50%, -60%) rotate(-15deg)' }}>
-                <div className="border-4 border-red-600 rounded-lg p-2 text-red-600 inline-block bg-white/70 backdrop-blur-[2px]">
-                  <div className="border-2 border-red-600 rounded p-4 text-center shadow-sm">
-                    <h3 className="font-black text-2xl uppercase tracking-widest leading-none mb-1">Aprovado</h3>
-                    <p className="font-bold text-[10px] uppercase tracking-wider">{budget.tenant.name}</p>
-                    <p className="font-mono text-[10px] font-bold mt-1 border-t border-red-600 pt-1">
-                      {new Date(budget.updatedAt).toLocaleDateString('pt-BR')} {new Date(budget.updatedAt).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
             <div className="border-b border-black mb-1 w-full mt-2"></div>
             <p className="font-bold uppercase">{budget.tenant.name}</p>
             <p className="text-gray-600">Assinatura da Oficina / Técnico Responsável</p>

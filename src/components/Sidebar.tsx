@@ -3,12 +3,15 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X, Monitor } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
+import { useScale } from '@/components/ScaleProvider'
 
 export default function Sidebar({ user }: { user?: { username: string, role: string } }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const { openWidget } = useScale()
+
 
   const menus = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -94,7 +97,21 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
         </nav>
 
         <div className="p-4 md:p-2 border-t border-neutral-800 space-y-4 md:space-y-2 flex flex-col items-center">
-          <nav className="w-full">
+          <nav className="w-full space-y-1">
+            <button 
+              type="button"
+              onClick={() => { openWidget(); setIsOpen(false); }}
+              title="Ajustar Densidade da Tela"
+              className="flex items-center gap-3 md:justify-center w-full px-3 md:px-0 py-2.5 md:py-3 text-[13px] font-medium text-neutral-400 rounded-lg hover:bg-neutral-800/50 hover:text-neutral-200 transition-colors group relative"
+            >
+              <Monitor className="w-4 h-4 shrink-0 text-indigo-400 group-hover:text-indigo-300" strokeWidth={2} />
+              <span className="md:hidden">Densidade da Tela</span>
+              
+              <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                Densidade da Tela
+              </span>
+            </button>
+
             <Link 
               href="/settings" 
               title="Configurações"
@@ -109,6 +126,7 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
               </span>
             </Link>
           </nav>
+
           
           <div className="flex items-center space-x-3 md:space-x-0 md:justify-center w-full px-3 md:px-0 py-2 md:py-2 rounded-lg bg-neutral-800/30 md:bg-transparent border border-neutral-800/50 md:border-transparent group relative">
             <div className="w-7 h-7 shrink-0 rounded-full bg-gradient-to-tr from-neutral-700 to-neutral-500 text-white flex items-center justify-center text-[10px] font-bold shadow-inner uppercase cursor-help">
