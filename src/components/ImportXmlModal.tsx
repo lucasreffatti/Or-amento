@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { UploadCloud, FileCode2, CheckCircle2, AlertCircle, Building2, PackageCheck, ArrowRight, RefreshCw, X } from 'lucide-react'
+import { UploadCloud, FileCode2, CheckCircle2, AlertCircle, Building2, PackageCheck, ArrowRight, RefreshCw, X, Percent } from 'lucide-react'
 import { parseNfeXmlAction, processStockEntryImport, ParsedXmlData, ImportItemChoice } from '@/app/actions/stockEntry'
 
 interface ImportXmlModalProps {
@@ -17,6 +17,7 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
   const [error, setError] = useState<string | null>(null)
   const [parsedData, setParsedData] = useState<ParsedXmlData | null>(null)
   const [itemChoices, setItemChoices] = useState<ImportItemChoice[]>([])
+  const [defaultMargin, setDefaultMargin] = useState<number>(60) // Margem de lucro padrão (%)
 
   if (!isOpen) return null
 
@@ -41,18 +42,21 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
 
         setParsedData(parsed)
 
-        // Inicializar opções dos itens
-        const initialChoices: ImportItemChoice[] = parsed.items.map(item => ({
-          code: item.code,
-          description: item.description,
-          ncm: item.ncm,
-          unit: item.unit,
-          quantity: item.quantity,
-          costPrice: item.costPrice,
-          salePrice: item.suggestedSalePrice,
-          action: item.matchedStockItemId ? 'UPDATE_EXISTING' : 'CREATE_NEW',
-          existingStockItemId: item.matchedStockItemId || undefined
-        }))
+        // Inicializar opções dos itens com a margem atual configurada
+        const initialChoices: ImportItemChoice[] = parsed.items.map(item => {
+          const calculatedSalePrice = Math.round(item.costPrice * (1 + defaultMargin / 100) * 100) / 100
+          return {
+            code: item.code,
+            description: item.description,
+            ncm: item.ncm,
+            unit: item.unit,
+            quantity: item.quantity,
+            costPrice: item.costPrice,
+            salePrice: calculatedSalePrice,
+            action: item.matchedStockItemId ? 'UPDATE_EXISTING' : 'CREATE_NEW',
+            existingStockItemId: item.matchedStockItemId || undefined
+          }
+        })
 
         setItemChoices(initialChoices)
         setStep('REVIEW')
@@ -63,6 +67,18 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
       }
     }
     reader.readAsText(file)
+  }
+
+  const handleGlobalMarginChange = (newMargin: number) => {
+    setDefaultMargin(newMargin)
+    if (parsedData && itemChoices.length > 0) {
+      setItemChoices(prev =>
+        prev.map(item => ({
+          ...item,
+          salePrice: Math.round(item.costPrice * (1 + newMargin / 100) * 100) / 100
+        }))
+      )
+    }
   }
 
   const handleActionChange = (index: number, action: 'CREATE_NEW' | 'UPDATE_EXISTING', stockItemId?: string) => {
@@ -189,9 +205,9 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
               </div>
               <div className="space-y-1">
                 <p className="font-bold flex items-center gap-1.5 text-blue-800">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 3. Margem Inteligente
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 3. Margem Ajustável
                 </p>
-                <p className="text-neutral-600">Aplica margem de lucro sugerida (+60%) sobre o custo do XML.</p>
+                <p className="text-neutral-600">Aplica a margem de lucro selecionada (%) sobre o custo das peças.</p>
               </div>
             </div>
           </div>
@@ -223,13 +239,55 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
               </div>
             </div>
 
+            {/* Controle Global da Margem de Lucro */}
+            <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-blue-900">
+                <Percent className="w-4 h-4 text-blue-600 shrink-0" />
+                <div>
+                  <span className="font-bold">Margem de Lucro Padrão da Oficina</span>
+                  <p className="text-neutral-500 text-[11px]">Recalcula automaticamente o preço de venda de todas as peças.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-neutral-600 font-medium">Margem:</span>
+                <div className="relative flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    max="1000"
+                    value={defaultMargin}
+                    onChange={(e) => handleGlobalMarginChange(parseFloat(e.target.value) || 0)}
+                    className="w-20 bg-white border border-blue-300 rounded-lg px-2.5 py-1 text-right font-bold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  <span className="ml-1 text-blue-900 font-bold">%</span>
+                </div>
+                <div className="flex gap-1 ml-2">
+                  {[40, 50, 60, 70, 100].map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => handleGlobalMarginChange(m)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                        defaultMargin === m
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100'
+                      }`}
+                    >
+                      {m}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Tabela de Conciliação das Peças */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs uppercase font-bold text-neutral-500 tracking-wider">
                   Itens Identificados no XML ({parsedData.items.length} peças)
                 </h3>
-                <span className="text-xs text-neutral-500">Revise o preço de venda e a ação de cada item:</span>
+                <span className="text-xs text-neutral-500">Altere a margem acima ou edite o valor direto na tabela:</span>
               </div>
 
               <div className="border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
@@ -241,7 +299,7 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
                         <th className="p-2.5">Descrição da Peça (XML)</th>
                         <th className="p-2.5 text-center">Qtd</th>
                         <th className="p-2.5 text-right">Custo Un.</th>
-                        <th className="p-2.5 text-right">Venda Un. (Sugerido)</th>
+                        <th className="p-2.5 text-right">Venda Un. (Com Margem)</th>
                         <th className="p-2.5">Ação de Entrada</th>
                       </tr>
                     </thead>
