@@ -74,7 +74,7 @@ export default async function SettingsPage() {
                 type="text" 
                 name="address"
                 defaultValue={tenant.address || ''}
-                placeholder="Ex: Rua Jacob Weingatner, 4198 - Centro - CEP 88131-400 - Palhoça/SC"
+                placeholder="Ex: Rua Jacob Weingartner, 4198 - Centro - CEP 88131-400 - Palhoça/SC"
                 className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all"
               />
             </div>

@@ -79,7 +79,7 @@ export default async function PrintInvoicePage(props: { params: Promise<{ id: st
           <div className="p-3 grid grid-cols-2 gap-4 text-xs">
             <div>
               <h2 className="font-bold text-sm uppercase">{invoice.tenant.name || 'Auto Elétrica Sérgio Car'}</h2>
-              <p className="text-gray-700 mt-0.5">{invoice.tenant.address || 'Rua Jacob Weingatner, 4198 - Centro - CEP 88131-400 - Palhoça/SC'}</p>
+              <p className="text-gray-700 mt-0.5">{invoice.tenant.address || 'Rua Jacob Weingartner, 4198 - Centro - CEP 88131-400 - Palhoça/SC'}</p>
               <p className="text-gray-700 font-semibold">Telefone: {invoice.tenant.phone || '(48) 99172-7541'}</p>
             </div>
             <div className="space-y-1 font-mono text-xs">

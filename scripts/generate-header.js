@@ -73,7 +73,7 @@ async function generateHeader() {
 
       <!-- Limpar área do CEP/Endereço antigo e desenhar o novo CEP 88131-400 -->
       <rect x="0" y="475" width="${width}" height="110" fill="#ffffff" />
-      <text x="${width / 2}" y="542" text-anchor="middle" class="address">Rua Jacob Weingatner, 4198 - Centro - 88131-400 - Palhoça/SC</text>
+      <text x="${width / 2}" y="542" text-anchor="middle" class="address">Rua Jacob Weingartner, 4198 - Centro - 88131-400 - Palhoça/SC</text>
     </svg>
   `;
 
