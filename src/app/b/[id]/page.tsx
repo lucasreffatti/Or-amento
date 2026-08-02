@@ -201,14 +201,14 @@ export default async function PublicBudgetPage(props: { params: Promise<{ id: st
         </div>
 
         {/* ASSINATURAS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-16 mt-12 pt-8">
-          <div className="text-center text-xs">
-            <div className="border-b border-black mb-1 w-full mt-12"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-16 mt-10 pt-6">
+          <div className="text-center text-xs flex flex-col justify-end min-h-[110px]">
+            <div className="border-b border-black mb-1.5 w-full"></div>
             <p className="font-bold uppercase">{budget.tenant.name}</p>
             <p className="text-gray-600">Assinatura da Oficina / Técnico Responsável</p>
           </div>
-          <div className="text-center text-xs">
-            <div className="border-b border-black mb-1 w-full mt-12"></div>
+          <div className="text-center text-xs flex flex-col justify-end min-h-[110px]">
+            <div className="border-b border-black mb-1.5 w-full"></div>
             <p className="font-bold uppercase">{budget.customer.name}</p>
             <p className="text-gray-600">De Acordo / Autorização de Execução</p>
           </div>

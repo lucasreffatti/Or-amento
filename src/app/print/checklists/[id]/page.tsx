@@ -168,14 +168,14 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
         )}
 
         {/* ASSINATURAS */}
-        <div className="mt-8 pt-4 border-t border-black grid grid-cols-2 gap-8 text-xs">
-          <div className="text-center">
-            <div className="border-b border-black mb-1 w-full mt-12"></div>
+        <div className="mt-10 pt-6 border-t border-black grid grid-cols-2 gap-8 text-xs">
+          <div className="text-center flex flex-col justify-end min-h-[110px]">
+            <div className="border-b border-black mb-1.5 w-full"></div>
             <p className="font-bold uppercase">Assinatura do Cliente</p>
             <p className="text-[10px] text-neutral-600 mt-0.5">Declaro estar ciente e de acordo com o estado do veículo descrito acima.</p>
           </div>
-          <div className="text-center">
-            <div className="border-b border-black mb-1 w-full mt-12"></div>
+          <div className="text-center flex flex-col justify-end min-h-[110px]">
+            <div className="border-b border-black mb-1.5 w-full"></div>
             <p className="font-bold uppercase">Responsável da Oficina</p>
             <p className="text-[10px] text-neutral-600 mt-0.5">{tenant?.name}</p>
           </div>

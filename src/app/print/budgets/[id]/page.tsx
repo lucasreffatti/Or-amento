@@ -230,16 +230,15 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         </div>
 
         {/* ASSINATURAS */}
-        <div className="grid grid-cols-2 gap-16 mt-12 pt-8 relative z-10">
-          
-          <div className="text-center text-xs relative">
-            <div className="border-b border-black mb-1 w-full mt-12"></div>
+        <div className="grid grid-cols-2 gap-16 mt-10 pt-6 relative z-10">
+          <div className="text-center text-xs flex flex-col justify-end min-h-[110px] relative">
+            <div className="border-b border-black mb-1.5 w-full"></div>
             <p className="font-bold uppercase">{budget.tenant.name}</p>
             <p className="text-gray-600">Assinatura da Oficina / Técnico Responsável</p>
             <p className="text-gray-400 mt-2">___/___/______</p>
           </div>
-          <div className="text-center text-xs relative">
-            <div className="border-b border-black mb-1 w-full mt-12"></div>
+          <div className="text-center text-xs flex flex-col justify-end min-h-[110px] relative">
+            <div className="border-b border-black mb-1.5 w-full"></div>
             <p className="font-bold uppercase">{budget.customer.name}</p>
             <p className="text-gray-600">De Acordo / Autorização de Execução</p>
             <p className="text-gray-400 mt-2">___/___/______</p>
