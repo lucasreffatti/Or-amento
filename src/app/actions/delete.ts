@@ -1,9 +1,9 @@
-'use strict'
 'use server'
 
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 export async function deleteChecklist(id: string) {
   const session = await getSession()
@@ -19,25 +19,30 @@ export async function deleteChecklist(id: string) {
   })
   
   revalidatePath('/checklists')
+  revalidatePath('/budgets')
+  redirect('/checklists')
 }
 
 export async function deleteBudget(id: string) {
   const session = await getSession()
   
-  // BudgetItem possui onDelete: Cascade no schema, então o Prisma cuidará dos itens,
-  // mas é sempre mais seguro deletar direto por via das dúvidas ou deixar o banco resolver.
+  // BudgetItem possui onDelete: Cascade no schema, então o Prisma cuidará dos itens
   await prisma.budget.delete({
     where: { id, tenantId: session.tenantId }
   })
   
   revalidatePath('/budgets')
+  revalidatePath('/checklists')
+  revalidatePath('/customers')
+  revalidatePath('/vehicles')
+  redirect('/budgets')
 }
 
 export async function deleteVehicle(id: string) {
   const session = await getSession()
   
   await prisma.$transaction(async (tx) => {
-    // 1. Encontrar orçamentos deste veículo e remover os itens primeiro (se não estiver em cascade a nível de driver)
+    // 1. Encontrar orçamentos deste veículo e remover os itens primeiro
     const budgets = await tx.budget.findMany({ where: { vehicleId: id, tenantId: session.tenantId } })
     const budgetIds = budgets.map(b => b.id)
     
@@ -54,6 +59,9 @@ export async function deleteVehicle(id: string) {
   })
   
   revalidatePath('/vehicles')
+  revalidatePath('/budgets')
+  revalidatePath('/checklists')
+  redirect('/vehicles')
 }
 
 export async function deleteCustomer(id: string) {
@@ -81,4 +89,8 @@ export async function deleteCustomer(id: string) {
   })
   
   revalidatePath('/customers')
+  revalidatePath('/budgets')
+  revalidatePath('/checklists')
+  revalidatePath('/vehicles')
+  redirect('/customers')
 }
