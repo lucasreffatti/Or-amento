@@ -52,7 +52,6 @@ interface Invoice {
 }
 
 export default function InvoicesClient({ initialInvoices, tenant }: { initialInvoices: Invoice[], tenant: any }) {
-  const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
   const [cancellingInvoiceId, setCancellingInvoiceId] = useState<string | null>(null)
@@ -104,10 +103,6 @@ export default function InvoicesClient({ initialInvoices, tenant }: { initialInv
     } finally {
       setLoading(false)
     }
-  }
-
-  const handlePrintModal = () => {
-    window.print()
   }
 
   return (
@@ -309,7 +304,7 @@ export default function InvoicesClient({ initialInvoices, tenant }: { initialInv
                       </td>
 
                       <td className="px-4 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
                           {inv.status === 'DRAFT' && (
                             <button
                               onClick={() => handleTransmit(inv.id)}
@@ -324,12 +319,23 @@ export default function InvoicesClient({ initialInvoices, tenant }: { initialInv
 
                           <button
                             onClick={() => setSelectedInvoice(inv)}
-                            className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded transition-colors flex items-center gap-1 text-xs"
+                            className="px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded text-xs font-medium inline-flex items-center gap-1 border border-neutral-700 transition-colors"
                             title="Visualizar Espelho / DANFE"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5 text-blue-400" />
                             <span>Ver Nota</span>
                           </button>
+
+                          <a
+                            href={`/print/invoices/${inv.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-xs font-semibold inline-flex items-center gap-1 border border-neutral-700 transition-colors"
+                            title="Abrir e Imprimir PDF da Nota Fiscal"
+                          >
+                            <Printer className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Imprimir PDF</span>
+                          </a>
 
                           {inv.status === 'AUTHORIZED' && (
                             <button
@@ -357,8 +363,8 @@ export default function InvoicesClient({ initialInvoices, tenant }: { initialInv
       {/* Modal Espelho / DANFE Visualizer */}
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl space-y-4 p-6 max-h-[90vh] overflow-y-auto print:bg-white print:text-black print:p-0 print:border-none print:shadow-none">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3 print:hidden">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl space-y-4 p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-blue-400" />
                 <h2 className="text-lg font-bold text-white">
@@ -374,52 +380,52 @@ export default function InvoicesClient({ initialInvoices, tenant }: { initialInv
             </div>
 
             {/* Cabeçalho da Nota */}
-            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-lg space-y-3 print:bg-white print:border-black print:text-black">
+            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-lg space-y-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-bold text-white text-base print:text-black">{tenant?.name || 'Auto Elétrica Sérgio Car'}</h3>
-                  <p className="text-xs text-neutral-400 print:text-gray-700">CNPJ: {tenant?.document || '22.980.022/0001-06'} | IE: {tenant?.ie || '123.456.789'}</p>
-                  <p className="text-xs text-neutral-400 print:text-gray-700">{tenant?.address}</p>
+                  <h3 className="font-bold text-white text-base">{tenant?.name || 'Auto Elétrica Sérgio Car'}</h3>
+                  <p className="text-xs text-neutral-400">CNPJ: {tenant?.document || '22.980.022/0001-06'} | IE: {tenant?.ie || '123.456.789'}</p>
+                  <p className="text-xs text-neutral-400">{tenant?.address}</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-mono bg-neutral-800 text-neutral-300 px-2 py-1 rounded print:bg-gray-200 print:text-black">
+                  <span className="text-xs font-mono bg-neutral-800 text-neutral-300 px-2 py-1 rounded">
                     SÉRIE: {selectedInvoice.series || 1}
                   </span>
                 </div>
               </div>
 
               {selectedInvoice.accessKey ? (
-                <div className="border-t border-neutral-800 pt-2 space-y-1 print:border-gray-300">
-                  <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold block print:text-black">Chave de Acesso (SEFAZ)</span>
-                  <p className="text-xs font-mono text-emerald-400 break-all bg-black/50 p-2 rounded border border-neutral-800 print:bg-gray-100 print:text-black print:border-gray-300">
+                <div className="border-t border-neutral-800 pt-2 space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold block">Chave de Acesso (SEFAZ)</span>
+                  <p className="text-xs font-mono text-emerald-400 break-all bg-black/50 p-2 rounded border border-neutral-800">
                     {selectedInvoice.accessKey}
                   </p>
                   {selectedInvoice.protocol && (
-                    <p className="text-[11px] text-neutral-400 font-mono print:text-black">
-                      Protocolo de Autorização: <span className="text-white print:text-black font-bold">{selectedInvoice.protocol}</span>
+                    <p className="text-[11px] text-neutral-400 font-mono">
+                      Protocolo de Autorização: <span className="text-white font-bold">{selectedInvoice.protocol}</span>
                     </p>
                   )}
                 </div>
               ) : (
-                <div className="border-t border-neutral-800 pt-2 text-xs text-amber-400 font-medium print:text-amber-800">
+                <div className="border-t border-neutral-800 pt-2 text-xs text-amber-400 font-medium">
                   ⚠️ NOTA EM RASCUNHO (Aguardando transmissão para gerar Chave SEFAZ de 44 dígitos)
                 </div>
               )}
             </div>
 
             {/* Destinatário */}
-            <div className="bg-neutral-950 border border-neutral-800 p-3 rounded-lg space-y-1 print:bg-white print:border-black print:text-black">
-              <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold print:text-black">Destinatário / Cliente</span>
-              <p className="text-sm font-bold text-white print:text-black">{selectedInvoice.customer.name}</p>
-              <p className="text-xs text-neutral-400 print:text-gray-700">CPF/CNPJ: {selectedInvoice.customer.document || 'Não informado'} | Tel: {selectedInvoice.customer.phone}</p>
+            <div className="bg-neutral-950 border border-neutral-800 p-3 rounded-lg space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">Destinatário / Cliente</span>
+              <p className="text-sm font-bold text-white">{selectedInvoice.customer.name}</p>
+              <p className="text-xs text-neutral-400">CPF/CNPJ: {selectedInvoice.customer.document || 'Não informado'} | Tel: {selectedInvoice.customer.phone}</p>
             </div>
 
             {/* Itens discriminados */}
             <div className="space-y-2">
-              <h4 className="text-xs uppercase font-bold text-neutral-400 tracking-wider print:text-black">Produtos e Serviços Discriminados</h4>
-              <div className="border border-neutral-800 rounded-lg overflow-hidden print:border-black">
-                <table className="w-full text-xs text-left text-neutral-300 print:text-black">
-                  <thead className="bg-neutral-950 text-neutral-400 font-medium uppercase border-b border-neutral-800 print:bg-gray-100 print:text-black print:border-black">
+              <h4 className="text-xs uppercase font-bold text-neutral-400 tracking-wider">Produtos e Serviços Discriminados</h4>
+              <div className="border border-neutral-800 rounded-lg overflow-hidden">
+                <table className="w-full text-xs text-left text-neutral-300">
+                  <thead className="bg-neutral-950 text-neutral-400 font-medium uppercase border-b border-neutral-800">
                     <tr>
                       <th className="p-2">Tipo</th>
                       <th className="p-2">Descrição</th>
@@ -429,17 +435,17 @@ export default function InvoicesClient({ initialInvoices, tenant }: { initialInv
                       <th className="p-2 text-right">V. Total</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-800 print:divide-black">
+                  <tbody className="divide-y divide-neutral-800">
                     {selectedInvoice.items.map((item) => (
                       <tr key={item.id}>
                         <td className="p-2 font-bold text-[10px]">
-                          {item.type === 'PART' ? <span className="text-blue-400 print:text-black">PEÇA</span> : <span className="text-emerald-400 print:text-black">SERVIÇO</span>}
+                          {item.type === 'PART' ? <span className="text-blue-400">PEÇA</span> : <span className="text-emerald-400">SERVIÇO</span>}
                         </td>
                         <td className="p-2">{item.description}</td>
-                        <td className="p-2 font-mono text-neutral-400 print:text-black">{item.ncm || item.serviceCode || '-'}</td>
+                        <td className="p-2 font-mono text-neutral-400">{item.ncm || item.serviceCode || '-'}</td>
                         <td className="p-2 text-center">{item.quantity} {item.unit}</td>
                         <td className="p-2 text-right">R$ {item.unitPrice.toFixed(2)}</td>
-                        <td className="p-2 text-right font-bold text-white print:text-black">R$ {item.totalPrice.toFixed(2)}</td>
+                        <td className="p-2 text-right font-bold text-white">R$ {item.totalPrice.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -448,28 +454,30 @@ export default function InvoicesClient({ initialInvoices, tenant }: { initialInv
             </div>
 
             {/* Totais */}
-            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-lg flex justify-between items-center text-sm print:bg-white print:border-black print:text-black">
+            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-lg flex justify-between items-center text-sm">
               <div className="space-y-0.5">
-                <p className="text-xs text-neutral-400 print:text-black">Total Peças: <span className="text-white print:text-black font-mono">R$ {selectedInvoice.partsTotal.toFixed(2)}</span></p>
-                <p className="text-xs text-neutral-400 print:text-black">Total Mão de Obra: <span className="text-white print:text-black font-mono">R$ {selectedInvoice.laborTotal.toFixed(2)}</span></p>
-                <p className="text-xs text-neutral-400 print:text-black">Imposto Aproximado (~6.5%): <span className="text-blue-400 print:text-black font-mono">R$ {selectedInvoice.taxTotal.toFixed(2)}</span></p>
+                <p className="text-xs text-neutral-400">Total Peças: <span className="text-white font-mono">R$ {selectedInvoice.partsTotal.toFixed(2)}</span></p>
+                <p className="text-xs text-neutral-400">Total Mão de Obra: <span className="text-white font-mono">R$ {selectedInvoice.laborTotal.toFixed(2)}</span></p>
+                <p className="text-xs text-neutral-400">Imposto Aproximado (~6.5%): <span className="text-blue-400 font-mono">R$ {selectedInvoice.taxTotal.toFixed(2)}</span></p>
               </div>
               <div className="text-right">
-                <span className="text-xs text-neutral-500 uppercase font-semibold print:text-black">Valor Total da Nota</span>
-                <p className="text-xl font-bold text-emerald-400 font-mono print:text-black">
+                <span className="text-xs text-neutral-500 uppercase font-semibold">Valor Total da Nota</span>
+                <p className="text-xl font-bold text-emerald-400 font-mono">
                   R$ {selectedInvoice.finalTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2 print:hidden">
-              <button
-                onClick={handlePrintModal}
-                className="px-4 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg border border-neutral-700 flex items-center gap-2 transition-colors"
+            <div className="flex justify-end gap-3 pt-2">
+              <a
+                href={`/print/invoices/${selectedInvoice.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
               >
                 <Printer className="w-4 h-4" />
-                <span>Imprimir / Salvar PDF</span>
-              </button>
+                <span>Imprimir / PDF (DANFE A4)</span>
+              </a>
               <button
                 onClick={() => setSelectedInvoice(null)}
                 className="px-4 py-2 text-sm text-neutral-400 hover:text-white rounded-lg border border-neutral-800"
