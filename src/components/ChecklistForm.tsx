@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { createChecklist, updateChecklist } from '@/app/actions/checklist'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { AlertCircle, Loader2 } from 'lucide-react'
 
 type Customer = { id: string, name: string, phone: string }
 type Vehicle = { id: string, plate: string, brand: string, model: string }
@@ -18,6 +20,9 @@ export default function ChecklistForm({
   budgetId?: string,
   initialData?: any
 }) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
   const [fuelLevel, setFuelLevel] = useState(initialData?.fuelLevel ?? 50)
   
   const checklistItemsTemplate = [
@@ -47,18 +52,41 @@ export default function ChecklistForm({
     setItemsStatus(prev => ({ ...prev, [item]: status }))
   }
 
-  const formAction = initialData 
-    ? updateChecklist.bind(null, initialData.id) 
-    : createChecklist
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    const formData = new FormData(e.currentTarget)
+    
+    startTransition(async () => {
+      const res = initialData 
+        ? await updateChecklist(initialData.id, formData) 
+        : await createChecklist(formData)
+
+      if (res.success) {
+        if (res.data?.redirectUrl) {
+          router.push(res.data.redirectUrl)
+        }
+      } else {
+        setError(res.message)
+      }
+    })
+  }
 
   // Calculando rotação do ponteiro (0% = -90deg, 100% = 90deg)
   const needleRotation = (fuelLevel / 100) * 180 - 90
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8">
       {budgetId && <input type="hidden" name="budgetId" value={budgetId} />}
       <input type="hidden" name="itemsStatus" value={JSON.stringify(itemsStatus)} />
       
+      {error && (
+        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-md flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="space-y-1.5">
           <label htmlFor="customerId" className="text-[13px] font-medium text-neutral-700">Cliente *</label>
@@ -67,7 +95,8 @@ export default function ChecklistForm({
             name="customerId" 
             required
             defaultValue={initialData?.customerId ?? ""}
-            className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
+            disabled={isPending}
+            className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 disabled:opacity-50"
           >
             <option value="">Selecione um cliente...</option>
             {customers.map(c => (
@@ -83,7 +112,8 @@ export default function ChecklistForm({
             name="vehicleId" 
             required
             defaultValue={initialData?.vehicleId ?? ""}
-            className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
+            disabled={isPending}
+            className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 disabled:opacity-50"
           >
             <option value="">Selecione um veículo...</option>
             {vehicles.map(v => (
@@ -149,7 +179,8 @@ export default function ChecklistForm({
             step="5"
             value={fuelLevel}
             onChange={(e) => setFuelLevel(Number(e.target.value))}
-            className="w-full max-w-[200px] h-2 mt-8 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-neutral-900 shadow-sm"
+            disabled={isPending}
+            className="w-full max-w-[200px] h-2 mt-8 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-neutral-900 shadow-sm disabled:opacity-50"
           />
           <p className="text-[10px] text-neutral-400 mt-2 uppercase tracking-widest font-semibold">Arraste para ajustar o nível</p>
         </div>
@@ -169,8 +200,9 @@ export default function ChecklistForm({
                     <button
                       key={status}
                       type="button"
+                      disabled={isPending}
                       onClick={() => handleStatusChange(item, status)}
-                      className={`px-3.5 py-1.5 text-xs font-bold transition-colors border-r last:border-r-0 border-neutral-100 ${
+                      className={`px-3.5 py-1.5 text-xs font-bold transition-colors border-r last:border-r-0 border-neutral-100 disabled:opacity-50 ${
                         isActive 
                           ? status === 'OK' ? 'bg-emerald-500 text-white' : status === 'AVARIA' ? 'bg-red-500 text-white' : 'bg-neutral-600 text-white'
                           : 'bg-white text-neutral-600 hover:bg-neutral-50'
@@ -196,8 +228,9 @@ export default function ChecklistForm({
             name="reportedIssue"
             rows={2}
             defaultValue={initialData?.reportedIssue ?? ""}
+            disabled={isPending}
             placeholder="Descreva o problema relatado pelo cliente (ex: barulho na suspensão, falha ao ligar)..."
-            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 text-neutral-900"
+            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 text-neutral-900 disabled:opacity-50"
           />
         </div>
 
@@ -208,8 +241,9 @@ export default function ChecklistForm({
             id="obd2Codes"
             name="obd2Codes"
             defaultValue={initialData?.obd2Codes ?? ""}
+            disabled={isPending}
             placeholder="Ex: P0300, P0171"
-            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 font-mono text-neutral-900"
+            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 font-mono text-neutral-900 disabled:opacity-50"
           />
         </div>
 
@@ -220,8 +254,9 @@ export default function ChecklistForm({
             name="additionalInfo"
             rows={3}
             defaultValue={initialData?.additionalInfo ?? ""}
+            disabled={isPending}
             placeholder="Digite qualquer detalhe adicional relevante sobre o estado do veículo ou objetos deixados no interior..."
-            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 text-neutral-900"
+            className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 text-neutral-900 disabled:opacity-50"
           />
         </div>
       </div>
@@ -235,11 +270,20 @@ export default function ChecklistForm({
         </Link>
         <button 
           type="submit"
-          className="px-4 py-2.5 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors shadow-sm"
+          disabled={isPending}
+          className="px-4 py-2.5 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {initialData ? "Salvar Alterações" : "Concluir Vistoria"}
+          {isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Salvando...</span>
+            </>
+          ) : (
+            <span>{initialData ? "Salvar Alterações" : "Concluir Vistoria"}</span>
+          )}
         </button>
       </div>
     </form>
   )
 }
+

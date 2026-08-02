@@ -3,60 +3,118 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 
-export async function updateBudgetStatus(budgetId: string, status: string) {
-  const session = await getSession()
-  
-  // Verifica se o usuário tem permissão para alterar este orçamento
-  const budget = await prisma.budget.findUnique({
-    where: { 
-      id: budgetId,
-      tenantId: session.tenantId
-    }
-  })
-
-  if (!budget) {
-    throw new Error('Orçamento não encontrado')
-  }
-
-  await prisma.budget.update({
-    where: { id: budgetId },
-    data: { status }
-  })
-
-  revalidatePath('/budgets')
-  revalidatePath(`/budgets/${budgetId}`)
+export type ActionState = {
+  success: boolean
+  message: string
+  data?: any
 }
 
-export async function updateBudgetInfo(budgetId: string, formData: FormData) {
-  const session = await getSession()
-  
-  const budget = await prisma.budget.findUnique({
-    where: { 
-      id: budgetId,
-      tenantId: session.tenantId
-    }
-  })
+// ==========================================
+// SCHEMAS DE VALIDAÇÃO (ZOD)
+// ==========================================
+const BudgetStatusSchema = z.enum([
+  'DRAFT', 'SENT', 'PARTIALLY_APPROVED', 'APPROVED', 'REJECTED'
+])
 
-  if (!budget) {
-    throw new Error('Orçamento não encontrado')
+const BudgetInfoSchema = z.object({
+  validUntil: z.string().min(1, "Data de validade é obrigatória"),
+  discount: z.coerce.number().min(0, "O desconto não pode ser negativo")
+})
+
+// ==========================================
+// SERVER ACTIONS
+// ==========================================
+
+export async function updateBudgetStatus(budgetId: string, status: string): Promise<ActionState> {
+  try {
+    const session = await getSession()
+    if (!session?.tenantId) return { success: false, message: 'Não autorizado' }
+
+    // Validação estrita do Zod
+    const parsedStatus = BudgetStatusSchema.safeParse(status)
+    if (!parsedStatus.success) {
+      return { success: false, message: 'Status de orçamento inválido.' }
+    }
+
+    const budget = await prisma.budget.findUnique({
+      where: { 
+        id: budgetId,
+        tenantId: session.tenantId
+      }
+    })
+
+    if (!budget) {
+      return { success: false, message: 'Orçamento não encontrado.' }
+    }
+
+    await prisma.budget.update({
+      where: { id: budgetId },
+      data: { status: parsedStatus.data }
+    })
+
+    revalidatePath('/budgets')
+    revalidatePath(`/budgets/${budgetId}`)
+
+    return { success: true, message: 'Status do orçamento atualizado com sucesso.' }
+  } catch (error: any) {
+    console.error('[updateBudgetStatus]', error)
+    return { success: false, message: 'Ocorreu um erro inesperado ao atualizar o status.' }
   }
+}
 
-  const validUntil = formData.get('validUntil') as string
-  const discountStr = formData.get('discount') as string
-  const discount = discountStr ? parseFloat(discountStr) : 0
+export async function updateBudgetInfo(budgetId: string, formData: FormData): Promise<ActionState> {
+  try {
+    const session = await getSession()
+    if (!session?.tenantId) return { success: false, message: 'Não autorizado' }
 
-  const finalTotal = budget.totalLabor + budget.totalParts - discount
+    const budget = await prisma.budget.findUnique({
+      where: { 
+        id: budgetId,
+        tenantId: session.tenantId
+      }
+    })
 
-  await prisma.budget.update({
-    where: { id: budgetId },
-    data: { 
-      validUntil: new Date(validUntil),
-      discount,
-      finalTotal
+    if (!budget) {
+      return { success: false, message: 'Orçamento não encontrado.' }
     }
-  })
 
-  revalidatePath('/budgets')
-  revalidatePath(`/budgets/${budgetId}`)
+    // Validação de inputs
+    const parsedData = BudgetInfoSchema.safeParse({
+      validUntil: formData.get('validUntil'),
+      discount: formData.get('discount')
+    })
+
+    if (!parsedData.success) {
+      return { 
+        success: false, 
+        message: 'Dados inválidos. Verifique a data e o valor do desconto.'
+      }
+    }
+
+    const { validUntil, discount } = parsedData.data
+    const finalTotal = budget.totalLabor + budget.totalParts - discount
+
+    if (finalTotal < 0) {
+      return { success: false, message: 'O desconto não pode ser maior que o valor total.' }
+    }
+
+    await prisma.budget.update({
+      where: { id: budgetId },
+      data: { 
+        validUntil: new Date(validUntil),
+        discount,
+        finalTotal
+      }
+    })
+
+    revalidatePath('/budgets')
+    revalidatePath(`/budgets/${budgetId}`)
+
+    return { success: true, message: 'Informações do orçamento salvas com sucesso.' }
+  } catch (error: any) {
+    console.error('[updateBudgetInfo]', error)
+    return { success: false, message: 'Ocorreu um erro ao salvar as informações do orçamento.' }
+  }
 }

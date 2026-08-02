@@ -4,10 +4,9 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, CheckCircle2, XCircle, Send, Edit, ExternalLink, AlertTriangle, Receipt } from 'lucide-react'
 import BudgetBuilder from '@/components/BudgetBuilder'
-import { updateBudgetStatus } from '@/app/actions/budget'
+import BudgetActionButtons from '@/components/BudgetActionButtons'
 import { DeleteButton } from '@/components/DeleteButton'
 import { deleteBudget } from '@/app/actions/delete'
-import { createInvoiceFromBudget } from '@/app/actions/invoice'
 
 export default async function BudgetDetailsPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -40,11 +39,6 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
 
   const isExpired = new Date(budget.validUntil) < new Date() && budget.status !== 'APPROVED';
   const displayStatus = isExpired ? 'EXPIRED' : budget.status;
-
-  const markAsSent = updateBudgetStatus.bind(null, budget.id, 'SENT')
-  const approve = updateBudgetStatus.bind(null, budget.id, 'APPROVED')
-  const reject = updateBudgetStatus.bind(null, budget.id, 'REJECTED')
-  const backToDraft = updateBudgetStatus.bind(null, budget.id, 'DRAFT')
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300 w-full pb-24">
@@ -97,56 +91,13 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
         </div>
         
         <div className="flex items-center gap-2">
-          {displayStatus === 'DRAFT' && (
-            <>
-              <form action={markAsSent}>
-                <button type="submit" className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1.5">
-                  <Send className="w-4 h-4" /> Enviar
-                </button>
-              </form>
-            </>
-          )}
-
-          {displayStatus === 'SENT' && (
-            <>
-              {budget.serviceType === 'INTERNAL' && !checklist ? (
-                <div className="bg-white border border-neutral-200 text-neutral-400 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm flex items-center gap-1.5 cursor-not-allowed">
-                  <CheckCircle2 className="w-4 h-4" /> Aprovar (Requer Vistoria)
-                </div>
-              ) : checklist?.status === 'RECUSADO' ? (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm flex items-center gap-1.5 cursor-not-allowed">
-                  <XCircle className="w-4 h-4 text-red-600" /> Aprovação Bloqueada (Vistoria Reprovada)
-                </div>
-              ) : (
-                <form action={approve}>
-                  <button type="submit" className="bg-emerald-600 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-emerald-700 transition-colors flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" /> Aprovar
-                  </button>
-                </form>
-              )}
-              <form action={reject}>
-                <button type="submit" className="bg-white border border-red-200 text-red-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-red-50 transition-colors flex items-center gap-1.5">
-                  <XCircle className="w-4 h-4" /> Recusar
-                </button>
-              </form>
-            </>
-          )}
-
-          {(displayStatus === 'APPROVED' || displayStatus === 'REJECTED' || displayStatus === 'EXPIRED') && (
-            <form action={backToDraft}>
-              <button type="submit" className="bg-white border border-neutral-200 text-neutral-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-50 transition-colors">
-                Reabrir
-              </button>
-            </form>
-          )}
-
-          {displayStatus === 'APPROVED' && (
-            <form action={createInvoiceFromBudget.bind(null, budget.id, 'COMBINED')}>
-              <button type="submit" className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1.5">
-                <Receipt className="w-4 h-4" /> Emitir Nota Fiscal
-              </button>
-            </form>
-          )}
+          <BudgetActionButtons 
+            budgetId={budget.id}
+            displayStatus={displayStatus}
+            serviceType={budget.serviceType}
+            hasChecklist={!!checklist}
+            isChecklistRejected={checklist?.status === 'RECUSADO'}
+          />
 
           <Link href={`/budgets/${budget.id}/edit`} className="bg-white border border-neutral-200 text-neutral-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-50 transition-colors flex items-center gap-1.5">
             <Edit className="w-4 h-4" /> Editar Info

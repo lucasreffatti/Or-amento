@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Printer, FileText, CheckCircle2, XCircle, AlertTriangle, HelpCircle, Edit } from 'lucide-react'
 import { DeleteButton } from '@/components/DeleteButton'
 import { deleteChecklist } from '@/app/actions/delete'
-
-import { updateChecklistStatus } from '@/app/actions/checklist'
+import ChecklistActionButtons from '@/components/ChecklistActionButtons'
 
 export default async function ChecklistViewPage(props: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -62,37 +61,10 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
           </p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
-          {checklist.status === 'PENDENTE' ? (
-            <>
-              <form action={async () => {
-                'use server'
-                await updateChecklistStatus(checklist.id, 'APROVADO')
-              }}>
-                <button type="submit" className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-[13px] font-medium hover:bg-emerald-100 transition-colors shadow-sm flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" /> Aprovar
-                </button>
-              </form>
-              <form action={async () => {
-                'use server'
-                await updateChecklistStatus(checklist.id, 'RECUSADO')
-              }}>
-                <button type="submit" className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-md text-[13px] font-medium hover:bg-red-100 transition-colors shadow-sm flex items-center gap-1.5">
-                  <XCircle className="w-4 h-4" /> Recusar
-                </button>
-              </form>
-            </>
-          ) : (
-            <form action={async () => {
-              'use server'
-              await updateChecklistStatus(checklist.id, 'PENDENTE')
-            }}>
-              <button type="submit" className="px-3 py-1.5 bg-white text-neutral-700 border border-neutral-200 rounded-md text-[13px] font-medium hover:bg-neutral-50 transition-colors shadow-sm flex items-center gap-1.5">
-                <ArrowLeft className="w-4 h-4" /> Reabrir
-              </button>
-            </form>
-          )}
+          <ChecklistActionButtons checklistId={checklist.id} status={checklist.status} />
 
           {checklist.budget ? (
+
             <Link 
               href={`/budgets/${checklist.budget.id}`}
               className="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-[13px] font-medium hover:bg-indigo-100 transition-colors flex items-center gap-1.5"

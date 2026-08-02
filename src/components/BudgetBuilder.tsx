@@ -31,6 +31,7 @@ interface StockItem {
   id: string
   code: string
   description: string
+  itemType?: string
   salePrice: number
   quantity: number
 }
@@ -246,11 +247,14 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
                     className="w-full px-3 py-2 bg-blue-50/50 border border-blue-200 rounded-md text-[13px] text-blue-900 font-medium outline-none focus:border-blue-400 transition-all"
                   >
                     <option value="">-- Selecione uma peça do estoque (Preenchimento automático) --</option>
-                    {stockItems.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        [{s.code}] {s.description} — Saldo: {s.quantity} un | R$ {s.salePrice.toFixed(2)}
-                      </option>
-                    ))}
+                    {stockItems.map((s) => {
+                      const isRotative = s.itemType === 'ROTATIVO'
+                      return (
+                        <option key={s.id} value={s.id}>
+                          [{s.code}] {s.description} — {isRotative ? 'Sob Demanda (Rotativo)' : `Saldo: ${s.quantity} un`} | R$ {s.salePrice.toFixed(2)}
+                        </option>
+                      )
+                    })}
                   </select>
                 </div>
               )}

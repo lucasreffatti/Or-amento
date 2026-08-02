@@ -291,7 +291,7 @@ export default function StockClient({
                   </tr>
                 ) : (
                   filteredItems.map((item) => {
-                    const isLowStock = item.quantity <= item.minQuantity
+                    const isLowStock = item.itemType !== 'ROTATIVO' && item.quantity <= item.minQuantity
                     return (
                       <tr key={item.id} className="hover:bg-neutral-50/80 transition-colors">
                         <td className="px-4 py-3.5 font-mono text-xs font-bold text-neutral-900">
@@ -321,7 +321,9 @@ export default function StockClient({
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold font-mono border ${
                               isLowStock 
                                 ? 'bg-amber-50 text-amber-800 border-amber-200' 
-                                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                : item.itemType === 'ROTATIVO'
+                                  ? 'bg-neutral-100 text-neutral-700 border-neutral-200'
+                                  : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                             }`}>
                               {item.quantity} {item.unit}
                             </span>
@@ -509,13 +511,17 @@ export default function StockClient({
               action={async (formData) => {
                 setLoading(true)
                 try {
-                  if (editingItem) {
-                    await updateStockItem(editingItem.id, formData)
+                  const action = editingItem 
+                    ? updateStockItem.bind(null, editingItem.id)
+                    : createStockItem;
+                  
+                  const result = await action(formData)
+                  if (!result.success) {
+                    alert(result.message)
                   } else {
-                    await createStockItem(formData)
+                    setIsModalOpen(false)
+                    window.location.reload()
                   }
-                  setIsModalOpen(false)
-                  window.location.reload()
                 } catch (err: any) {
                   alert(err.message || 'Erro ao salvar peça.')
                 } finally {

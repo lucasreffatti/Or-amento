@@ -3,6 +3,26 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+export type ActionState = {
+  success: boolean
+  message: string
+  data?: any
+}
+
+const StockItemSchema = z.object({
+  code: z.string().min(1, 'Código SKU é obrigatório.'),
+  description: z.string().min(1, 'Descrição é obrigatória.'),
+  itemType: z.enum(['FIXO', 'ROTATIVO']).default('FIXO'),
+  ncm: z.string().nullable().optional().default('8708.29.99'),
+  cest: z.string().nullable().optional(),
+  unit: z.string().default('UN'),
+  costPrice: z.number().min(0, 'O preço de custo não pode ser negativo.'),
+  salePrice: z.number().min(0, 'O preço de venda não pode ser negativo.'),
+  quantity: z.number().default(0),
+  minQuantity: z.number().default(2)
+})
 
 export async function getStockItems() {
   const session = await getSession()
@@ -14,78 +34,80 @@ export async function getStockItems() {
   })
 }
 
-export async function createStockItem(formData: FormData) {
-  const session = await getSession()
-  if (!session?.tenantId) throw new Error('Não autorizado')
+export async function createStockItem(formData: FormData): Promise<ActionState> {
+  try {
+    const session = await getSession()
+    if (!session?.tenantId) return { success: false, message: 'Não autorizado' }
 
-  const code = (formData.get('code') as string)?.trim()
-  const description = (formData.get('description') as string)?.trim()
-  const itemType = (formData.get('itemType') as string)?.trim() || 'FIXO'
-  const ncm = (formData.get('ncm') as string)?.trim() || '8708.29.99'
-  const cest = (formData.get('cest') as string)?.trim() || null
-  const unit = (formData.get('unit') as string)?.trim() || 'UN'
-  const costPrice = parseFloat(formData.get('costPrice') as string || '0')
-  const salePrice = parseFloat(formData.get('salePrice') as string || '0')
-  const quantity = parseInt(formData.get('quantity') as string || '0', 10)
-  const minQuantity = parseInt(formData.get('minQuantity') as string || '2', 10)
-
-  if (!code || !description) {
-    throw new Error('Código SKU e Descrição são obrigatórios')
-  }
-
-  await prisma.stockItem.create({
-    data: {
-      tenantId: session.tenantId,
-      code,
-      description,
-      itemType,
-      ncm,
-      cest,
-      unit,
-      costPrice,
-      salePrice,
-      quantity,
-      minQuantity
+    const data = {
+      code: formData.get('code'),
+      description: formData.get('description'),
+      itemType: formData.get('itemType') || 'FIXO',
+      ncm: formData.get('ncm') || null,
+      cest: formData.get('cest') || null,
+      unit: formData.get('unit') || 'UN',
+      costPrice: parseFloat(formData.get('costPrice') as string || '0'),
+      salePrice: parseFloat(formData.get('salePrice') as string || '0'),
+      quantity: parseInt(formData.get('quantity') as string || '0', 10),
+      minQuantity: parseInt(formData.get('minQuantity') as string || '2', 10)
     }
-  })
 
-  revalidatePath('/stock')
-  revalidatePath('/budgets')
+    const validatedData = StockItemSchema.safeParse(data)
+    if (!validatedData.success) {
+      return { success: false, message: validatedData.error.issues[0].message }
+    }
+
+    await prisma.stockItem.create({
+      data: {
+        ...validatedData.data,
+        tenantId: session.tenantId
+      }
+    })
+
+    revalidatePath('/stock')
+    revalidatePath('/budgets')
+    return { success: true, message: 'Peça cadastrada com sucesso!' }
+  } catch (error) {
+    console.error('[createStockItem]', error)
+    return { success: false, message: 'Erro ao cadastrar peça. O código pode já existir.' }
+  }
 }
 
-export async function updateStockItem(id: string, formData: FormData) {
-  const session = await getSession()
-  if (!session?.tenantId) throw new Error('Não autorizado')
+export async function updateStockItem(id: string, formData: FormData): Promise<ActionState> {
+  try {
+    const session = await getSession()
+    if (!session?.tenantId) return { success: false, message: 'Não autorizado' }
 
-  const code = (formData.get('code') as string)?.trim()
-  const description = (formData.get('description') as string)?.trim()
-  const itemType = (formData.get('itemType') as string)?.trim() || 'FIXO'
-  const ncm = (formData.get('ncm') as string)?.trim() || '8708.29.99'
-  const cest = (formData.get('cest') as string)?.trim() || null
-  const unit = (formData.get('unit') as string)?.trim() || 'UN'
-  const costPrice = parseFloat(formData.get('costPrice') as string || '0')
-  const salePrice = parseFloat(formData.get('salePrice') as string || '0')
-  const quantity = parseInt(formData.get('quantity') as string || '0', 10)
-  const minQuantity = parseInt(formData.get('minQuantity') as string || '2', 10)
-
-  await prisma.stockItem.update({
-    where: { id, tenantId: session.tenantId },
-    data: {
-      code,
-      description,
-      itemType,
-      ncm,
-      cest,
-      unit,
-      costPrice,
-      salePrice,
-      quantity,
-      minQuantity
+    const data = {
+      code: formData.get('code'),
+      description: formData.get('description'),
+      itemType: formData.get('itemType') || 'FIXO',
+      ncm: formData.get('ncm') || null,
+      cest: formData.get('cest') || null,
+      unit: formData.get('unit') || 'UN',
+      costPrice: parseFloat(formData.get('costPrice') as string || '0'),
+      salePrice: parseFloat(formData.get('salePrice') as string || '0'),
+      quantity: parseInt(formData.get('quantity') as string || '0', 10),
+      minQuantity: parseInt(formData.get('minQuantity') as string || '2', 10)
     }
-  })
 
-  revalidatePath('/stock')
-  revalidatePath('/budgets')
+    const validatedData = StockItemSchema.safeParse(data)
+    if (!validatedData.success) {
+      return { success: false, message: validatedData.error.issues[0].message }
+    }
+
+    await prisma.stockItem.update({
+      where: { id, tenantId: session.tenantId },
+      data: validatedData.data
+    })
+
+    revalidatePath('/stock')
+    revalidatePath('/budgets')
+    return { success: true, message: 'Peça atualizada com sucesso!' }
+  } catch (error) {
+    console.error('[updateStockItem]', error)
+    return { success: false, message: 'Erro ao atualizar peça.' }
+  }
 }
 
 export async function deleteStockItem(id: string) {

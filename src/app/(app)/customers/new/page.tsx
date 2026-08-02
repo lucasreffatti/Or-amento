@@ -1,47 +1,10 @@
-import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, User } from 'lucide-react'
+import CustomerForm from '@/components/CustomerForm'
 
 export default async function NewCustomerPage() {
-  const session = await getSession()
-
-  async function createCustomer(formData: FormData) {
-    'use server'
-    const actionSession = await getSession()
-    if (!actionSession?.tenantId) {
-      redirect('/login')
-    }
-
-    const name = (formData.get('name') as string)?.trim()
-    const email = (formData.get('email') as string)?.trim() || null
-    const phone = (formData.get('phone') as string)?.trim()
-    const document = (formData.get('document') as string)?.trim() || null
-    
-    if (!name || !phone) {
-      throw new Error('Nome e Telefone são obrigatórios.')
-    }
-    
-    try {
-      await prisma.customer.create({
-        data: {
-          name,
-          email,
-          phone,
-          document,
-          tenantId: actionSession.tenantId
-        }
-      })
-      revalidatePath('/customers')
-    } catch (error) {
-      console.error('[Action Error - createCustomer]:', error)
-      throw new Error('Erro ao salvar cliente. Verifique se o CPF/CNPJ já não está cadastrado.')
-    }
-    
-    redirect('/customers')
-  }
+  await getSession() // Apenas para checar se logado
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 w-full pb-12">
@@ -63,82 +26,8 @@ export default async function NewCustomerPage() {
         </div>
       </header>
 
-      <div className="bg-white border border-neutral-200/80 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-4 md:p-8">
-        <div className="flex items-center gap-4 mb-8 pb-6 border-b border-neutral-100">
-          <div className="w-12 h-12 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-center shadow-sm">
-            <User className="w-5 h-5 text-neutral-400" />
-          </div>
-          <div>
-            <h2 className="text-[14px] font-semibold text-neutral-900">Informações Pessoais</h2>
-            <p className="text-[13px] text-neutral-500 mt-0.5">Dados de contato e identificação</p>
-          </div>
-        </div>
-
-        <form action={createCustomer} className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Nome Completo *</label>
-              <input 
-                type="text" 
-                id="name" 
-                name="name" 
-                required
-                placeholder="Ex: João Silva"
-                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="document" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">CPF/CNPJ</label>
-              <input 
-                type="text" 
-                id="document" 
-                name="document" 
-                placeholder="000.000.000-00"
-                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400 font-mono"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Telefone *</label>
-              <input 
-                type="text" 
-                id="phone" 
-                name="phone" 
-                required
-                placeholder="(00) 00000-0000"
-                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400 font-mono"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">E-mail</label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                placeholder="joao@exemplo.com"
-                className="w-full px-4 py-2.5 bg-[#FAFAFA] border border-neutral-200 rounded-lg text-[13px] outline-none focus:border-neutral-400 focus:bg-white focus:ring-4 focus:ring-neutral-500/5 transition-all placeholder:text-neutral-400"
-              />
-            </div>
-          </div>
-
-          <div className="pt-8 mt-8 border-t border-neutral-100 flex justify-end gap-3">
-            <Link 
-              href="/customers" 
-              className="px-5 py-2.5 text-[13px] font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 hover:border-neutral-300 transition-all shadow-sm"
-            >
-              Cancelar
-            </Link>
-            <button 
-              type="submit"
-              className="px-5 py-2.5 text-[13px] font-medium text-white bg-neutral-900 rounded-lg hover:bg-neutral-800 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
-            >
-              Salvar Cliente
-            </button>
-          </div>
-        </form>
-      </div>
+      <CustomerForm />
     </div>
   )
 }
+
