@@ -29,12 +29,17 @@ export function ScaleProvider({ children }: { children: React.ReactNode }) {
 
     const width = window.innerWidth
     
+    // Dispositivos móveis e celulares (largura < 768px): layout mobile nativo (escala 100% para não encolher a tela)
+    if (width < 768) {
+      return 1.0
+    }
+
     // Se a largura for menor que 1536px (devido a resolução menor ou zoom in do navegador como 125%, 150%, 175%)
     if (width < 1536) {
       // Escala proporcional fluida calculada a partir dos 1536px de referência
       const calculated = width / 1536
-      // Permite recuo suave de escala até 0.65 (65%) para evitar que conteúdos invadam as bordas da tela no zoom
-      return Math.max(0.65, Math.min(1.0, Number(calculated.toFixed(2))))
+      // Permite recuo suave de escala até 0.75 (75%) para evitar que conteúdos invadam as bordas no desktop
+      return Math.max(0.75, Math.min(1.0, Number(calculated.toFixed(2))))
     }
     
     // Telas Ultra-wide ou 4K muito grandes (largura > 2200px)

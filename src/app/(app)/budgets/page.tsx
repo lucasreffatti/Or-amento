@@ -40,7 +40,7 @@ export default async function BudgetsPage(props: { searchParams: Promise<{ statu
   ]
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+    <div className="space-y-6 animate-in fade-in duration-300">
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-neutral-200/60">
         <div>
           <div className="flex items-center gap-2 mb-2">
