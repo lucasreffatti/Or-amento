@@ -73,6 +73,16 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
                   Vencido
                 </span>
               )}
+              {displayStatus === 'SENT' && (
+                <span className="bg-blue-50 text-blue-700 border border-blue-200/80 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                  <Send className="w-3 h-3" /> Enviado
+                </span>
+              )}
+              {displayStatus === 'DRAFT' && (
+                <span className="bg-neutral-100 text-neutral-600 border border-neutral-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                  Rascunho
+                </span>
+              )}
               {checklist?.status === 'RECUSADO' && (
                 <span className="bg-red-100 text-red-800 border border-red-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
                   <XCircle className="w-3.5 h-3.5 text-red-600" /> Vistoria Reprovada
@@ -140,9 +150,19 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
             className="px-3 py-1.5 bg-white border border-neutral-200 shadow-sm"
           />
 
-          <Link href={`/print/budgets/${budget.id}`} target="_blank" className="bg-neutral-900 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-800 transition-colors flex items-center gap-1.5 ml-2">
-            <ExternalLink className="w-4 h-4" /> Imprimir
-          </Link>
+          {displayStatus === 'REJECTED' ? (
+            <button 
+              disabled 
+              title="Orçamento recusado não pode ser impresso ou baixado em PDF"
+              className="bg-neutral-200 text-neutral-400 border border-neutral-300 px-3 py-1.5 rounded-md text-[13px] font-medium cursor-not-allowed flex items-center gap-1.5 ml-2 opacity-70"
+            >
+              <ExternalLink className="w-4 h-4 text-neutral-400" /> Imprimir Bloqueado
+            </button>
+          ) : (
+            <Link href={`/print/budgets/${budget.id}`} target="_blank" className="bg-neutral-900 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-800 transition-colors flex items-center gap-1.5 ml-2">
+              <ExternalLink className="w-4 h-4" /> Imprimir
+            </Link>
+          )}
         </div>
       </header>
 
@@ -176,6 +196,17 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
           <div>
             <p className="font-bold">Este orçamento está Aprovado.</p>
             <p className="text-emerald-700/80 mt-0.5">Altere para rascunho se precisar modificar os itens.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Exibe aviso se recusado */}
+      {displayStatus === 'REJECTED' && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-[13px] flex items-center gap-3">
+          <XCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <div>
+            <p className="font-bold">Este orçamento foi RECUSADO / REPROVADO.</p>
+            <p className="text-red-700/80 mt-0.5">A impressão e geração de PDF estão bloqueadas para orçamentos recusados. Reabra o orçamento para editar ou aceitar.</p>
           </div>
         </div>
       )}

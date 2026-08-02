@@ -32,9 +32,25 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
   const isExpired = new Date(budget.validUntil) < new Date() && budget.status !== 'APPROVED';
 
 
+  const isRejected = budget.status === 'REJECTED';
+
   return (
     <div className="bg-white text-black min-h-screen font-sans p-8 print:p-0 text-sm relative">
-      <AutoPrint />
+      {!isRejected && <AutoPrint />}
+
+      {isRejected && (
+        <div className="max-w-[210mm] mx-auto mb-6 bg-red-50 border-2 border-red-600 text-red-900 p-4 rounded-lg flex items-center gap-3 print:hidden shadow-md">
+          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0 border border-red-300">
+            <span className="font-bold text-red-600 text-lg">✕</span>
+          </div>
+          <div>
+            <h3 className="font-bold text-base text-red-900">Impressão e Exportação PDF Bloqueadas</h3>
+            <p className="text-sm text-red-700 mt-0.5">
+              Este orçamento possui o status <span className="font-bold uppercase">RECUSADO / REPROVADO</span>. A impressão e o download em PDF estão desabilitados para orçamentos recusados.
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* Container A4 format */}
       <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 print:scale-[0.88] print:origin-top relative overflow-hidden">

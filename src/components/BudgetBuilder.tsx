@@ -1,7 +1,7 @@
 'use client'
 
 import { useOptimistic, startTransition, useRef } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, CheckCircle2, XCircle, Clock, Send, FileText, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { addBudgetItem, removeBudgetItem } from '@/app/(app)/budgets/[id]/actions'
 
@@ -68,6 +68,8 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
     
     await addBudgetItem(formData)
   }
+
+  const isRejected = budget.status === 'REJECTED'
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -178,7 +180,7 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
         <section className="bg-white border border-neutral-200/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5">
           <h2 className="text-[13px] font-semibold text-neutral-900 mb-4 flex items-center gap-2">
             Adicionar Item
-            <span className="px-1.5 py-0.5 rounded-sm bg-neutral-100 text-neutral-500 text-[9px] uppercase tracking-wider font-mono">Instant</span >
+            <span className="px-1.5 py-0.5 rounded-sm bg-neutral-100 text-neutral-500 text-[9px] uppercase tracking-wider font-mono">Instant</span>
           </h2>
           <form ref={formRef} action={handleAdd} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
             <input type="hidden" name="budgetId" value={budget.id} />
@@ -218,9 +220,24 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
       {/* Lado Direito: Resumo */}
       <div className="lg:col-span-1">
         <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl shadow-xl p-6 text-white sticky top-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4 border-b border-neutral-800 pb-3">
             <h2 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-widest">Resumo Financeiro</h2>
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+            
+            {/* Status Badge ao Vivo */}
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+              budget.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+              budget.status === 'REJECTED' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+              budget.status === 'SENT' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+              'bg-neutral-800 text-neutral-300 border border-neutral-700'
+            }`}>
+              {budget.status === 'APPROVED' && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+              {budget.status === 'REJECTED' && <XCircle className="w-3 h-3 text-red-400" />}
+              {budget.status === 'SENT' && <Send className="w-3 h-3 text-blue-400" />}
+              {budget.status === 'DRAFT' && <FileText className="w-3 h-3 text-neutral-400" />}
+              {budget.status === 'APPROVED' ? 'Aprovado' :
+               budget.status === 'REJECTED' ? 'Recusado' :
+               budget.status === 'SENT' ? 'Enviado' : 'Rascunho'}
+            </span>
           </div>
           
           <div className="space-y-4">
@@ -247,14 +264,25 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
           </div>
           
           <div className="mt-8 space-y-2.5">
-            <Link 
-              href={`/print/budgets/${budget.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-white text-black py-2.5 rounded-lg text-[13px] font-semibold hover:bg-neutral-200 transition-colors flex items-center justify-center shadow-sm"
-            >
-              Gerar PDF Comercial
-            </Link>
+            {isRejected ? (
+              <button 
+                type="button"
+                disabled 
+                title="Orçamento recusado não pode ser impresso ou baixado em PDF"
+                className="w-full bg-neutral-800 text-neutral-500 py-2.5 rounded-lg text-[12px] font-semibold cursor-not-allowed flex items-center justify-center gap-2 border border-neutral-700/60 opacity-60"
+              >
+                <Lock className="w-3.5 h-3.5 text-neutral-500" /> PDF Bloqueado (Recusado)
+              </button>
+            ) : (
+              <Link 
+                href={`/print/budgets/${budget.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-white text-black py-2.5 rounded-lg text-[13px] font-semibold hover:bg-neutral-200 transition-colors flex items-center justify-center shadow-sm"
+              >
+                Gerar PDF Comercial
+              </Link>
+            )}
             
             {(() => {
               const phoneDigits = budget.customer.phone.replace(/\D/g, '');
