@@ -13,7 +13,7 @@ html, body {
   height: 100%;
   max-width: 100vw;
   overflow-x: hidden;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
 }
 
 html {
