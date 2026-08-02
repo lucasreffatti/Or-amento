@@ -13,7 +13,7 @@ export default async function NewBudgetPage({ searchParams }: { searchParams: Pr
     redirect('/login')
   }
 
-  // We need customers and vehicles to create a budget
+  // Customers and vehicles for current tenant
   const customers = await prisma.customer.findMany({
     where: { tenantId: session.tenantId },
     orderBy: { name: 'asc' }
@@ -31,53 +31,66 @@ export default async function NewBudgetPage({ searchParams }: { searchParams: Pr
       redirect('/login')
     }
 
-    const customerId = formData.get('customerId') as string
-    const vehicleId = formData.get('vehicleId') as string
-    const serviceType = formData.get('serviceType') as string
+    const customerId = (formData.get('customerId') as string)?.trim()
+    const vehicleId = (formData.get('vehicleId') as string)?.trim()
+    const serviceType = (formData.get('serviceType') as string) || 'INTERNAL'
     let rawChecklistId = (formData.get('checklistId') as string)?.trim() || null
 
     if (!customerId || !vehicleId) {
-      throw new Error('Cliente e Veículo são obrigatórios.')
+      redirect('/budgets/new')
+    }
+
+    // 1. Verifica se a cliente e veículo pertencem ao tenant do usuário
+    const customerExists = await prisma.customer.findFirst({ where: { id: customerId, tenantId: actionSession.tenantId } })
+    const vehicleExists = await prisma.vehicle.findFirst({ where: { id: vehicleId, tenantId: actionSession.tenantId } })
+    if (!customerExists || !vehicleExists) {
+      redirect('/budgets/new')
     }
 
     let validChecklistId: string | null = null
     let initialStatus = 'DRAFT'
 
+    // 2. Tenta validar se a checklist informada não está associada a nenhum outro orçamento
+    if (rawChecklistId) {
+      const existingChk = await prisma.checklist.findFirst({
+        where: { id: rawChecklistId, tenantId: actionSession.tenantId },
+        include: { budget: true }
+      })
+      if (existingChk && !existingChk.budget) {
+        validChecklistId = existingChk.id
+        if (existingChk.status === 'RECUSADO') {
+          initialStatus = 'REJECTED'
+        }
+      }
+    }
+
+    // 3. Se não veio checklist desassociada via param, procura última vistoria do veículo que esteja livre
+    if (!validChecklistId && vehicleId) {
+      const availableChecklist = await prisma.checklist.findFirst({
+        where: { 
+          vehicleId, 
+          tenantId: actionSession.tenantId,
+          budget: { is: null }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+      if (availableChecklist) {
+        validChecklistId = availableChecklist.id
+        if (availableChecklist.status === 'RECUSADO') {
+          initialStatus = 'REJECTED'
+        }
+      }
+    }
+
+    let createdId: string | null = null
+
     try {
-      // 1. Validar se a checklistId informada ou vinculada existe no banco de dados
-      if (rawChecklistId) {
-        const existingChk = await prisma.checklist.findFirst({
-          where: { id: rawChecklistId, tenantId: actionSession.tenantId }
-        })
-        if (existingChk) {
-          validChecklistId = existingChk.id
-          if (existingChk.status === 'RECUSADO') {
-            initialStatus = 'REJECTED'
-          }
-        }
-      }
-
-      // 2. Se não veio checklist id, tenta procurar última vistoria deste veículo
-      if (!validChecklistId && vehicleId) {
-        const matchingChecklist = await prisma.checklist.findFirst({
-          where: { vehicleId, tenantId: actionSession.tenantId },
-          orderBy: { createdAt: 'desc' }
-        })
-        if (matchingChecklist) {
-          validChecklistId = matchingChecklist.id
-          if (matchingChecklist.status === 'RECUSADO') {
-            initialStatus = 'REJECTED'
-          }
-        }
-      }
-
-      // 3. Criar orçamento com segurança de chave estrangeira
       const newBudget = await prisma.budget.create({
         data: {
           tenantId: actionSession.tenantId,
           customerId,
           vehicleId,
-          serviceType: serviceType || 'INTERNAL',
+          serviceType,
           checklistId: validChecklistId,
           status: initialStatus,
           totalLabor: 0,
@@ -87,14 +100,35 @@ export default async function NewBudgetPage({ searchParams }: { searchParams: Pr
           validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 dias
         }
       })
-
-      revalidatePath('/budgets')
-      var createdId = newBudget.id
+      createdId = newBudget.id
     } catch (error) {
-      console.error('[Action Error - createBudget]:', error)
-      throw new Error('Erro ao criar orçamento. Por favor, tente novamente.')
+      console.error('[Action Error - createBudget with checklistId]:', error)
+      
+      // Fallback: se houver qualquer erro de constraint na vistoria, cria o orçamento sem o vínculo da vistoria
+      try {
+        const fallbackBudget = await prisma.budget.create({
+          data: {
+            tenantId: actionSession.tenantId,
+            customerId,
+            vehicleId,
+            serviceType,
+            status: 'DRAFT',
+            totalLabor: 0,
+            totalParts: 0,
+            discount: 0,
+            finalTotal: 0,
+            validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          }
+        })
+        createdId = fallbackBudget.id
+      } catch (fallbackError) {
+        console.error('[Action Critical Error - createBudget fallback]:', fallbackError)
+        redirect('/budgets')
+      }
     }
 
+    revalidatePath('/budgets')
+    
     if (createdId) {
       redirect(`/budgets/${createdId}`)
     } else {

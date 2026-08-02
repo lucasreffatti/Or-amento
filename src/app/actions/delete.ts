@@ -26,7 +26,12 @@ export async function deleteChecklist(id: string) {
 export async function deleteBudget(id: string) {
   const session = await getSession()
   
-  // BudgetItem possui onDelete: Cascade no schema, então o Prisma cuidará dos itens
+  // 1. Apaga faturas/notas associadas a este orçamento primeiro
+  await prisma.invoice.deleteMany({
+    where: { budgetId: id, tenantId: session.tenantId }
+  })
+
+  // 2. BudgetItem possui onDelete: Cascade no schema, deleta o orçamento
   await prisma.budget.delete({
     where: { id, tenantId: session.tenantId }
   })
@@ -35,6 +40,7 @@ export async function deleteBudget(id: string) {
   revalidatePath('/checklists')
   revalidatePath('/customers')
   revalidatePath('/vehicles')
+  revalidatePath('/invoices')
   redirect('/budgets')
 }
 
@@ -42,10 +48,16 @@ export async function deleteVehicle(id: string) {
   const session = await getSession()
   
   await prisma.$transaction(async (tx) => {
-    // 1. Encontrar orçamentos deste veículo e remover os itens primeiro
+    // 1. Encontrar orçamentos deste veículo
     const budgets = await tx.budget.findMany({ where: { vehicleId: id, tenantId: session.tenantId } })
     const budgetIds = budgets.map(b => b.id)
     
+    // Deletar notas fiscais dos orçamentos
+    await tx.invoice.deleteMany({
+      where: { budgetId: { in: budgetIds } }
+    })
+
+    // Deletar itens dos orçamentos
     await tx.budgetItem.deleteMany({
       where: { budgetId: { in: budgetIds } }
     })
@@ -61,6 +73,7 @@ export async function deleteVehicle(id: string) {
   revalidatePath('/vehicles')
   revalidatePath('/budgets')
   revalidatePath('/checklists')
+  revalidatePath('/invoices')
   redirect('/vehicles')
 }
 
@@ -72,7 +85,10 @@ export async function deleteCustomer(id: string) {
     const budgets = await tx.budget.findMany({ where: { customerId: id, tenantId: session.tenantId } })
     const budgetIds = budgets.map(b => b.id)
     
-    // 2. Limpar itens dos orçamentos
+    // Deletar notas fiscais do cliente e dos orçamentos
+    await tx.invoice.deleteMany({ where: { customerId: id, tenantId: session.tenantId } })
+
+    // Limpar itens dos orçamentos
     await tx.budgetItem.deleteMany({
       where: { budgetId: { in: budgetIds } }
     })
@@ -92,5 +108,6 @@ export async function deleteCustomer(id: string) {
   revalidatePath('/budgets')
   revalidatePath('/checklists')
   revalidatePath('/vehicles')
+  revalidatePath('/invoices')
   redirect('/customers')
 }
