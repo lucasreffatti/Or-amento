@@ -50,21 +50,21 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
     <div className="bg-white min-h-screen text-black font-sans print:p-0 p-4 sm:p-6 flex justify-center">
       <div className="w-[210mm] max-w-full bg-white print:shadow-none shadow-xl border border-neutral-200 print:border-none p-6 print:p-2 print:w-full print:max-w-none print:m-0 relative">
         
-        {/* CABEÇALHO DA OFICINA */}
-        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-neutral-900 text-white rounded-lg flex items-center justify-center font-bold text-xl tracking-tighter shrink-0">
-              {tenant?.name?.substring(0, 2).toUpperCase() || 'OF'}
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-black uppercase">{tenant?.name || 'OFICINA NÃO CONFIGURADA'}</h1>
-              <p className="text-xs font-medium text-neutral-600">CNPJ: {tenant?.document || '00.000.000/0000-00'}</p>
-              <p className="text-xs text-neutral-600">{tenant?.address || 'Endereço não configurado'}</p>
-              <p className="text-xs text-neutral-600">{tenant?.phone || 'Telefone não configurado'}</p>
+        {/* CABEÇALHO DA OFICINA COM LOGO SÉRGIOCAR E TÍTULO VISTORIA */}
+        <div className="flex justify-between items-center border-b-2 border-black pb-3 mb-4 gap-4">
+          <div className="flex-1 max-w-[460px]">
+            <img 
+              src="/sergiocar-header.png" 
+              alt="SÉRGIOCAR - Injeção Eletrônica, Auto Elétrica, Mecânica" 
+              className="w-full h-auto object-contain max-h-[105px]"
+            />
+            <div className="text-center text-[10px] text-black font-medium tracking-tight mt-0.5 border-t border-black/30 pt-0.5">
+              Rua Jacob Weingatner, 4198 - Centro - 88131-300 - Palhoça/SC
             </div>
           </div>
-          <div className="text-right">
-            <h2 className="text-2xl font-black uppercase tracking-widest text-black">VISTORIA</h2>
+          
+          <div className="text-right shrink-0">
+            <h2 className="text-3xl font-black uppercase tracking-widest text-black leading-tight">VISTORIA</h2>
             <p className="text-xs font-mono text-neutral-600 font-bold">#{checklist.id.substring(0, 8).toUpperCase()}</p>
             <p className="text-xs text-neutral-500 mt-1">Data: {new Date(checklist.createdAt).toLocaleDateString('pt-BR')}</p>
             <p className="text-xs text-neutral-500">Hora: {new Date(checklist.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>

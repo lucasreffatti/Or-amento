@@ -47,22 +47,25 @@ export default async function PublicBudgetPage(props: { params: Promise<{ id: st
       {/* Container A4 format */}
       <div className="max-w-[210mm] w-full bg-white shadow-xl p-8 sm:p-12">
         
-        {/* CABEÇALHO DO DOCUMENTO */}
-        <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-black pb-4 mb-4 gap-4">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold uppercase tracking-tight">{budget.tenant.name}</h1>
-            <div className="text-xs mt-1 space-y-0.5 text-black">
-              <p>CNPJ: 00.000.000/0001-00 (Exemplo)</p>
-              <p>Endereço: Rua Fictícia, 123 - Centro, Cidade/UF</p>
-              <p>Telefone: (00) 00000-0000</p>
+        {/* CABEÇALHO DO DOCUMENTO COM LOGO OFICIAL SÉRGIOCAR E BOX DE INFORMAÇÕES */}
+        <div className="flex flex-col sm:flex-row justify-between items-center border-b-2 border-black pb-3 mb-4 gap-4">
+          <div className="flex-1 max-w-[460px] w-full">
+            <img 
+              src="/sergiocar-header.png" 
+              alt="SÉRGIOCAR - Injeção Eletrônica, Auto Elétrica, Mecânica" 
+              className="w-full h-auto object-contain max-h-[110px]"
+            />
+            <div className="text-center text-[10px] text-black font-medium tracking-tight mt-0.5 border-t border-black/30 pt-0.5">
+              Rua Jacob Weingatner, 4198 - Centro - 88131-300 - Palhoça/SC
             </div>
           </div>
-          <div className="w-full sm:w-[300px] border border-black p-3 text-center bg-gray-50">
-            <h2 className="font-bold text-lg uppercase leading-tight mb-2">Orçamento de Serviços</h2>
-            <div className="text-xs text-left grid grid-cols-2 gap-1 font-medium">
-              <span>Nº do Doc:</span> <span className="font-mono text-right">{budget.id.substring(0, 8).toUpperCase()}</span>
-              <span>Emissão:</span> <span className="font-mono text-right">{new Date(budget.createdAt).toLocaleDateString('pt-BR')}</span>
-              <span>Validade:</span> <span className="font-mono text-right">{new Date(budget.validUntil).toLocaleDateString('pt-BR')}</span>
+          
+          <div className="w-full sm:w-[260px] border border-black p-2 text-center bg-white shrink-0 self-center">
+            <h2 className="font-bold text-sm uppercase leading-tight mb-1 border-b border-black pb-1">ORÇAMENTO DE SERVIÇOS</h2>
+            <div className="text-xs text-left grid grid-cols-2 gap-1 font-medium mt-1">
+              <span className="text-neutral-700">Nº do Doc:</span> <span className="font-mono text-right font-bold text-black">{budget.id.substring(0, 8).toUpperCase()}</span>
+              <span className="text-neutral-700">Emissão:</span> <span className="font-mono text-right text-black">{new Date(budget.createdAt).toLocaleDateString('pt-BR')}</span>
+              <span className="text-neutral-700">Validade:</span> <span className="font-mono text-right text-black">{new Date(budget.validUntil).toLocaleDateString('pt-BR')}</span>
             </div>
           </div>
         </div>
