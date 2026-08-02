@@ -7,6 +7,10 @@ import { ArrowLeft, Car } from 'lucide-react'
 
 export default async function NewVehiclePage() {
   const session = await getSession()
+
+  if (!session?.tenantId) {
+    redirect('/login')
+  }
   
   // Get customers to link the vehicle to an owner
   const customers = await prisma.customer.findMany({
@@ -16,35 +20,46 @@ export default async function NewVehiclePage() {
 
   async function createVehicle(formData: FormData) {
     'use server'
+    const actionSession = await getSession()
+    if (!actionSession?.tenantId) {
+      redirect('/login')
+    }
+
     const customerId = formData.get('customerId') as string
-    const plate = (formData.get('plate') as string).toUpperCase()
-    const brand = formData.get('brand') as string
-    const model = formData.get('model') as string
-    const year = parseInt(formData.get('year') as string, 10)
+    const plate = (formData.get('plate') as string)?.trim().toUpperCase()
+    const brand = (formData.get('brand') as string)?.trim()
+    const model = (formData.get('model') as string)?.trim()
+    const yearStr = formData.get('year') as string
+    const year = yearStr ? parseInt(yearStr, 10) : new Date().getFullYear()
     const engineType = formData.get('engineType') as string
     const mileageStr = formData.get('mileage') as string
     const mileage = mileageStr ? parseInt(mileageStr, 10) : null
-    const notes = (formData.get('notes') as string) || null
+    const notes = (formData.get('notes') as string)?.trim() || null
     
-    const tenant = await prisma.tenant.findFirst()
+    if (!customerId || !plate || !brand || !model) {
+      throw new Error('Proprietário, Placa, Marca e Modelo são obrigatórios.')
+    }
     
-    if (tenant) {
+    try {
       await prisma.vehicle.create({
         data: {
-          tenantId: tenant.id,
+          tenantId: actionSession.tenantId,
           customerId,
           plate,
           brand,
           model,
           year,
-          engineType,
+          engineType: engineType || 'FLEX',
           mileage,
           notes
         }
       })
+      revalidatePath('/vehicles')
+    } catch (error) {
+      console.error('[Action Error - createVehicle]:', error)
+      throw new Error('Erro ao cadastrar veículo. Verifique se a placa já não está cadastrada.')
     }
     
-    revalidatePath('/vehicles')
     redirect('/vehicles')
   }
 
@@ -81,8 +96,8 @@ export default async function NewVehiclePage() {
               Para cadastrar um veículo, você precisa ter pelo menos 1 cliente cadastrado no sistema.
             </p>
             <div className="mt-4 flex justify-center">
-              <Link href="/customers/new" className="text-xs font-medium text-blue-600 hover:underline">
-                Cadastrar Cliente
+              <Link href="/customers/new" className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-md transition-colors">
+                + Cadastrar Cliente
               </Link>
             </div>
           </div>
@@ -150,6 +165,7 @@ export default async function NewVehiclePage() {
                   required
                   min="1950"
                   max={new Date().getFullYear() + 1}
+                  defaultValue={new Date().getFullYear()}
                   placeholder="Ex: 2020"
                   className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 font-mono"
                 />

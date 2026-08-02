@@ -3,12 +3,16 @@ import { getSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, FileText } from 'lucide-react'
+import { ArrowLeft, FileText, AlertTriangle } from 'lucide-react'
 
 export default async function NewBudgetPage({ searchParams }: { searchParams: Promise<{ vehicleId?: string; customerId?: string; checklistId?: string }> }) {
   const session = await getSession()
   const params = await searchParams
   
+  if (!session?.tenantId) {
+    redirect('/login')
+  }
+
   // We need customers and vehicles to create a budget
   const customers = await prisma.customer.findMany({
     where: { tenantId: session.tenantId },
@@ -22,58 +26,77 @@ export default async function NewBudgetPage({ searchParams }: { searchParams: Pr
 
   async function createBudget(formData: FormData) {
     'use server'
+    const actionSession = await getSession()
+    if (!actionSession?.tenantId) {
+      redirect('/login')
+    }
+
     const customerId = formData.get('customerId') as string
     const vehicleId = formData.get('vehicleId') as string
     const serviceType = formData.get('serviceType') as string
-    let checklistId = (formData.get('checklistId') as string) || null
-    
-    const tenant = await prisma.tenant.findFirst()
-    
-    let newBudgetId = ''
-    
-    if (tenant) {
-      // Se checklistId não veio no form, tenta encontrar checklist ativo para este veículo
-      if (!checklistId && vehicleId) {
+    let rawChecklistId = (formData.get('checklistId') as string)?.trim() || null
+
+    if (!customerId || !vehicleId) {
+      throw new Error('Cliente e Veículo são obrigatórios.')
+    }
+
+    let validChecklistId: string | null = null
+    let initialStatus = 'DRAFT'
+
+    try {
+      // 1. Validar se a checklistId informada ou vinculada existe no banco de dados
+      if (rawChecklistId) {
+        const existingChk = await prisma.checklist.findFirst({
+          where: { id: rawChecklistId, tenantId: actionSession.tenantId }
+        })
+        if (existingChk) {
+          validChecklistId = existingChk.id
+          if (existingChk.status === 'RECUSADO') {
+            initialStatus = 'REJECTED'
+          }
+        }
+      }
+
+      // 2. Se não veio checklist id, tenta procurar última vistoria deste veículo
+      if (!validChecklistId && vehicleId) {
         const matchingChecklist = await prisma.checklist.findFirst({
-          where: { vehicleId, tenantId: session.tenantId },
+          where: { vehicleId, tenantId: actionSession.tenantId },
           orderBy: { createdAt: 'desc' }
         })
         if (matchingChecklist) {
-          checklistId = matchingChecklist.id
+          validChecklistId = matchingChecklist.id
+          if (matchingChecklist.status === 'RECUSADO') {
+            initialStatus = 'REJECTED'
+          }
         }
       }
 
-      // Se a vistoria selecionada ou do veículo estiver RECUSADA, cria o orçamento já com status REJECTED
-      let initialStatus = 'DRAFT'
-      if (checklistId) {
-        const chk = await prisma.checklist.findUnique({ where: { id: checklistId } })
-        if (chk?.status === 'RECUSADO') {
-          initialStatus = 'REJECTED'
-        }
-      }
-
+      // 3. Criar orçamento com segurança de chave estrangeira
       const newBudget = await prisma.budget.create({
         data: {
+          tenantId: actionSession.tenantId,
           customerId,
           vehicleId,
-          serviceType,
-          checklistId: checklistId || undefined,
+          serviceType: serviceType || 'INTERNAL',
+          checklistId: validChecklistId,
           status: initialStatus,
-          tenantId: tenant.id,
           totalLabor: 0,
           totalParts: 0,
           discount: 0,
           finalTotal: 0,
-          validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 dias
         }
       })
-      newBudgetId = newBudget.id
+
+      revalidatePath('/budgets')
+      var createdId = newBudget.id
+    } catch (error) {
+      console.error('[Action Error - createBudget]:', error)
+      throw new Error('Erro ao criar orçamento. Por favor, tente novamente.')
     }
-    
-    revalidatePath('/budgets')
-    
-    if (newBudgetId) {
-      redirect(`/budgets/${newBudgetId}`)
+
+    if (createdId) {
+      redirect(`/budgets/${createdId}`)
     } else {
       redirect('/budgets')
     }
@@ -106,20 +129,23 @@ export default async function NewBudgetPage({ searchParams }: { searchParams: Pr
         </div>
 
         {customers.length === 0 || vehicles.length === 0 ? (
-          <div className="py-8 text-center bg-neutral-50 border border-neutral-100 rounded-md">
-            <p className="text-sm text-neutral-600 font-medium">Faltam cadastros base</p>
-            <p className="text-xs text-neutral-500 mt-1 max-w-xs mx-auto">
+          <div className="py-8 text-center bg-neutral-50 border border-neutral-100 rounded-md space-y-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <p className="text-sm text-neutral-700 font-semibold">Faltam cadastros base</p>
+            <p className="text-xs text-neutral-500 max-w-xs mx-auto">
               Para criar um orçamento, você precisa ter pelo menos 1 cliente e 1 veículo cadastrados no sistema.
             </p>
-            <div className="mt-4 flex justify-center gap-3">
+            <div className="pt-2 flex justify-center gap-3">
               {customers.length === 0 && (
-                <Link href="/customers/new" className="text-xs font-medium text-blue-600 hover:underline">
-                  Cadastrar Cliente
+                <Link href="/customers/new" className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-md transition-colors">
+                  + Cadastrar Cliente
                 </Link>
               )}
               {vehicles.length === 0 && (
-                <Link href="/vehicles" className="text-xs font-medium text-blue-600 hover:underline">
-                  Cadastrar Veículo
+                <Link href="/vehicles/new" className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-md transition-colors">
+                  + Cadastrar Veículo
                 </Link>
               )}
             </div>
@@ -130,7 +156,7 @@ export default async function NewBudgetPage({ searchParams }: { searchParams: Pr
               <input type="hidden" name="checklistId" value={params.checklistId} />
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <label htmlFor="serviceType" className="text-[13px] font-medium text-neutral-700">Tipo de Orçamento *</label>
                 <select 
                   id="serviceType" 
@@ -139,7 +165,7 @@ export default async function NewBudgetPage({ searchParams }: { searchParams: Pr
                   className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900"
                 >
                   <option value="INTERNAL">Serviço Interno (Veículo na Oficina)</option>
-                  <option value="EXTERNAL">Orçamento de Balcão (Apenas Cotação)</option>
+                  <option value="EXTERNAL">Orçamento de Balcão (Apenas Cotação / Venda)</option>
                 </select>
                 <p className="text-[11px] text-neutral-500">Serviços internos exigem vistoria de entrada (Checklist) antes da aprovação.</p>
               </div>
@@ -188,7 +214,7 @@ export default async function NewBudgetPage({ searchParams }: { searchParams: Pr
                 type="submit"
                 className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors shadow-sm"
               >
-                Criar Rascunho
+                Criar Rascunho de Orçamento
               </button>
             </div>
           </form>

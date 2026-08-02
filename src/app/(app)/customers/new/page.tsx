@@ -3,30 +3,43 @@ import { getSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, User, Sparkles } from 'lucide-react'
+import { ArrowLeft, User } from 'lucide-react'
 
 export default async function NewCustomerPage() {
   const session = await getSession()
 
   async function createCustomer(formData: FormData) {
     'use server'
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const phone = formData.get('phone') as string
-    const document = formData.get('document') as string
+    const actionSession = await getSession()
+    if (!actionSession?.tenantId) {
+      redirect('/login')
+    }
+
+    const name = (formData.get('name') as string)?.trim()
+    const email = (formData.get('email') as string)?.trim() || null
+    const phone = (formData.get('phone') as string)?.trim()
+    const document = (formData.get('document') as string)?.trim() || null
     
-    const tenant = await prisma.tenant.findFirst()
-    
-    if (tenant) {
-      await prisma.customer.create({
-        data: {
-          name, email, phone, document,
-          tenantId: tenant.id
-        }
-      })
+    if (!name || !phone) {
+      throw new Error('Nome e Telefone são obrigatórios.')
     }
     
-    revalidatePath('/customers')
+    try {
+      await prisma.customer.create({
+        data: {
+          name,
+          email,
+          phone,
+          document,
+          tenantId: actionSession.tenantId
+        }
+      })
+      revalidatePath('/customers')
+    } catch (error) {
+      console.error('[Action Error - createCustomer]:', error)
+      throw new Error('Erro ao salvar cliente. Verifique se o CPF/CNPJ já não está cadastrado.')
+    }
+    
     redirect('/customers')
   }
 
