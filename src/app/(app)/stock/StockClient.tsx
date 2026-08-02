@@ -123,21 +123,21 @@ export default function StockClient({
           <p className="text-sm text-neutral-500 mt-1">Separação de estoque permanente (prateleira) e rotativo (encomenda por serviço).</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => setIsXmlModalOpen(true)}
-            className="bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-200 px-3.5 py-2 text-[13px] font-medium rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 shrink-0"
+            className="bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-200 px-3.5 py-2.5 min-h-[44px] text-[13px] font-medium rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
             title="Importar XML da Distribuidora para dar entrada de estoque e cadastrar fornecedor"
           >
-            <FileCode2 className="w-4 h-4 text-blue-600" />
+            <FileCode2 className="w-4 h-4 text-blue-600 shrink-0" />
             <span>Importar Nota de Compra (XML)</span>
           </button>
 
           <button
             onClick={handleOpenCreate}
-            className="bg-neutral-900 text-white px-4 py-2 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center gap-2 shrink-0"
+            className="bg-neutral-900 text-white px-4 py-2.5 min-h-[44px] text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span>Cadastrar Nova Peça</span>
           </button>
         </div>
@@ -184,8 +184,8 @@ export default function StockClient({
         </div>
       </div>
 
-      {/* Navegação por Abas Principais */}
-      <div className="flex border-b border-neutral-200 space-x-2">
+      {/* Navegação por Abas Principais com Scroll Horizontal Mobile */}
+      <div className="flex border-b border-neutral-200 space-x-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
         <button
           onClick={() => setActiveTab('FIXO')}
           className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2 ${
