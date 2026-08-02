@@ -36,6 +36,8 @@ model Tenant {
   invoices     Invoice[]
   suppliers    Supplier[]
   stockEntries StockEntry[]
+
+  @@index([document])
 }
 
 model User {
@@ -78,6 +80,9 @@ model Customer {
   budgets    Budget[]
   checklists Checklist[]
   invoices   Invoice[]
+
+  @@index([tenantId])
+  @@index([tenantId, document])
 }
 
 model Vehicle {
@@ -96,6 +101,9 @@ model Vehicle {
   
   checklists Checklist[]
   budgets    Budget[]
+
+  @@index([tenantId])
+  @@index([plate])
 }
 
 model Checklist {
@@ -120,6 +128,9 @@ model Checklist {
   customerSignature String? 
   budget        Budget?
   createdAt     DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([tenantId, status])
 }
 
 model Budget {
@@ -147,6 +158,9 @@ model Budget {
   invoice       Invoice?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, status])
 }
 
 model BudgetItem {
@@ -187,6 +201,7 @@ model Supplier {
   stockItems   StockItem[]
 
   @@unique([tenantId, document])
+  @@index([tenantId])
 }
 
 model StockItem {
@@ -212,6 +227,8 @@ model StockItem {
   entryItems  StockEntryItem[]
 
   @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, itemType])
 }
 
 model StockEntry {
@@ -232,6 +249,7 @@ model StockEntry {
   createdAt    DateTime         @default(now())
 
   @@unique([tenantId, nfeKey])
+  @@index([tenantId])
 }
 
 model StockEntryItem {
