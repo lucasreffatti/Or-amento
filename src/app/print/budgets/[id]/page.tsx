@@ -73,21 +73,26 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
       <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 print:scale-[0.88] print:origin-top relative overflow-visible">
         
         {/* CABEÇALHO DO DOCUMENTO COM LOGO OFICIAL SÉRGIOCAR E BOX DE INFORMAÇÕES */}
-        <div className="flex justify-between items-center border-b-2 border-black pb-3 mb-4 relative z-10 gap-4">
-          <div className="flex-1 max-w-[480px]">
-            <img 
-              src="/sergiocar-header.png" 
-              alt="SÉRGIOCAR - Auto Elétrica e Mecânica" 
-              className="w-full h-auto object-contain"
-            />
+        <div className="mb-4 relative z-10">
+          <div className="text-right text-[11px] font-semibold text-neutral-800 mb-1 pr-1">
+            Auto Elétrica Sérgio Car
           </div>
-          
-          <div className="w-[260px] border border-black p-2 text-center bg-white shrink-0 self-center">
-            <h2 className="font-bold text-sm uppercase leading-tight mb-1 border-b border-black pb-1">ORÇAMENTO DE SERVIÇOS</h2>
-            <div className="text-xs text-left grid grid-cols-2 gap-1 font-medium mt-1">
-              <span className="text-neutral-700">Nº do Doc:</span> <span className="font-mono text-right font-bold text-black">{budget.id.substring(0, 8).toUpperCase()}</span>
-              <span className="text-neutral-700">Emissão:</span> <span className="font-mono text-right text-black">{new Date(budget.createdAt).toLocaleDateString('pt-BR')}</span>
-              <span className="text-neutral-700">Validade:</span> <span className="font-mono text-right text-black">{new Date(budget.validUntil).toLocaleDateString('pt-BR')}</span>
+          <div className="flex justify-between items-center border-b-2 border-black pb-3 gap-4">
+            <div className="flex-1 max-w-[480px]">
+              <img 
+                src="/sergiocar-header.png" 
+                alt="SÉRGIOCAR - Auto Elétrica e Mecânica" 
+                className="w-full h-auto object-contain"
+              />
+            </div>
+            
+            <div className="w-[260px] border border-black p-2 text-center bg-white shrink-0 self-center">
+              <h2 className="font-bold text-sm uppercase leading-tight mb-1 border-b border-black pb-1">ORÇAMENTO DE SERVIÇOS</h2>
+              <div className="text-xs text-left grid grid-cols-2 gap-1 font-medium mt-1">
+                <span className="text-neutral-700">Nº do Doc:</span> <span className="font-mono text-right font-bold text-black">{budget.id.substring(0, 8).toUpperCase()}</span>
+                <span className="text-neutral-700">Emissão:</span> <span className="font-mono text-right text-black">{new Date(budget.createdAt).toLocaleDateString('pt-BR')}</span>
+                <span className="text-neutral-700">Validade:</span> <span className="font-mono text-right text-black">{new Date(budget.validUntil).toLocaleDateString('pt-BR')}</span>
+              </div>
             </div>
           </div>
         </div>
