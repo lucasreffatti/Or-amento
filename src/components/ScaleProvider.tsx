@@ -23,18 +23,18 @@ export function ScaleProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
-  // Função para calcular a escala nativa automática baseada na resolução da tela
+  // Função para calcular a escala nativa automática baseada na resolução da tela e zoom do navegador
   const calculateAutoScale = useCallback(() => {
     if (typeof window === 'undefined') return 1
 
     const width = window.innerWidth
     
-    // Se a tela for menor que 1536px (ex: 1366px, ou 1920px com DPI de 125%/150% do Windows)
+    // Se a largura for menor que 1536px (devido a resolução menor ou zoom in do navegador como 125%, 150%, 175%)
     if (width < 1536) {
-      // Escala proporcional fluida
+      // Escala proporcional fluida calculada a partir dos 1536px de referência
       const calculated = width / 1536
-      // Limita a escala entre 0.80 (80%) e 1.0 (100%) para manter ótima legibilidade
-      return Math.max(0.80, Math.min(1.0, Number(calculated.toFixed(2))))
+      // Permite recuo suave de escala até 0.65 (65%) para evitar que conteúdos invadam as bordas da tela no zoom
+      return Math.max(0.65, Math.min(1.0, Number(calculated.toFixed(2))))
     }
     
     // Telas Ultra-wide ou 4K muito grandes (largura > 2200px)
@@ -69,7 +69,7 @@ export function ScaleProvider({ children }: { children: React.ReactNode }) {
     applyScale(targetScale)
   }, [preset, calculateAutoScale, applyScale])
 
-  // Inicialização e escuta de redimensionamento de janela
+  // Inicialização e escuta de redimensionamento e zoom do navegador
   useEffect(() => {
     setMounted(true)
 
@@ -78,13 +78,40 @@ export function ScaleProvider({ children }: { children: React.ReactNode }) {
       setPresetState(savedPreset)
     }
 
-    // Recalcula ao redimensionar (ex: ao arrastar janela de um monitor para outro)
+    // Recalcula ao redimensionar ou alterar o zoom do navegador
     const handleResize = () => {
       updateScale()
     }
 
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+
+    // Escutar diretamente alterações de devicePixelRatio (Zoom Ctrl+ / Ctrl-)
+    let dprMediaQuery: MediaQueryList | null = null
+    const setupDprListener = () => {
+      if (dprMediaQuery) {
+        dprMediaQuery.removeEventListener('change', handleDprChange)
+      }
+      dprMediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`)
+      dprMediaQuery.addEventListener('change', handleDprChange)
+    }
+
+    const handleDprChange = () => {
+      updateScale()
+      setupDprListener()
+    }
+
+    setupDprListener()
+
+    // Suporte para visualViewport (redimensionamento por zoom em qualquer plataforma)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize)
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (dprMediaQuery) dprMediaQuery.removeEventListener('change', handleDprChange)
+      if (window.visualViewport) window.visualViewport.removeEventListener('resize', handleResize)
+    }
   }, [updateScale])
 
   // Aplica escala sempre que o preset mudar

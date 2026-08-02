@@ -11,8 +11,8 @@ export default async function AppLayout({
   return (
     <div className="flex flex-col md:flex-row min-h-screen h-screen overflow-hidden bg-neutral-50">
       <Sidebar user={session} />
-      <main className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden">
-        <div className="w-full max-w-[1600px] mx-auto p-3 sm:p-5 md:p-6 lg:p-8">
+      <main className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden min-w-0">
+        <div className="w-full max-w-[1600px] mx-auto p-3 sm:p-4 md:p-5 lg:p-6 text-neutral-900">
           {children}
         </div>
       </main>
