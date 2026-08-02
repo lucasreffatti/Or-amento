@@ -53,7 +53,7 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
       )}
       
       {/* Container A4 format */}
-      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 print:scale-[0.88] print:origin-top relative overflow-hidden">
+      <div className="max-w-[210mm] mx-auto bg-white print:max-w-none print:shadow-none print:w-full print:m-0 print:scale-[0.88] print:origin-top relative overflow-visible">
         
         {/* CABEÇALHO DO DOCUMENTO */}
         <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4 relative z-10">

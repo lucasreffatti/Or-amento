@@ -30,90 +30,90 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
   } catch (e) {}
 
   return (
-    <div className="bg-white min-h-screen text-black font-sans print:p-0 p-8 flex justify-center">
-      <div className="w-[210mm] min-h-[297mm] bg-white print:shadow-none shadow-xl border border-neutral-200 print:border-none p-10 print:scale-[0.88] print:origin-top relative">
+    <div className="bg-white min-h-screen text-black font-sans print:p-0 p-4 sm:p-6 flex justify-center">
+      <div className="w-[210mm] max-w-full bg-white print:shadow-none shadow-xl border border-neutral-200 print:border-none p-6 print:p-2 print:w-full print:max-w-none print:m-0 relative">
         
         {/* CABEÇALHO DA OFICINA */}
-        <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
+        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-neutral-900 text-white rounded-lg flex items-center justify-center font-bold text-2xl tracking-tighter">
+            <div className="w-14 h-14 bg-neutral-900 text-white rounded-lg flex items-center justify-center font-bold text-xl tracking-tighter shrink-0">
               {tenant?.name?.substring(0, 2).toUpperCase() || 'OF'}
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-black uppercase">{tenant?.name || 'OFICINA NÃO CONFIGURADA'}</h1>
-              <p className="text-sm font-medium text-neutral-600">CNPJ: {tenant?.document || '00.000.000/0000-00'}</p>
-              <p className="text-sm text-neutral-600">{tenant?.address || 'Endereço não configurado'}</p>
-              <p className="text-sm text-neutral-600">{tenant?.phone || 'Telefone não configurado'}</p>
+              <h1 className="text-xl font-bold tracking-tight text-black uppercase">{tenant?.name || 'OFICINA NÃO CONFIGURADA'}</h1>
+              <p className="text-xs font-medium text-neutral-600">CNPJ: {tenant?.document || '00.000.000/0000-00'}</p>
+              <p className="text-xs text-neutral-600">{tenant?.address || 'Endereço não configurado'}</p>
+              <p className="text-xs text-neutral-600">{tenant?.phone || 'Telefone não configurado'}</p>
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-black uppercase tracking-widest text-black">VISTORIA</h2>
-            <p className="text-sm font-mono text-neutral-500 font-medium">#{checklist.id.substring(0, 8).toUpperCase()}</p>
-            <p className="text-sm text-neutral-500 mt-2">Data: {new Date(checklist.createdAt).toLocaleDateString('pt-BR')}</p>
-            <p className="text-sm text-neutral-500">Hora: {new Date(checklist.createdAt).toLocaleTimeString('pt-BR')}</p>
+            <h2 className="text-2xl font-black uppercase tracking-widest text-black">VISTORIA</h2>
+            <p className="text-xs font-mono text-neutral-600 font-bold">#{checklist.id.substring(0, 8).toUpperCase()}</p>
+            <p className="text-xs text-neutral-500 mt-1">Data: {new Date(checklist.createdAt).toLocaleDateString('pt-BR')}</p>
+            <p className="text-xs text-neutral-500">Hora: {new Date(checklist.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
           </div>
         </div>
 
         {/* DADOS CLIENTE E VEÍCULO */}
-        <div className="grid grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-4 border border-black p-3 bg-gray-50/50 rounded">
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-2 border-b border-neutral-200 pb-1">Cliente</h3>
-            <p className="font-bold text-lg text-black">{checklist.customer.name}</p>
-            <p className="text-sm text-neutral-700">{checklist.customer.phone}</p>
-            {checklist.customer.document && <p className="text-sm text-neutral-700">CPF/CNPJ: {checklist.customer.document}</p>}
+            <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-1 border-b border-black/20 pb-0.5">Cliente</h3>
+            <p className="font-bold text-sm text-black">{checklist.customer.name}</p>
+            <p className="text-xs text-neutral-800">Telefone: {checklist.customer.phone}</p>
+            {checklist.customer.document && <p className="text-xs text-neutral-800">CPF/CNPJ: {checklist.customer.document}</p>}
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-2 border-b border-neutral-200 pb-1">Veículo</h3>
-            <p className="font-bold text-lg text-black">{checklist.vehicle.brand} {checklist.vehicle.model}</p>
-            <p className="text-sm text-neutral-700 font-mono">Placa: {checklist.vehicle.plate}</p>
-            <p className="text-sm text-neutral-700">Ano: {checklist.vehicle.year}</p>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-1 border-b border-black/20 pb-0.5">Veículo</h3>
+            <p className="font-bold text-sm text-black">{checklist.vehicle.brand} {checklist.vehicle.model}</p>
+            <p className="text-xs text-neutral-800 font-mono">Placa: <span className="uppercase font-bold">{checklist.vehicle.plate}</span></p>
+            <p className="text-xs text-neutral-800">Ano: {checklist.vehicle.year}</p>
           </div>
         </div>
 
         {/* MARCADOR DE COMBUSTÍVEL */}
-        <div className="mb-8 p-4 border border-neutral-300 rounded-lg bg-neutral-50/50 print:bg-transparent">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-black mb-4">Nível de Combustível</h3>
-          <div className="flex flex-col items-center max-w-sm mx-auto">
-            <div className="w-full h-4 bg-neutral-200 rounded-full overflow-hidden mb-2 border border-neutral-300">
+        <div className="mb-4 p-3 border border-black rounded bg-gray-50/30">
+          <div className="flex justify-between items-center mb-1.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-black">Nível de Combustível</h3>
+            <span className="text-xs font-bold text-black font-mono">{checklist.fuelLevel}%</span>
+          </div>
+          <div className="flex flex-col items-center max-w-md mx-auto">
+            <div className="w-full h-3 bg-neutral-200 rounded-full overflow-hidden mb-1 border border-neutral-400">
               <div 
                 className="h-full bg-black rounded-full print:bg-black" 
                 style={{ width: `${checklist.fuelLevel}%`, WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
               />
             </div>
-            <div className="w-full flex justify-between text-xs font-bold text-neutral-500 font-mono">
+            <div className="w-full flex justify-between text-[10px] font-bold text-neutral-600 font-mono">
               <span>E (Vazio)</span>
               <span>1/2</span>
               <span>F (Cheio)</span>
-            </div>
-            <div className="mt-2 text-xl font-bold text-black font-mono tracking-tight">
-              {checklist.fuelLevel}%
             </div>
           </div>
         </div>
 
         {/* LISTA DE ITENS */}
-        <div className="mb-12">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-black mb-4 border-b border-neutral-300 pb-2">Inspeção Visual e Componentes</h3>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+        <div className="mb-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-2 border-b border-black pb-1">Inspeção Visual e Componentes</h3>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2">
             {Object.entries(itemsStatus).map(([item, status]) => (
-              <div key={item} className="flex justify-between items-center border-b border-neutral-200 pb-2 border-dashed">
-                <span className="text-sm font-medium text-black">{item}</span>
-                <div className="flex gap-4">
-                  <div className={`flex items-center gap-1.5 text-xs font-bold ${status === 'OK' ? 'text-black' : 'text-neutral-300'}`}>
-                    <div className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center ${status === 'OK' ? 'border-black bg-black text-white' : 'border-neutral-300'}`}>
-                      {status === 'OK' && <CheckSquare className="w-3 h-3" />}
+              <div key={item} className="flex justify-between items-center border-b border-neutral-200 pb-1 text-xs">
+                <span className="font-medium text-black">{item}</span>
+                <div className="flex gap-3">
+                  <div className={`flex items-center gap-1 text-[11px] font-bold ${status === 'OK' ? 'text-black' : 'text-neutral-300'}`}>
+                    <div className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center ${status === 'OK' ? 'border-black bg-black text-white' : 'border-neutral-300'}`}>
+                      {status === 'OK' && <CheckSquare className="w-2.5 h-2.5" />}
                     </div>
                     OK
                   </div>
-                  <div className={`flex items-center gap-1.5 text-xs font-bold ${status === 'AVARIA' ? 'text-black' : 'text-neutral-300'}`}>
-                    <div className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center ${status === 'AVARIA' ? 'border-black bg-black text-white' : 'border-neutral-300'}`}>
-                      {status === 'AVARIA' && <X className="w-3 h-3" />}
+                  <div className={`flex items-center gap-1 text-[11px] font-bold ${status === 'AVARIA' ? 'text-black' : 'text-neutral-300'}`}>
+                    <div className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center ${status === 'AVARIA' ? 'border-black bg-black text-white' : 'border-neutral-300'}`}>
+                      {status === 'AVARIA' && <X className="w-2.5 h-2.5" />}
                     </div>
                     AVARIA
                   </div>
-                  <div className={`flex items-center gap-1.5 text-xs font-bold ${status === 'N/A' ? 'text-black' : 'text-neutral-300'}`}>
-                    <div className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center ${status === 'N/A' ? 'border-black bg-black text-white' : 'border-neutral-300'}`}>
-                      {status === 'N/A' && <Circle className="w-3 h-3" />}
+                  <div className={`flex items-center gap-1 text-[11px] font-bold ${status === 'N/A' ? 'text-black' : 'text-neutral-300'}`}>
+                    <div className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center ${status === 'N/A' ? 'border-black bg-black text-white' : 'border-neutral-300'}`}>
+                      {status === 'N/A' && <Circle className="w-2.5 h-2.5" />}
                     </div>
                     N/A
                   </div>
@@ -125,50 +125,50 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
 
         {/* OBSERVAÇÕES E INFORMAÇÕES ADICIONAIS */}
         {(checklist.reportedIssue || checklist.obd2Codes || checklist.additionalInfo) && (
-          <div className="mb-8 p-4 border border-neutral-300 rounded-lg">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-black mb-3 border-b border-neutral-200 pb-1">
+          <div className="mb-4 p-3 border border-black rounded text-xs bg-gray-50/20">
+            <h3 className="font-bold uppercase tracking-wider text-black mb-2 border-b border-neutral-300 pb-0.5">
               Observações & Diagnóstico Inicial
             </h3>
             
             {checklist.reportedIssue && (
-              <div className="mb-2">
-                <span className="text-xs font-bold text-neutral-600 block">Defeito Relatado / Queixa do Cliente:</span>
-                <p className="text-sm font-medium text-black leading-relaxed">{checklist.reportedIssue}</p>
+              <div className="mb-1.5">
+                <span className="font-bold text-neutral-700">Defeito Relatado: </span>
+                <span className="font-medium text-black">{checklist.reportedIssue}</span>
               </div>
             )}
 
             {checklist.obd2Codes && (
-              <div className="mb-2">
-                <span className="text-xs font-bold text-neutral-600 block">Códigos OBD2 / Diagnóstico:</span>
-                <span className="text-sm font-mono font-bold text-black">{checklist.obd2Codes}</span>
+              <div className="mb-1.5">
+                <span className="font-bold text-neutral-700">Códigos OBD2: </span>
+                <span className="font-mono font-bold text-black">{checklist.obd2Codes}</span>
               </div>
             )}
 
             {checklist.additionalInfo && (
               <div>
-                <span className="text-xs font-bold text-neutral-600 block">Informações Adicionais da Vistoria:</span>
-                <p className="text-sm text-black leading-relaxed whitespace-pre-wrap">{checklist.additionalInfo}</p>
+                <span className="font-bold text-neutral-700 block mb-0.5">Informações Adicionais:</span>
+                <p className="text-black whitespace-pre-wrap">{checklist.additionalInfo}</p>
               </div>
             )}
           </div>
         )}
 
         {/* ASSINATURAS */}
-        <div className="mt-12 pt-6 border-t border-neutral-300 grid grid-cols-2 gap-12">
+        <div className="mt-6 pt-4 border-t border-black grid grid-cols-2 gap-8 text-xs">
           <div className="text-center">
-            <div className="h-16 border-b border-black mb-2 relative"></div>
-            <p className="font-bold text-sm uppercase">Assinatura do Cliente</p>
-            <p className="text-xs text-neutral-500 mt-1">Declaro estar ciente e de acordo com o estado do veículo descrito acima no momento da entrega à oficina.</p>
+            <div className="border-b border-black mb-1 w-full mt-6"></div>
+            <p className="font-bold uppercase">Assinatura do Cliente</p>
+            <p className="text-[10px] text-neutral-600 mt-0.5">Declaro estar ciente e de acordo com o estado do veículo descrito acima.</p>
           </div>
-          <div className="text-center relative">
-            <div className="h-16 border-b border-black mb-2 relative"></div>
-            <p className="font-bold text-sm uppercase">Responsável da Oficina</p>
-            <p className="text-xs text-neutral-500 mt-1">{tenant?.name}</p>
+          <div className="text-center">
+            <div className="border-b border-black mb-1 w-full mt-6"></div>
+            <p className="font-bold uppercase">Responsável da Oficina</p>
+            <p className="text-[10px] text-neutral-600 mt-0.5">{tenant?.name}</p>
           </div>
         </div>
 
         {/* FOOTER */}
-        <div className="absolute bottom-10 left-10 right-10 text-center text-[10px] text-neutral-400 font-mono border-t border-neutral-200 pt-4">
+        <div className="mt-4 text-center text-[10px] text-neutral-500 font-mono border-t border-neutral-200 pt-2">
           Documento gerado em {new Date().toLocaleString('pt-BR')} • {tenant?.name} • ID: {checklist.id}
         </div>
       </div>
