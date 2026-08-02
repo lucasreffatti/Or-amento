@@ -74,15 +74,12 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
         
         {/* CABEÇALHO DO DOCUMENTO COM LOGO OFICIAL SÉRGIOCAR E BOX DE INFORMAÇÕES */}
         <div className="flex justify-between items-center border-b-2 border-black pb-3 mb-4 relative z-10 gap-4">
-          <div className="flex-1 max-w-[460px]">
+          <div className="flex-1 max-w-[480px]">
             <img 
               src="/sergiocar-header.png" 
-              alt="SÉRGIOCAR - Injeção Eletrônica, Auto Elétrica, Mecânica" 
-              className="w-full h-auto object-contain max-h-[110px]"
+              alt="SÉRGIOCAR - Auto Elétrica e Mecânica" 
+              className="w-full h-auto object-contain"
             />
-            <div className="text-center text-[10px] text-black font-medium tracking-tight mt-0.5 border-t border-black/30 pt-0.5">
-              Rua Jacob Weingatner, 4198 - Centro - 88131-300 - Palhoça/SC
-            </div>
           </div>
           
           <div className="w-[260px] border border-black p-2 text-center bg-white shrink-0 self-center">
