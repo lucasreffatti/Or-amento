@@ -54,7 +54,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(checklist, { status: 201 })
   } catch (error) {
-    console.error(error)
+    console.error('[API /api/checklists Error]:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

@@ -22,7 +22,7 @@ export async function createChecklist(formData: FormData) {
   try {
     if (itemsStatusRaw) itemsStatus = JSON.parse(itemsStatusRaw)
   } catch (e) {
-    console.error('Invalid itemsStatus JSON')
+    console.error('[Action createChecklist]: Invalid itemsStatus JSON string')
   }
 
   const checklist = await prisma.checklist.create({
@@ -71,7 +71,7 @@ export async function updateChecklist(id: string, formData: FormData) {
   try {
     if (itemsStatusRaw) itemsStatus = JSON.parse(itemsStatusRaw)
   } catch (e) {
-    console.error('Invalid itemsStatus JSON')
+    console.error('[Action updateChecklist]: Invalid itemsStatus JSON string')
   }
 
   await prisma.checklist.update({

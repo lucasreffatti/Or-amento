@@ -6,11 +6,18 @@ const prisma = new PrismaClient();
 async function main() {
   const tenant = await prisma.tenant.upsert({
     where: { id: 'tenant-1' }, // Ensure we have a default tenant for the MVP
-    update: {},
+    update: {
+      name: 'Auto Elétrica Sérgio Car',
+      phone: '(48) 99172-7541',
+      document: '22.980.022/0001-06',
+      address: 'Rua Jacob Weingatner, 4198 - Centro - CEP 88131-400 - Palhoça/SC',
+    },
     create: {
       id: 'tenant-1',
-      name: 'Oficina SergioCar',
-      document: '00.000.000/0001-00',
+      name: 'Auto Elétrica Sérgio Car',
+      phone: '(48) 99172-7541',
+      document: '22.980.022/0001-06',
+      address: 'Rua Jacob Weingatner, 4198 - Centro - CEP 88131-400 - Palhoça/SC',
     },
   });
 
