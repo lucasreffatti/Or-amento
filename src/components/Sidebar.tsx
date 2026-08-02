@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X, Monitor, Package, Receipt } from 'lucide-react'
+import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X, Monitor, Package, Receipt, Building2 } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import { useScale } from '@/components/ScaleProvider'
 
@@ -19,6 +19,7 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
     { name: 'Checklists', href: '/checklists', icon: ClipboardCheck },
     { name: 'Orçamentos', href: '/budgets', icon: FileText },
     { name: 'Estoque', href: '/stock', icon: Package },
+    { name: 'Fornecedores', href: '/suppliers', icon: Building2 },
     { name: 'Notas Fiscais', href: '/invoices', icon: Receipt },
   ]
 
@@ -98,65 +99,38 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
         </nav>
 
         <div className="p-4 md:p-2 border-t border-neutral-800 space-y-4 md:space-y-2 flex flex-col items-center">
-          <nav className="w-full space-y-1">
-            <button 
-              type="button"
-              onClick={() => { openWidget(); setIsOpen(false); }}
-              title="Ajustar Densidade da Tela"
-              className="flex items-center gap-3 md:justify-center w-full px-3 md:px-0 py-2.5 md:py-3 text-[13px] font-medium text-neutral-400 rounded-lg hover:bg-neutral-800/50 hover:text-neutral-200 transition-colors group relative"
-            >
-              <Monitor className="w-4 h-4 shrink-0 text-indigo-400 group-hover:text-indigo-300" strokeWidth={2} />
-              <span className="md:hidden">Densidade da Tela</span>
-              
-              <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
-                Densidade da Tela
-              </span>
-            </button>
-
-            <Link 
-              href="/settings" 
-              title="Configurações"
-              onClick={() => setIsOpen(false)} 
-              className="flex items-center gap-3 md:justify-center w-full px-3 md:px-0 py-2.5 md:py-3 text-[13px] font-medium text-neutral-400 rounded-lg hover:bg-neutral-800/50 hover:text-neutral-200 transition-colors group relative"
-            >
-              <Settings className="w-4 h-4 shrink-0 text-neutral-500 group-hover:text-neutral-300" strokeWidth={2} />
-              <span className="md:hidden">Configurações</span>
-              
-              <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
-                Configurações
-              </span>
-            </Link>
-          </nav>
-
-          
-          <div className="flex items-center space-x-3 md:space-x-0 md:justify-center w-full px-3 md:px-0 py-2 md:py-2 rounded-lg bg-neutral-800/30 md:bg-transparent border border-neutral-800/50 md:border-transparent group relative">
-            <div className="w-7 h-7 shrink-0 rounded-full bg-gradient-to-tr from-neutral-700 to-neutral-500 text-white flex items-center justify-center text-[10px] font-bold shadow-inner uppercase cursor-help">
-              {user?.username ? user.username.substring(0, 2) : 'US'}
-            </div>
-            
-            <div className="flex-1 overflow-hidden md:hidden">
-              <p className="text-[12px] font-medium text-neutral-200 truncate">{user?.username || 'Usuário'}</p>
-              <p className="text-[10px] text-neutral-500 font-mono truncate">{user?.role || 'USER'}</p>
-            </div>
-            <form action={logout} className="md:hidden">
-              <button type="submit" className="text-neutral-500 hover:text-neutral-300 transition-colors" title="Sair">
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            </form>
-
+          <button 
+            onClick={openWidget}
+            title="Redimensionamento da Interface"
+            className="w-full flex items-center justify-center p-2 text-neutral-400 hover:bg-neutral-800/50 hover:text-white rounded-lg transition-colors group relative"
+          >
+            <Monitor className="w-4 h-4" />
             <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
-              {user?.username || 'Usuário'} ({user?.role || 'USER'})
+              Escalar Tela
             </span>
-          </div>
+          </button>
 
-          <form action={logout} className="hidden md:block w-full">
+          <Link 
+            href="/settings"
+            title="Configurações"
+            className={`w-full flex items-center justify-center p-2 text-neutral-400 hover:bg-neutral-800/50 hover:text-white rounded-lg transition-colors group relative ${
+              pathname === '/settings' ? 'bg-neutral-800 text-white' : ''
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+              Configurações
+            </span>
+          </Link>
+
+          <form action={logout} className="w-full">
             <button 
-              type="submit" 
-              className="w-full flex justify-center p-2 text-neutral-500 hover:bg-neutral-800/50 hover:text-red-400 rounded-lg transition-colors group relative" 
-              title="Sair"
+              type="submit"
+              title="Sair do Sistema"
+              className="w-full flex items-center justify-center p-2 text-neutral-400 hover:bg-neutral-800/50 hover:text-red-400 rounded-lg transition-colors group relative"
             >
-              <LogOut className="w-4 h-4 shrink-0" />
-              <span className="hidden md:block absolute left-12 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+              <LogOut className="w-4 h-4" />
+              <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
                 Sair
               </span>
             </button>
