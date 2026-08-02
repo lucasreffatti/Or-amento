@@ -234,11 +234,11 @@ export function ScaleProvider({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          {/* Botão Gatilho Discreto */}
+          {/* Botão Gatilho Discreto (Alvo de toque otimizado 44px para mobile) */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             title="Ajustar Densidade/Zoom da Tela"
-            className="group flex items-center gap-2 bg-neutral-900/90 hover:bg-black text-white px-3 py-1.5 rounded-full shadow-lg border border-neutral-700/60 backdrop-blur-md text-[11px] font-medium transition-all duration-200 hover:scale-105"
+            className="group flex items-center gap-2 bg-neutral-900/90 hover:bg-black text-white px-3.5 py-2 min-h-[44px] rounded-full shadow-xl border border-neutral-700/60 backdrop-blur-md text-[11px] font-medium transition-all duration-200 active:scale-95 hover:scale-105"
           >
             <Monitor className="w-3.5 h-3.5 text-indigo-400 group-hover:rotate-12 transition-transform" />
             <span className="font-mono text-neutral-200">{percentage}%</span>

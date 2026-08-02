@@ -164,16 +164,16 @@ export default function ReportsClient({ initialData }: ReportsClientProps) {
         </div>
 
         {/* Botões Principais de Exportação */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-all duration-200"
+            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 min-h-[44px] rounded-lg shadow-sm transition-all duration-200 w-full sm:w-auto"
           >
             <FileSpreadsheet className="w-4 h-4" /> Exportar Excel/CSV
           </button>
           <button
             onClick={handleOpenPrintView}
-            className="flex items-center gap-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-all duration-200"
+            className="flex items-center justify-center gap-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold px-4 py-2.5 min-h-[44px] rounded-lg shadow-sm transition-all duration-200 w-full sm:w-auto"
           >
             <Printer className="w-4 h-4 text-indigo-400" /> Imprimir / PDF
           </button>
@@ -198,7 +198,7 @@ export default function ReportsClient({ initialData }: ReportsClientProps) {
               <button
                 key={p.value}
                 onClick={() => onPeriodChange(p.value as any)}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-md transition-all ${
+                className={`text-xs font-semibold px-3 py-2 min-h-[44px] sm:min-h-[36px] flex items-center justify-center rounded-md transition-all ${
                   period === p.value
                     ? 'bg-neutral-900 text-white shadow-sm'
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
@@ -251,7 +251,7 @@ export default function ReportsClient({ initialData }: ReportsClientProps) {
               <button
                 key={cat.id}
                 onClick={() => onCategoryChange(cat.id as any)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   isSelected
                     ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                     : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800'

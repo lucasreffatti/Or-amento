@@ -161,7 +161,7 @@ export default async function Dashboard() {
                   </div>
                   <Link 
                     href={`/budgets/${budget.id}`}
-                    className="text-[12px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+                    className="text-[12px] font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100/60 border border-indigo-100 px-3 py-2 rounded-lg min-h-[44px] flex items-center justify-center transition-colors"
                   >
                     Abrir
                   </Link>

@@ -34,7 +34,7 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
           </div>
           <span className="text-[13px] font-semibold tracking-tight">Sérgio Car</span>
         </Link>
-        <button onClick={() => setIsOpen(true)} className="p-1 hover:bg-neutral-800 rounded">
+        <button onClick={() => setIsOpen(true)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-neutral-800 rounded-lg transition-colors" aria-label="Abrir menu">
           <Menu className="w-5 h-5 text-neutral-300" />
         </button>
       </div>
