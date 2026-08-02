@@ -29,6 +29,14 @@ html {
     size: A4 portrait;
     margin: 8mm;
   }
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transition: none !important;
+    animation: none !important;
+    will-change: auto !important;
+    backdrop-filter: none !important;
+  }
   html, body {
     background: #ffffff !important;
     color: #000000 !important;
@@ -38,6 +46,11 @@ html {
     print-color-adjust: exact !important;
     height: auto !important;
     overflow: visible !important;
+  }
+  img, svg {
+    max-width: 100% !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 

@@ -173,12 +173,14 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
         </div>
       </div>
       
-      {/* SCRIPT DE AUTO-PRINT */}
+      {/* SCRIPT DE AUTO-PRINT RAPIDO */}
       <script dangerouslySetInnerHTML={{ __html: `
-        window.onload = function() {
-          setTimeout(() => {
-            window.print();
-          }, 500);
+        if (document.readyState === 'complete') {
+          requestAnimationFrame(function() { window.print(); });
+        } else {
+          window.addEventListener('load', function() {
+            requestAnimationFrame(function() { window.print(); });
+          });
         }
       `}} />
     </div>
