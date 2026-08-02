@@ -2,6 +2,23 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { AutoPrint } from '@/components/AutoPrint'
+import type { Metadata } from 'next'
+
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const params = await props.params
+  const session = await getSession()
+  const budget = await prisma.budget.findUnique({
+    where: { id: params.id, tenantId: session.tenantId },
+    include: { customer: true }
+  })
+
+  if (!budget) return { title: 'Orcamento' }
+  const code = budget.id.substring(0, 8).toUpperCase()
+  const cleanCustomerName = budget.customer.name.replace(/[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]/g, '').trim().replace(/\s+/g, '_')
+  return {
+    title: `Orcamento_${code}_${cleanCustomerName}`
+  }
+}
 
 export default async function PrintLegalBudgetPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;

@@ -2,6 +2,23 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { CheckSquare, Circle, X } from 'lucide-react'
+import type { Metadata } from 'next'
+
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const params = await props.params
+  const session = await getSession()
+  const checklist = await prisma.checklist.findUnique({
+    where: { id: params.id, tenantId: session.tenantId },
+    include: { customer: true }
+  })
+
+  if (!checklist) return { title: 'Vistoria' }
+  const code = checklist.id.substring(0, 8).toUpperCase()
+  const cleanCustomerName = checklist.customer.name.replace(/[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]/g, '').trim().replace(/\s+/g, '_')
+  return {
+    title: `Vistoria_${code}_${cleanCustomerName}`
+  }
+}
 
 export default async function PrintChecklistPage(props: { params: Promise<{ id: string }> }) {
   const session = await getSession()
