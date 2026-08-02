@@ -13,8 +13,8 @@ export default async function CustomersPage() {
   })
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200/60">
+    <div className="flex-1 flex flex-col space-y-6 animate-in fade-in duration-300">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200/60 shrink-0">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest flex items-center gap-1">
@@ -42,9 +42,9 @@ export default async function CustomersPage() {
         </div>
       </header>
 
-      <div className="border border-neutral-200/80 bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
+      <div className="flex-1 border border-neutral-200/80 bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden flex flex-col">
         {customers.length === 0 ? (
-          <div className="py-12 px-6 flex flex-col items-center justify-center text-center bg-neutral-50/30">
+          <div className="my-auto py-12 px-6 flex flex-col items-center justify-center text-center bg-neutral-50/30">
             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-3 border border-neutral-200 shadow-sm">
               <Users className="w-5 h-5 text-neutral-400" />
             </div>
@@ -60,7 +60,7 @@ export default async function CustomersPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden flex-1">
             <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
               <thead className="bg-white">
                 <tr>

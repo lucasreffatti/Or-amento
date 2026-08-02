@@ -13,8 +13,8 @@ export default async function ChecklistsPage() {
   })
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200/60">
+    <div className="flex-1 flex flex-col space-y-6 animate-in fade-in duration-300">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200/60 shrink-0">
         <div>
           <h1 className="text-xl font-semibold text-neutral-900 tracking-tight">Checklists</h1>
           <p className="text-sm text-neutral-500 mt-1">Registros de inspeção veicular de entrada.</p>
@@ -37,9 +37,9 @@ export default async function ChecklistsPage() {
         </div>
       </header>
 
-      <div className="border border-neutral-200 bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
+      <div className="flex-1 border border-neutral-200 bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden flex flex-col">
         {checklists.length === 0 ? (
-          <div className="py-12 px-6 flex flex-col items-center justify-center text-center">
+          <div className="my-auto py-12 px-6 flex flex-col items-center justify-center text-center">
             <div className="w-12 h-12 bg-neutral-50 rounded-xl flex items-center justify-center mb-3 border border-neutral-200 shadow-sm">
               <CheckCircle2 className="w-5 h-5 text-neutral-400" />
             </div>
@@ -49,7 +49,7 @@ export default async function ChecklistsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden flex-1">
             <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
               <thead className="bg-neutral-50/50">
                 <tr>
