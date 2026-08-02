@@ -33,7 +33,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
   const needleRotation = (checklist.fuelLevel / 100) * 180 - 90
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 pb-12 w-full relative">
+    <div className="space-y-8 animate-in fade-in duration-300 pb-4 w-full relative">
 
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-neutral-100 relative z-10">
         <div>

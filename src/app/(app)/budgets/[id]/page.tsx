@@ -41,7 +41,7 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
   const displayStatus = isExpired ? 'EXPIRED' : budget.status;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 w-full pb-24">
+    <div className="space-y-8 animate-in fade-in duration-300 w-full pb-4">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200/60">
         <div className="flex items-center gap-4">
           <Link 

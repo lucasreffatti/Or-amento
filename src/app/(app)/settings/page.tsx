@@ -13,7 +13,7 @@ export default async function SettingsPage() {
   if (!tenant) return null
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-12 w-full">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-4 w-full">
       <header className="pb-6 border-b border-neutral-200/60">
         <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight flex items-center gap-2">
           <Settings className="w-6 h-6 text-neutral-400" /> Configurações

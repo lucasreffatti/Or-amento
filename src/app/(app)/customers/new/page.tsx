@@ -7,7 +7,7 @@ export default async function NewCustomerPage() {
   await getSession() // Apenas para checar se logado
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 w-full pb-12">
+    <div className="space-y-10 animate-in fade-in duration-500 w-full pb-4">
       <header className="flex items-center gap-4 pb-6 border-b border-neutral-200/60">
         <Link 
           href="/customers" 

@@ -13,7 +13,7 @@ export default async function VehiclesPage() {
   })
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 pb-12">
+    <div className="space-y-10 animate-in fade-in duration-500 pb-4">
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-neutral-200/60">
         <div>
           <div className="flex items-center gap-2 mb-2">

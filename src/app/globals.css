@@ -9,22 +9,23 @@
   --app-scale: 1;
 }
 
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
 html {
   font-size: calc(16px * var(--app-scale, 1));
   transition: font-size 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   -webkit-text-size-adjust: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
 }
 
 @layer base {
   body {
     @apply font-sans bg-[#FAFAFA] text-neutral-900 antialiased selection:bg-neutral-900 selection:text-white;
     font-feature-settings: "rlig" 1, "calt" 1;
-    min-height: 100vh;
-    min-height: 100dvh;
-    max-width: 100vw;
-    overflow-x: hidden;
+    min-height: 100%;
   }
 }
 
