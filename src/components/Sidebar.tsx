@@ -78,7 +78,6 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
               <Link
                 key={menu.name}
                 href={menu.href}
-                title={menu.name}
                 onClick={() => setIsOpen(false)}
                 className={`flex items-center gap-3 md:justify-center px-3 md:px-0 py-2.5 md:py-3 text-[13px] font-medium rounded-lg transition-all duration-200 group relative ${
                   isActive 
@@ -89,8 +88,8 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-300'}`} strokeWidth={isActive ? 2.5 : 2} />
                 <span className="md:hidden">{menu.name}</span>
                 
-                {/* Tooltip on Desktop */}
-                <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                {/* Tooltip no Desktop sem corte por overflow */}
+                <span className="hidden md:block fixed left-[80px] bg-neutral-900 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-2xl border border-neutral-700/80 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-all duration-150 z-[100]">
                   {menu.name}
                 </span>
               </Link>
@@ -101,24 +100,22 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
         <div className="p-4 md:p-2 border-t border-neutral-800 space-y-4 md:space-y-2 flex flex-col items-center">
           <button 
             onClick={openWidget}
-            title="Redimensionamento da Interface"
             className="w-full flex items-center justify-center p-2 text-neutral-400 hover:bg-neutral-800/50 hover:text-white rounded-lg transition-colors group relative"
           >
             <Monitor className="w-4 h-4" />
-            <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+            <span className="hidden md:block fixed left-[80px] bg-neutral-900 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-2xl border border-neutral-700/80 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-all duration-150 z-[100]">
               Escalar Tela
             </span>
           </button>
 
           <Link 
             href="/settings"
-            title="Configurações"
             className={`w-full flex items-center justify-center p-2 text-neutral-400 hover:bg-neutral-800/50 hover:text-white rounded-lg transition-colors group relative ${
               pathname === '/settings' ? 'bg-neutral-800 text-white' : ''
             }`}
           >
             <Settings className="w-4 h-4" />
-            <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+            <span className="hidden md:block fixed left-[80px] bg-neutral-900 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-2xl border border-neutral-700/80 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-all duration-150 z-[100]">
               Configurações
             </span>
           </Link>
@@ -126,11 +123,10 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
           <form action={logout} className="w-full">
             <button 
               type="submit"
-              title="Sair do Sistema"
               className="w-full flex items-center justify-center p-2 text-neutral-400 hover:bg-neutral-800/50 hover:text-red-400 rounded-lg transition-colors group relative"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden md:block absolute left-14 bg-neutral-800 text-white text-[11px] font-medium px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+              <span className="hidden md:block fixed left-[80px] bg-neutral-900 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-2xl border border-neutral-700/80 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-all duration-150 z-[100]">
                 Sair
               </span>
             </button>
