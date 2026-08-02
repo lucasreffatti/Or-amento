@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X, Monitor, Package, Receipt, Building2 } from 'lucide-react'
+import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X, Monitor, Package, Receipt, Building2, BarChart3 } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import { useScale } from '@/components/ScaleProvider'
 
@@ -21,6 +21,7 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
     { name: 'Estoque', href: '/stock', icon: Package },
     { name: 'Fornecedores', href: '/suppliers', icon: Building2 },
     { name: 'Notas Fiscais', href: '/invoices', icon: Receipt },
+    { name: 'Relatórios', href: '/reports', icon: BarChart3 },
   ]
 
   return (
