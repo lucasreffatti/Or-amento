@@ -142,10 +142,10 @@ export function ScaleProvider({ children }: { children: React.ReactNode }) {
 
       {/* Flutuante Zoom Controller (Visível apenas após montagem) */}
       {mounted && (
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end print:hidden">
+        <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end print:hidden pointer-events-auto select-none">
           {/* Menu Expansível de Escala */}
           {isOpen && (
-            <div className="mb-2 bg-neutral-900/95 text-white p-3 rounded-xl shadow-2xl border border-neutral-800 backdrop-blur-md w-64 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="mb-2 bg-neutral-900/95 text-white p-3 rounded-xl shadow-2xl border border-neutral-800 backdrop-blur-md w-64 max-w-[calc(100vw-32px)] animate-in fade-in slide-in-from-bottom-2 duration-200">
               <div className="flex items-center justify-between border-b border-neutral-800 pb-2 mb-2">
                 <span className="text-[12px] font-semibold flex items-center gap-1.5 text-neutral-200">
                   <Monitor className="w-3.5 h-3.5 text-indigo-400" /> Densidade da Tela
