@@ -137,6 +137,9 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
           </form>
         </div>
       </aside>
+
+      {/* Spacer para reservar 72px no fluxo flex do layout desktop e evitar que o conteúdo fique sob a sidebar */}
+      <div className="hidden md:block w-[72px] shrink-0 h-full" aria-hidden="true" />
     </>
   )
 }
