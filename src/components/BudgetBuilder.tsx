@@ -1,7 +1,7 @@
 'use client'
 
-import { useOptimistic, startTransition, useRef } from 'react'
-import { Plus, Trash2, CheckCircle2, XCircle, Clock, Send, FileText, Lock } from 'lucide-react'
+import { useOptimistic, startTransition, useRef, useState, useEffect } from 'react'
+import { Plus, Trash2, CheckCircle2, XCircle, Clock, Send, FileText, Lock, Package } from 'lucide-react'
 import Link from 'next/link'
 import { addBudgetItem, removeBudgetItem } from '@/app/(app)/budgets/[id]/actions'
 
@@ -12,6 +12,7 @@ type BudgetItem = {
   quantity: number
   unitPrice: number
   budgetId: string
+  stockItemId?: string | null
 }
 
 type Budget = {
@@ -26,8 +27,28 @@ type Budget = {
   items: BudgetItem[]
 }
 
+interface StockItem {
+  id: string
+  code: string
+  description: string
+  salePrice: number
+  quantity: number
+}
+
 export default function BudgetBuilder({ budget }: { budget: Budget }) {
   const formRef = useRef<HTMLFormElement>(null)
+  const [stockItems, setStockItems] = useState<StockItem[]>([])
+  const [selectedType, setSelectedType] = useState('LABOR')
+  const [selectedStockItemId, setSelectedStockItemId] = useState('')
+
+  useEffect(() => {
+    fetch('/api/stock')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setStockItems(data)
+      })
+      .catch(err => console.error('Erro ao buscar estoque:', err))
+  }, [])
 
   const [optimisticItems, modifyOptimisticItems] = useOptimistic(
     budget.items,
@@ -58,7 +79,9 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
     
     // Reset the form immediately for better UX
     formRef.current?.reset()
-    // Focus back on description for rapid entry (optional, but good UX)
+    setSelectedStockItemId('')
+    setSelectedType('LABOR')
+
     const descInput = formRef.current?.querySelector('input[name="description"]') as HTMLInputElement
     if (descInput) descInput.focus()
 
@@ -67,6 +90,17 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
     })
     
     await addBudgetItem(formData)
+  }
+
+  const handleStockSelect = (stockId: string) => {
+    setSelectedStockItemId(stockId)
+    const item = stockItems.find(s => s.id === stockId)
+    if (item && formRef.current) {
+      const descInput = formRef.current.querySelector('input[name="description"]') as HTMLInputElement
+      const priceInput = formRef.current.querySelector('input[name="unitPrice"]') as HTMLInputElement
+      if (descInput) descInput.value = item.description
+      if (priceInput) priceInput.value = item.salePrice.toString()
+    }
   }
 
   const isRejected = budget.status === 'REJECTED'
@@ -129,7 +163,7 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
         {/* Tabela de Peças */}
         <section className="bg-white border border-neutral-200/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="px-5 py-3.5 border-b border-neutral-100 bg-neutral-50/50 flex justify-between items-center">
-            <h2 className="text-[13px] font-semibold text-neutral-900 tracking-tight">Peças e Produtos</h2>
+            <h2 className="text-[13px] font-semibold text-neutral-900 tracking-tight">Peças e Produtos (Estoque Vinculado)</h2>
             <span className="text-[11px] font-medium text-neutral-500 font-mono bg-neutral-100/80 px-2 py-0.5 rounded-sm">R$ {totalParts.toFixed(2)}</span>
           </div>
           
@@ -177,41 +211,93 @@ export default function BudgetBuilder({ budget }: { budget: Budget }) {
         </section>
 
         {/* Adicionar Novo Item */}
-        <section className="bg-white border border-neutral-200/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5">
-          <h2 className="text-[13px] font-semibold text-neutral-900 mb-4 flex items-center gap-2">
-            Adicionar Item
-            <span className="px-1.5 py-0.5 rounded-sm bg-neutral-100 text-neutral-500 text-[9px] uppercase tracking-wider font-mono">Instant</span>
+        <section className="bg-white border border-neutral-200/80 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5 space-y-4">
+          <h2 className="text-[13px] font-semibold text-neutral-900 flex items-center gap-2">
+            Adicionar Item ao Orçamento
+            <span className="px-1.5 py-0.5 rounded-sm bg-neutral-100 text-neutral-500 text-[9px] uppercase tracking-wider font-mono">Estoque Real</span>
           </h2>
-          <form ref={formRef} action={handleAdd} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+
+          <form ref={formRef} action={handleAdd} className="space-y-3">
             <input type="hidden" name="budgetId" value={budget.id} />
-            
-            <div className="md:col-span-3 space-y-1.5">
-              <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Tipo</label>
-              <select name="type" className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all">
-                <option value="LABOR">Mão de Obra</option>
-                <option value="PART">Peça / Produto</option>
-              </select>
+            <input type="hidden" name="stockItemId" value={selectedStockItemId} />
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+              <div className="md:col-span-3 space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Tipo</label>
+                <select 
+                  name="type" 
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all"
+                >
+                  <option value="LABOR">Mão de Obra (Serviço)</option>
+                  <option value="PART">Peça / Produto (Estoque)</option>
+                </select>
+              </div>
+
+              {selectedType === 'PART' && stockItems.length > 0 && (
+                <div className="md:col-span-9 space-y-1.5">
+                  <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                    <Package className="w-3 h-3 text-blue-600" /> Selecionar do Estoque Cadastrado
+                  </label>
+                  <select
+                    value={selectedStockItemId}
+                    onChange={(e) => handleStockSelect(e.target.value)}
+                    className="w-full px-3 py-2 bg-blue-50/50 border border-blue-200 rounded-md text-[13px] text-blue-900 font-medium outline-none focus:border-blue-400 transition-all"
+                  >
+                    <option value="">-- Selecione uma peça do estoque (Preenchimento automático) --</option>
+                    {stockItems.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        [{s.code}] {s.description} — Saldo: {s.quantity} un | R$ {s.salePrice.toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
-            <div className="md:col-span-4 space-y-1.5">
-              <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Descrição</label>
-              <input required type="text" name="description" placeholder="Ex: Troca de óleo" className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all placeholder:text-neutral-400" />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+              <div className="md:col-span-6 space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Descrição do Item</label>
+                <input 
+                  required 
+                  type="text" 
+                  name="description" 
+                  placeholder="Ex: Substituição da Bateria 60Ah" 
+                  className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all placeholder:text-neutral-400" 
+                />
+              </div>
 
-            <div className="md:col-span-2 space-y-1.5">
-              <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Qtd</label>
-              <input required type="number" name="quantity" defaultValue={1} min={1} className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all font-mono" />
-            </div>
+              <div className="md:col-span-2 space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Qtd</label>
+                <input 
+                  required 
+                  type="number" 
+                  name="quantity" 
+                  defaultValue={1} 
+                  min={1} 
+                  className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all font-mono" 
+                />
+              </div>
 
-            <div className="md:col-span-2 space-y-1.5">
-              <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Preço Unit.</label>
-              <input required type="number" name="unitPrice" step="0.01" min="0" placeholder="0.00" className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all font-mono" />
-            </div>
+              <div className="md:col-span-3 space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Preço Unit. (R$)</label>
+                <input 
+                  required 
+                  type="number" 
+                  name="unitPrice" 
+                  step="0.01" 
+                  min="0" 
+                  placeholder="0.00" 
+                  className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-100 transition-all font-mono" 
+                />
+              </div>
 
-            <div className="md:col-span-1">
-              <button type="submit" className="w-full h-[36px] bg-neutral-900 text-white rounded-md hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center">
-                <Plus className="w-4 h-4" />
-              </button>
+              <div className="md:col-span-1">
+                <button type="submit" className="w-full h-[36px] bg-neutral-900 text-white rounded-md hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center">
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </form>
         </section>

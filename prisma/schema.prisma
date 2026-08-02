@@ -9,19 +9,31 @@ datasource db {
 }
 
 model Tenant {
-  id        String   @id @default(cuid())
-  name      String
-  phone     String?
-  document  String?
-  address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String
+  phone          String?
+  document       String?
+  address        String?
+  
+  // Campos Fiscais da Oficina / Empresa
+  ie             String?  // Inscrição Estadual
+  im             String?  // Inscrição Municipal
+  taxRegime      String   @default("SIMPLES_NACIONAL") // SIMPLES_NACIONAL, REGIME_NORMAL, MEI
+  cnae           String?  @default("4520-0/01") // Manutenção e reparação de veículos automotores
+  cityIbge       String?  @default("4211900") // Palhoça/SC
+  nfeEnvironment String   @default("HOMOLOGATION") // HOMOLOGATION, PRODUCTION
+  nfeApiToken    String?  // Token de autenticação da API Fiscal (Focus NFe, PlugNotas, e-Notas, etc.)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   users      User[]
   customers  Customer[]
   vehicles   Vehicle[]
   checklists Checklist[]
   budgets    Budget[]
+  stockItems StockItem[]
+  invoices   Invoice[]
 }
 
 model User {
@@ -32,24 +44,38 @@ model User {
   username  String   @unique @default("sergiocar")
   name      String?
   password  String   @default("") // Will hold bcrypt hash
-  role      String   @default("USER") // ADMIN, USER
+  role      String   @default("ADMIN") // ADMIN, USER
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  name      String
-  phone     String   
-  email     String?
-  document  String?  
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  name        String
+  phone       String   
+  email       String?
+  document    String?  // CPF ou CNPJ
+  
+  // Campos Fiscais do Cliente
+  personType   String   @default("INDIVIDUAL") // INDIVIDUAL (PF), LEGAL_ENTITY (PJ)
+  ie           String?  // Inscrição Estadual (se Pessoa Jurídica contribuinte)
+  street       String?
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
+  cep          String?
+  cityIbge     String?
+  
+  createdAt   DateTime @default(now())
   
   vehicles   Vehicle[]
   budgets    Budget[]
   checklists Checklist[]
+  invoices   Invoice[]
 }
 
 model Vehicle {
@@ -83,7 +109,7 @@ model Checklist {
   reportedIssue String   
   obd2Codes     String?  
   
-  itemsStatus   String   // JSON convertido para String para SQLite
+  itemsStatus   String   // JSON convertido para String
   imagesUrls    String   @default("[]") // Lista convertida para String JSON
   additionalInfo String?
   
@@ -115,21 +141,91 @@ model Budget {
   checklistId   String?  @unique
   checklist     Checklist? @relation(fields: [checklistId], references: [id])
 
-  
   items         BudgetItem[]
+  invoice       Invoice?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
 model BudgetItem {
-  id            String   @id @default(cuid())
-  budgetId      String
-  budget        Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  id          String     @id @default(cuid())
+  budgetId    String
+  budget      Budget     @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   
-  type          String   // "PART" ou "LABOR"
-  description   String   
-  quantity      Int      @default(1)
-  unitCost      Float    
-  unitPrice     Float    
-  approved      Boolean  @default(true) 
+  stockItemId String?
+  stockItem   StockItem? @relation(fields: [stockItemId], references: [id])
+
+  type        String     // "PART" ou "LABOR"
+  description String   
+  quantity    Int        @default(1)
+  unitCost    Float    
+  unitPrice   Float    
+  approved    Boolean    @default(true) 
+}
+
+model StockItem {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  code        String   // SKU / Código de Barras / Referência
+  description String
+  ncm         String?  @default("8708.29.99") // NCM para autopeças
+  cest        String?  // Código Especificador da Substituição Tributária
+  unit        String   @default("UN") // UN, PÇ, LT, KG, CX, JG
+  costPrice   Float    @default(0)
+  salePrice   Float    @default(0)
+  quantity    Int      @default(0)
+  minQuantity Int      @default(2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+
+  @@unique([tenantId, code])
+}
+
+model Invoice {
+  id           String        @id @default(cuid())
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  budgetId     String?       @unique
+  budget       Budget?       @relation(fields: [budgetId], references: [id])
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id])
+
+  type         String        @default("NFE_PARTS") // NFSE_SERVICE, NFE_PARTS, COMBINED
+  status       String        @default("DRAFT") // DRAFT, PENDING, AUTHORIZED, CANCELLED, ERROR
+  number       Int?
+  series       Int?          @default(1)
+  accessKey    String?       // Chave de Acesso de 44 dígitos
+  protocol     String?       // Protocolo de autorização
+  xmlUrl       String?
+  pdfUrl       String?
+  errorMessage String?
+
+  laborTotal   Float         @default(0)
+  partsTotal   Float         @default(0)
+  taxTotal     Float         @default(0)
+  finalTotal   Float         @default(0)
+
+  items        InvoiceItem[]
+
+  issuedAt     DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  type        String   // SERVICE ou PART
+  description String
+  ncm         String?  // NCM da peça
+  serviceCode String?  // Código do Serviço municipal (NFS-e)
+  unit        String   @default("UN")
+  quantity    Int      @default(1)
+  unitPrice   Float
+  totalPrice  Float
 }

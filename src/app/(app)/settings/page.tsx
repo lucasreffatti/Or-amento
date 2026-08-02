@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
-import { Settings, Building2, HardDrive, Shield } from 'lucide-react'
+import { Settings, Building2, HardDrive, Shield, Receipt, Key, FileCheck } from 'lucide-react'
 import { updateSettings } from '@/app/actions/settings'
+import { updateTenantFiscalSettings } from '@/app/actions/invoice'
 
 export default async function SettingsPage() {
   const session = await getSession()
@@ -17,23 +18,24 @@ export default async function SettingsPage() {
         <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight flex items-center gap-2">
           <Settings className="w-6 h-6 text-neutral-400" /> Configurações
         </h1>
-        <p className="text-[13px] text-neutral-500 mt-1">Gerencie os dados da sua oficina e preferências do sistema.</p>
+        <p className="text-[13px] text-neutral-500 mt-1">Gerencie os dados da sua oficina, parâmetros fiscais e preferências do sistema.</p>
       </header>
 
+      {/* Dados Principais da Empresa */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1 space-y-1 text-[13px]">
           <h2 className="font-semibold text-neutral-900 flex items-center gap-2">
             <Building2 className="w-4 h-4 text-neutral-500" /> Dados da Empresa
           </h2>
           <p className="text-neutral-500">
-            Informações que aparecerão em orçamentos, recibos e na plataforma.
+            Informações que aparecerão em orçamentos, recibos e no sistema.
           </p>
         </div>
 
         <div className="md:col-span-2">
           <form action={updateSettings} className="bg-white border border-neutral-200/80 rounded-xl shadow-sm p-6 space-y-6">
             <div className="space-y-1.5">
-              <label className="text-[12px] font-medium text-neutral-700">Nome da Empresa</label>
+              <label className="text-[12px] font-medium text-neutral-700">Nome Fantasia / Razão Social</label>
               <input 
                 required 
                 type="text" 
@@ -55,7 +57,7 @@ export default async function SettingsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[12px] font-medium text-neutral-700">Telefone</label>
+                <label className="text-[12px] font-medium text-neutral-700">Telefone / WhatsApp</label>
                 <input 
                   type="text" 
                   name="phone"
@@ -67,12 +69,12 @@ export default async function SettingsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[12px] font-medium text-neutral-700">Endereço</label>
+              <label className="text-[12px] font-medium text-neutral-700">Endereço Completo</label>
               <input 
                 type="text" 
                 name="address"
                 defaultValue={tenant.address || ''}
-                placeholder="Ex: Rua Fictícia, 123 - Centro, Cidade/UF"
+                placeholder="Ex: Rua Jacob Weingatner, 4198 - Centro - CEP 88131-400 - Palhoça/SC"
                 className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all"
               />
             </div>
@@ -91,6 +93,122 @@ export default async function SettingsPage() {
 
       <hr className="border-neutral-200/60" />
 
+      {/* Parâmetros Fiscais & Integração de Nota Fiscal */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-1 space-y-1 text-[13px]">
+          <h2 className="font-semibold text-neutral-900 flex items-center gap-2">
+            <Receipt className="w-4 h-4 text-blue-600" /> Parâmetros Fiscais (NF-e / NFS-e)
+          </h2>
+          <p className="text-neutral-500">
+            Regime Tributário, Inscrições e Token da API de emissão de Nota Fiscal Eletrônica.
+          </p>
+        </div>
+
+        <div className="md:col-span-2">
+          <form action={updateTenantFiscalSettings} className="bg-white border border-neutral-200/80 rounded-xl shadow-sm p-6 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-medium text-neutral-700">Inscrição Estadual (IE)</label>
+                <input 
+                  type="text" 
+                  name="ie"
+                  defaultValue={tenant.ie || ''}
+                  placeholder="Ex: 123.456.789"
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all font-mono"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-medium text-neutral-700">Inscrição Municipal (IM)</label>
+                <input 
+                  type="text" 
+                  name="im"
+                  defaultValue={tenant.im || ''}
+                  placeholder="Ex: 987654"
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-500/5 transition-all font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-medium text-neutral-700">Regime Tributário</label>
+                <select
+                  name="taxRegime"
+                  defaultValue={tenant.taxRegime || 'SIMPLES_NACIONAL'}
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 focus:ring-4"
+                >
+                  <option value="SIMPLES_NACIONAL">1 - Simples Nacional</option>
+                  <option value="REGIME_NORMAL">3 - Regime Normal (Lucro Presumido/Real)</option>
+                  <option value="MEI">4 - MEI (Microempreendedor)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-medium text-neutral-700">Código CNAE Principal</label>
+                <input 
+                  type="text" 
+                  name="cnae"
+                  defaultValue={tenant.cnae || '4520-0/01'}
+                  placeholder="4520-0/01"
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 font-mono"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-medium text-neutral-700">Cód. IBGE Município</label>
+                <input 
+                  type="text" 
+                  name="cityIbge"
+                  defaultValue={tenant.cityIbge || '4211900'}
+                  placeholder="4211900 (Palhoça/SC)"
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-medium text-neutral-700">Ambiente Fiscal (SEFAZ)</label>
+                <select
+                  name="nfeEnvironment"
+                  defaultValue={tenant.nfeEnvironment || 'HOMOLOGATION'}
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 font-semibold"
+                >
+                  <option value="HOMOLOGATION">Ambiente de Homologação (Testes)</option>
+                  <option value="PRODUCTION">Ambiente de Produção (Válido SEFAZ)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-medium text-neutral-700 flex items-center gap-1">
+                  <Key className="w-3.5 h-3.5 text-blue-600" /> Token da API Fiscal (FocusNFe / PlugNotas / e-Notas)
+                </label>
+                <input 
+                  type="password" 
+                  name="nfeApiToken"
+                  defaultValue={tenant.nfeApiToken || ''}
+                  placeholder="Cole aqui seu Token de API..."
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-[13px] text-neutral-900 outline-none focus:border-neutral-400 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-neutral-100 flex justify-end">
+              <button 
+                type="submit" 
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-[13px] font-medium shadow-[0_2px_10px_rgba(37,99,235,0.2)] hover:bg-blue-500 transition-colors"
+              >
+                Salvar Parâmetros Fiscais
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <hr className="border-neutral-200/60" />
+
+      {/* Infraestrutura */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1 space-y-1 text-[13px]">
           <h2 className="font-semibold text-neutral-900 flex items-center gap-2">
@@ -122,7 +240,6 @@ export default async function SettingsPage() {
           </div>
         </div>
       </div>
-
     </div>
   )
 }

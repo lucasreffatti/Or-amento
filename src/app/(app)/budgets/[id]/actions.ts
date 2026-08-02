@@ -39,7 +39,8 @@ export async function addBudgetItem(formData: FormData) {
   const description = formData.get('description') as string
   const quantity = parseInt(formData.get('quantity') as string, 10)
   const unitPrice = parseFloat(formData.get('unitPrice') as string)
-  
+  const stockItemId = (formData.get('stockItemId') as string) || null
+
   await prisma.budgetItem.create({
     data: {
       budgetId,
@@ -47,7 +48,8 @@ export async function addBudgetItem(formData: FormData) {
       description,
       quantity,
       unitPrice,
-      unitCost: 0 // Mocking unit cost as 0 for now as it's not strictly requested by the user
+      stockItemId: stockItemId || undefined,
+      unitCost: 0
     }
   })
   

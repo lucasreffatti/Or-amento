@@ -2,11 +2,12 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle2, XCircle, Send, Edit, ExternalLink, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, XCircle, Send, Edit, ExternalLink, AlertTriangle, Receipt } from 'lucide-react'
 import BudgetBuilder from '@/components/BudgetBuilder'
 import { updateBudgetStatus } from '@/app/actions/budget'
 import { DeleteButton } from '@/components/DeleteButton'
 import { deleteBudget } from '@/app/actions/delete'
+import { createInvoiceFromBudget } from '@/app/actions/invoice'
 
 export default async function BudgetDetailsPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -135,6 +136,14 @@ export default async function BudgetDetailsPage(props: { params: Promise<{ id: s
             <form action={backToDraft}>
               <button type="submit" className="bg-white border border-neutral-200 text-neutral-600 px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-neutral-50 transition-colors">
                 Reabrir
+              </button>
+            </form>
+          )}
+
+          {displayStatus === 'APPROVED' && (
+            <form action={createInvoiceFromBudget.bind(null, budget.id, 'COMBINED')}>
+              <button type="submit" className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-[13px] font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1.5">
+                <Receipt className="w-4 h-4" /> Emitir Nota Fiscal
               </button>
             </form>
           )}
