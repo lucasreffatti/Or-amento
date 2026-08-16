@@ -225,6 +225,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
           <VehicleDamageMapper3D
             pins={damagePins}
             vehicleModel={checklist.vehicle.model}
+            vehicleBrand={checklist.vehicle.brand}
             readOnly={true}
           />
 

@@ -63,6 +63,7 @@ export default function ChecklistForm({
   const [itemsStatus, setItemsStatus] = useState<Record<string, string>>(defaultStatus)
   const [images, setImages] = useState<string[]>(defaultImages)
   const [damagePins, setDamagePins] = useState<DamagePin[]>(defaultPins)
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialData?.vehicleId ?? '')
 
   const handleStatusChange = (item: string, status: string) => {
     setItemsStatus(prev => ({ ...prev, [item]: status }))
@@ -129,7 +130,8 @@ export default function ChecklistForm({
             id="vehicleId" 
             name="vehicleId" 
             required
-            defaultValue={initialData?.vehicleId ?? ""}
+            value={selectedVehicleId}
+            onChange={(e) => setSelectedVehicleId(e.target.value)}
             disabled={isPending}
             className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all text-neutral-900 disabled:opacity-50"
           >
@@ -240,7 +242,8 @@ export default function ChecklistForm({
       <VehicleDamageMapper3D
         pins={damagePins}
         onChange={setDamagePins}
-        vehicleModel={vehicles.find(v => v.id === initialData?.vehicleId)?.model || 'Veículo'}
+        vehicleModel={vehicles.find(v => v.id === selectedVehicleId)?.model || 'Veículo'}
+        vehicleBrand={vehicles.find(v => v.id === selectedVehicleId)?.brand || ''}
       />
 
       <div className="bg-white border border-neutral-200 rounded-lg p-5 space-y-4 shadow-sm">

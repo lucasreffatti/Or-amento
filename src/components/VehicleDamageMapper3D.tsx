@@ -1,25 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react'
+import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { 
-  Car, 
+  Sparkles, 
   RotateCw, 
   Plus, 
   X, 
-  AlertCircle, 
   Check, 
-  Eye, 
   Trash2, 
   Paintbrush, 
-  Sparkles,
-  Layers
+  Car, 
+  Info,
+  Compass,
+  Maximize2
 } from 'lucide-react'
 
 export interface DamagePin {
   id: string
-  x: number // porcentagem 0-100 na vista ativa
-  y: number // porcentagem 0-100 na vista ativa
-  view: 'FRONT' | 'LEFT' | 'BACK' | 'RIGHT' | 'TOP'
+  x: number // 3D Coordenada X
+  y: number // 3D Coordenada Y
+  z: number // 3D Coordenada Z
   type: 'RISCO' | 'AMASSADO' | 'TRINCA' | 'QUEBRADO' | 'PINTURA'
   severity: 'LEVE' | 'MEDIO' | 'GRAVE'
   note?: string
@@ -29,81 +31,388 @@ interface VehicleDamageMapper3DProps {
   pins: DamagePin[]
   onChange?: (pins: DamagePin[]) => void
   vehicleModel?: string
+  vehicleBrand?: string
   initialColor?: string
   readOnly?: boolean
 }
 
-// Cores populares de veículos
+// CORES DE LATARIA
 const VEHICLE_COLORS = [
-  { name: 'Branco', hex: '#f8fafc', textDark: true },
-  { name: 'Prata', hex: '#cbd5e1', textDark: true },
-  { name: 'Cinza', hex: '#64748b', textDark: false },
-  { name: 'Preto', hex: '#1e293b', textDark: false },
-  { name: 'Vermelho', hex: '#dc2626', textDark: false },
-  { name: 'Azul', hex: '#2563eb', textDark: false },
-  { name: 'Amarelo', hex: '#eab308', textDark: true },
-  { name: 'Verde', hex: '#15803d', textDark: false },
+  { name: 'Prata Metálico', hex: '#cbd5e1', metal: 0.8, rough: 0.2 },
+  { name: 'Preto Ninja', hex: '#0f172a', metal: 0.9, rough: 0.1 },
+  { name: 'Branco Pérola', hex: '#f8fafc', metal: 0.3, rough: 0.3 },
+  { name: 'Vermelho Ruby', hex: '#dc2626', metal: 0.7, rough: 0.2 },
+  { name: 'Azul Imperial', hex: '#1d4ed8', metal: 0.8, rough: 0.2 },
+  { name: 'Cinza Nardo', hex: '#475569', metal: 0.6, rough: 0.3 },
+  { name: 'Amarelo Giro', hex: '#eab308', metal: 0.5, rough: 0.2 },
 ]
 
 const DAMAGE_TYPES = [
-  { id: 'RISCO', label: 'Risco / Arranhão', color: 'bg-red-500 text-white border-red-300', dot: '#ef4444' },
-  { id: 'AMASSADO', label: 'Amassado', color: 'bg-amber-500 text-white border-amber-300', dot: '#f59e0b' },
-  { id: 'TRINCA', label: 'Trincado / Vidro', color: 'bg-yellow-500 text-black border-yellow-300', dot: '#eab308' },
-  { id: 'QUEBRADO', label: 'Peça Quebrada / Faltando', color: 'bg-purple-600 text-white border-purple-300', dot: '#9333ea' },
-  { id: 'PINTURA', label: 'Pintura / Mancha', color: 'bg-blue-600 text-white border-blue-300', dot: '#2563eb' },
+  { id: 'RISCO', label: 'Risco / Arranhão', color: '#ef4444' },
+  { id: 'AMASSADO', label: 'Amassado', color: '#f59e0b' },
+  { id: 'TRINCA', label: 'Trincado / Vidro', color: '#eab308' },
+  { id: 'QUEBRADO', label: 'Peça Quebrada / Faltando', color: '#a855f7' },
+  { id: 'PINTURA', label: 'Pintura / Mancha', color: '#3b82f6' },
 ]
 
 const SEVERITIES = [
-  { id: 'LEVE', label: 'Leve', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
-  { id: 'MEDIO', label: 'Médio', color: 'bg-amber-100 text-amber-800 border-amber-300' },
-  { id: 'GRAVE', label: 'Grave', color: 'bg-red-100 text-red-800 border-red-300' },
+  { id: 'LEVE', label: 'Leve', color: 'bg-emerald-100 text-emerald-800' },
+  { id: 'MEDIO', label: 'Médio', color: 'bg-amber-100 text-amber-800' },
+  { id: 'GRAVE', label: 'Grave', color: 'bg-red-100 text-red-800' },
 ]
+
+// DETECTOR AUTOMÁTICO DE CATEGORIA POR NOME DO CARRO
+function detectBodyCategory(model: string = '', brand: string = ''): 'SEDAN' | 'HATCH' | 'SUV' | 'PICKUP' | 'COUPE' {
+  const text = `${brand} ${model}`.toLowerCase()
+  
+  if (/hatch|onix|gol|ka|kwid|mobi|polo|argo|hb20|fit|march|sandero|yaris|fox|up|golf|208|c3|clio|fiesta/i.test(text)) {
+    return 'HATCH'
+  }
+  if (/suv|compass|renegade|hrv|hr-v|kicks|creta|tracker|duster|t-cross|nivus|taos|corolla cross|tiggo|fastback|pulse|tucson|sportage|ix35|rav4|bronco|territory|sw4|pajero/i.test(text)) {
+    return 'SUV'
+  }
+  if (/picape|pickup|hilux|s10|toro|strada|saveiro|ranger|amarok|montana|oroch|f150|f-150|ram|l200|frontier|maverick/i.test(text)) {
+    return 'PICKUP'
+  }
+  if (/coupe|mustang|camaro|porsche|audi tt|challenger|corvette|350z|supra/i.test(text)) {
+    return 'COUPE'
+  }
+  return 'SEDAN' // Padrão
+}
 
 export default function VehicleDamageMapper3D({
   pins = [],
   onChange,
   vehicleModel = 'Veículo',
+  vehicleBrand = '',
   initialColor = '#cbd5e1',
   readOnly = false
 }: VehicleDamageMapper3DProps) {
-  const [activeView, setActiveView] = useState<'LEFT' | 'FRONT' | 'RIGHT' | 'BACK' | 'TOP'>('LEFT')
-  const [carColor, setCarColor] = useState(initialColor)
-  const [bodyType, setBodyType] = useState<'SEDAN' | 'HATCH' | 'SUV' | 'PICKUP'>('SEDAN')
+  const mountRef = useRef<HTMLDivElement>(null)
   
-  // Estado de criação de Pin
-  const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null)
+  // Detecta automaticamente o tipo de carroceria pelo modelo
+  const detectedCategory = detectBodyCategory(vehicleModel, vehicleBrand)
+  
+  const [carColor, setCarColor] = useState(initialColor)
+  const [bodyCategory, setBodyCategory] = useState<'SEDAN' | 'HATCH' | 'SUV' | 'PICKUP' | 'COUPE'>(detectedCategory)
+  
+  // Atualiza a categoria caso o modelo de veículo mude
+  useEffect(() => {
+    setBodyCategory(detectBodyCategory(vehicleModel, vehicleBrand))
+  }, [vehicleModel, vehicleBrand])
+
+  // Estado de inserção de Pin
+  const [pendingPoint, setPendingPoint] = useState<{ x: number; y: number; z: number } | null>(null)
   const [pinType, setPinType] = useState<'RISCO' | 'AMASSADO' | 'TRINCA' | 'QUEBRADO' | 'PINTURA'>('RISCO')
   const [pinSeverity, setPinSeverity] = useState<'LEVE' | 'MEDIO' | 'GRAVE'>('LEVE')
   const [pinNote, setPinNote] = useState('')
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null)
 
-  // Filtrar pins da visão ativa
-  const activePins = pins.filter(p => p.view === activeView)
+  // Referências Three.js
+  const sceneRef = useRef<THREE.Scene | null>(null)
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const controlsRef = useRef<OrbitControls | null>(null)
+  const carMeshGroupRef = useRef<THREE.Group | null>(null)
+  const pinsGroupRef = useRef<THREE.Group | null>(null)
 
+  // 1. INICIALIZAÇÃO DA CENA THREE.JS
+  useEffect(() => {
+    const container = mountRef.current
+    if (!container) return
+
+    const width = container.clientWidth
+    const height = container.clientHeight
+
+    // Scene
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color('#090d16')
+    sceneRef.current = scene
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
+    camera.position.set(6, 3, 7)
+    cameraRef.current = camera
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    renderer.setSize(width, height)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    rendererRef.current = renderer
+
+    container.appendChild(renderer.domElement)
+
+    // Orbit Controls (Movimento 360 Graus livre)
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.05
+    controls.maxPolarAngle = Math.PI / 2 + 0.05 // Limite para não passar por baixo do chão
+    controls.minDistance = 3
+    controls.maxDistance = 12
+    controlsRef.current = controls
+
+    // ILUMINAÇÃO ESTÚDIO AUTOMOTIVO
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2)
+    scene.add(ambientLight)
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2.5)
+    mainLight.position.set(5, 10, 7)
+    mainLight.castShadow = true
+    mainLight.shadow.mapSize.width = 2048
+    mainLight.shadow.mapSize.height = 2048
+    scene.add(mainLight)
+
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 1.0)
+    fillLight.position.set(-5, 5, -5)
+    scene.add(fillLight)
+
+    const topLight = new THREE.DirectionalLight(0xffffff, 1.5)
+    topLight.position.set(0, 10, 0)
+    scene.add(topLight)
+
+    // PISO REFLETIVO COM GRID TÉCNICO 3D
+    const gridHelper = new THREE.GridHelper(20, 20, '#38bdf8', '#1e293b')
+    gridHelper.position.y = -0.01
+    scene.add(gridHelper)
+
+    const shadowPlaneGeo = new THREE.PlaneGeometry(20, 20)
+    const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.4 })
+    const shadowPlane = new THREE.Mesh(shadowPlaneGeo, shadowPlaneMat)
+    shadowPlane.rotation.x = -Math.PI / 2
+    shadowPlane.receiveShadow = true
+    scene.add(shadowPlane)
+
+    // Grupo do Carro
+    const carGroup = new THREE.Group()
+    scene.add(carGroup)
+    carMeshGroupRef.current = carGroup
+
+    // Grupo de Pins 3D
+    const pinsGroup = new THREE.Group()
+    scene.add(pinsGroup)
+    pinsGroupRef.current = pinsGroup
+
+    // Animation Loop
+    let animationFrameId: number
+    const animate = () => {
+      animationFrameId = requestAnimationFrame(animate)
+      controls.update()
+      renderer.render(scene, camera)
+    }
+    animate()
+
+    // Resize Handler
+    const handleResize = () => {
+      if (!container) return
+      const w = container.clientWidth
+      const h = container.clientHeight
+      camera.aspect = w / h
+      camera.updateProjectionMatrix()
+      renderer.setSize(w, h)
+    }
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      cancelAnimationFrame(animationFrameId)
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement)
+      }
+      renderer.dispose()
+    }
+  }, [])
+
+  // 2. CONSTRUÇÃO DO MODELO 3D DE ACORDO COM A CATEGORIA E COR
+  useEffect(() => {
+    const carGroup = carMeshGroupRef.current
+    if (!carGroup) return
+
+    // Limpa malha anterior
+    while (carGroup.children.length > 0) {
+      const child = carGroup.children[0]
+      carGroup.remove(child)
+    }
+
+    // Material da Lataria Metálica
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(carColor),
+      metalness: 0.75,
+      roughness: 0.2,
+    })
+
+    // Material de Vidro
+    const glassMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#0284c7'),
+      metalness: 0.9,
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.6,
+    })
+
+    // Material de Pneus/Rodas
+    const tireMaterial = new THREE.MeshStandardMaterial({ color: '#0f172a', roughness: 0.9 })
+    const rimMaterial = new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.9, roughness: 0.1 })
+    const lightMaterial = new THREE.MeshStandardMaterial({ color: '#fef08a', emissive: '#fef08a', emissiveIntensity: 0.8 })
+    const tailLightMaterial = new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#ef4444', emissiveIntensity: 0.8 })
+
+    // Geometrias baseadas na categoria
+    let length = 4.2, height = 1.2, cabinLen = 2.2, cabinOffX = 0
+    if (bodyCategory === 'HATCH') { length = 3.6; height = 1.3; cabinLen = 2.0; cabinOffX = 0.2 }
+    if (bodyCategory === 'SUV') { length = 4.4; height = 1.5; cabinLen = 2.6; cabinOffX = 0 }
+    if (bodyCategory === 'PICKUP') { length = 4.8; height = 1.4; cabinLen = 1.8; cabinOffX = -0.4 }
+    if (bodyCategory === 'COUPE') { length = 4.3; height = 1.0; cabinLen = 1.9; cabinOffX = 0 }
+
+    // Lataria Inferior / Base
+    const baseGeo = new THREE.BoxGeometry(length, 0.7, 1.9)
+    const baseMesh = new THREE.Mesh(baseGeo, bodyMaterial)
+    baseMesh.position.y = 0.55
+    baseMesh.castShadow = true
+    baseMesh.receiveShadow = true
+    carGroup.add(baseMesh)
+
+    // Cabine / Teto (Arredondado)
+    const cabinGeo = new THREE.BoxGeometry(cabinLen, height, 1.7)
+    const cabinMesh = new THREE.Mesh(cabinGeo, bodyMaterial)
+    cabinMesh.position.set(cabinOffX, 0.55 + height/2, 0)
+    cabinMesh.castShadow = true
+    carGroup.add(cabinMesh)
+
+    // Vidros (Pára-brisa & Janelas)
+    const windshieldGeo = new THREE.BoxGeometry(cabinLen * 0.9, height * 0.85, 1.72)
+    const windshieldMesh = new THREE.Mesh(windshieldGeo, glassMaterial)
+    windshieldMesh.position.set(cabinOffX, 0.55 + height/2, 0)
+    carGroup.add(windshieldMesh)
+
+    // Rodas (4 Rodas com Jantes)
+    const wheelPositions = [
+      { x: length/2 - 0.8, z: 1.0 },
+      { x: length/2 - 0.8, z: -1.0 },
+      { x: -length/2 + 0.8, z: 1.0 },
+      { x: -length/2 + 0.8, z: -1.0 },
+    ]
+
+    wheelPositions.forEach((pos) => {
+      const wheelGroup = new THREE.Group()
+      wheelGroup.position.set(pos.x, 0.35, pos.z)
+
+      const tireGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.3, 24)
+      tireGeo.rotateX(Math.PI / 2)
+      const tireMesh = new THREE.Mesh(tireGeo, tireMaterial)
+      tireMesh.castShadow = true
+      wheelGroup.add(tireMesh)
+
+      const rimGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.32, 16)
+      rimGeo.rotateX(Math.PI / 2)
+      const rimMesh = new THREE.Mesh(rimGeo, rimMaterial)
+      wheelGroup.add(rimMesh)
+
+      carGroup.add(wheelGroup)
+    })
+
+    // Faróis Dianteiros
+    const head1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.4), lightMaterial)
+    head1.position.set(length/2 + 0.01, 0.65, 0.6)
+    const head2 = head1.clone()
+    head2.position.set(length/2 + 0.01, 0.65, -0.6)
+    carGroup.add(head1, head2)
+
+    // Lanternas Traseiras
+    const tail1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.4), tailLightMaterial)
+    tail1.position.set(-length/2 - 0.01, 0.65, 0.6)
+    const tail2 = tail1.clone()
+    tail2.position.set(-length/2 - 0.01, 0.65, -0.6)
+    carGroup.add(tail1, tail2)
+
+  }, [bodyCategory, carColor])
+
+  // 3. RENDERIZAÇÃO DOS PINS 3D NA CENA
+  useEffect(() => {
+    const pinsGroup = pinsGroupRef.current
+    if (!pinsGroup) return
+
+    // Limpa pins anteriores
+    while (pinsGroup.children.length > 0) {
+      pinsGroup.remove(pinsGroup.children[0])
+    }
+
+    pins.forEach((pin, idx) => {
+      const pinMeta = DAMAGE_TYPES.find(d => d.id === pin.type)
+      const pinColor = pinMeta ? pinMeta.color : '#ef4444'
+
+      const pinSubGroup = new THREE.Group()
+      pinSubGroup.position.set(pin.x, pin.y, pin.z)
+
+      // Esfera 3D com brilho Neon
+      const sphereGeo = new THREE.SphereGeometry(0.14, 16, 16)
+      const sphereMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(pinColor),
+        emissive: new THREE.Color(pinColor),
+        emissiveIntensity: 0.6,
+        roughness: 0.1,
+      })
+      const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat)
+      pinSubGroup.add(sphereMesh)
+
+      // Anel Pulsante
+      const ringGeo = new THREE.RingGeometry(0.18, 0.24, 24)
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(pinColor),
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.8,
+      })
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat)
+      ringMesh.rotation.x = Math.PI / 2
+      pinSubGroup.add(ringMesh)
+
+      pinsGroup.add(pinSubGroup)
+    })
+  }, [pins])
+
+  // 4. RAYCASTING: CLICAR NO CARRO 3D PARA PEGAR COORDENADAS (X, Y, Z)
   function handleCanvasClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (readOnly) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100)
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100)
-    
-    setPendingPin({ x, y })
-    setSelectedPinId(null)
+    if (readOnly || !mountRef.current || !cameraRef.current || !carMeshGroupRef.current) return
+
+    const rect = mountRef.current.getBoundingClientRect()
+    const mouse = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    )
+
+    const raycaster = new THREE.Raycaster()
+    raycaster.setFromCamera(mouse, cameraRef.current)
+
+    const intersects = raycaster.intersectObjects(carMeshGroupRef.current.children, true)
+
+    if (intersects.length > 0) {
+      const point = intersects[0].point
+      setPendingPoint({
+        x: parseFloat(point.x.toFixed(2)),
+        y: parseFloat(point.y.toFixed(2)),
+        z: parseFloat(point.z.toFixed(2))
+      })
+      setSelectedPinId(null)
+    }
   }
 
+  // CONFIRMA CRIAÇÃO DO PIN 3D
   function handleAddPin() {
-    if (!pendingPin || !onChange) return
+    if (!pendingPoint || !onChange) return
+
     const newPin: DamagePin = {
       id: Date.now().toString(),
-      x: pendingPin.x,
-      y: pendingPin.y,
-      view: activeView,
+      x: pendingPoint.x,
+      y: pendingPoint.y,
+      z: pendingPoint.z,
       type: pinType,
       severity: pinSeverity,
       note: pinNote.trim() || undefined
     }
 
     onChange([...pins, newPin])
-    setPendingPin(null)
+    setPendingPoint(null)
     setPinNote('')
   }
 
@@ -113,36 +422,57 @@ export default function VehicleDamageMapper3D({
     if (selectedPinId === id) setSelectedPinId(null)
   }
 
-  const selectedPin = pins.find(p => p.id === selectedPinId)
+  // MUDAR CÂMERA DE FORMA SUAVE
+  function setCameraAngle(angle: 'FRONT' | 'BACK' | 'LEFT' | 'RIGHT' | 'TOP' | 'FREE') {
+    const controls = controlsRef.current
+    const camera = cameraRef.current
+    if (!controls || !camera) return
+
+    if (angle === 'FRONT') { camera.position.set(7, 2, 0) }
+    if (angle === 'BACK') { camera.position.set(-7, 2, 0) }
+    if (angle === 'LEFT') { camera.position.set(0, 2, 7) }
+    if (angle === 'RIGHT') { camera.position.set(0, 2, -7) }
+    if (angle === 'TOP') { camera.position.set(0, 8, 0.1) }
+    if (angle === 'FREE') { camera.position.set(6, 3, 7) }
+    controls.target.set(0, 0.7, 0)
+    controls.update()
+  }
 
   return (
-    <div className="bg-white border border-neutral-200 rounded-2xl p-5 space-y-5 shadow-sm">
-      {/* CABEÇALHO DO MAPEIADOR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
+    <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 space-y-5 shadow-2xl text-white">
+      {/* CABEÇALHO TÉCNICO 3D */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
         <div>
-          <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            Mapeador 3D de Avarias (Gêmeo Digital)
+          <div className="flex items-center gap-2">
+            <span className="bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-widest flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-blue-400" /> WebGL 3D Realtime
+            </span>
+            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-widest">
+              Detectado: {bodyCategory}
+            </span>
+          </div>
+          <h3 className="text-lg font-bold text-white mt-1 flex items-center gap-2">
+            Gêmeo Digital 3D • {vehicleBrand} {vehicleModel}
           </h3>
-          <p className="text-xs text-neutral-500 mt-0.5">
-            {readOnly 
-              ? 'Visualização interna de imperfeições mapeadas no veículo.' 
-              : 'Clique na lataria para marcar avarias, riscos ou amassados.'}
+          <p className="text-xs text-neutral-400 mt-0.5">
+            {readOnly
+              ? 'Arraste com o mouse para girar o veículo em 360° em qualquer direção.'
+              : 'Clique em qualquer ponto da lataria 3D para marcar uma nova imperfeição.'}
           </p>
         </div>
 
-        {/* SELETOR DE COR DA LATARIA */}
-        <div className="flex items-center gap-2 self-start sm:self-auto bg-neutral-50 p-1.5 rounded-xl border border-neutral-200">
-          <Paintbrush className="w-3.5 h-3.5 text-neutral-500 ml-1" />
-          <span className="text-[11px] font-semibold text-neutral-600 mr-1">Cor:</span>
-          <div className="flex items-center gap-1">
+        {/* CONTROLES DE COR DA LATARIA */}
+        <div className="flex items-center gap-2 bg-neutral-800/80 p-2 rounded-2xl border border-neutral-700/60 self-start sm:self-auto">
+          <Paintbrush className="w-4 h-4 text-neutral-400 ml-1" />
+          <span className="text-xs font-semibold text-neutral-300">Pintura:</span>
+          <div className="flex items-center gap-1.5">
             {VEHICLE_COLORS.map(c => (
               <button
                 key={c.name}
                 type="button"
                 onClick={() => setCarColor(c.hex)}
                 className={`w-5 h-5 rounded-full border transition-all ${
-                  carColor === c.hex ? 'ring-2 ring-black scale-110 shadow-sm' : 'border-neutral-300 hover:scale-105'
+                  carColor === c.hex ? 'ring-2 ring-blue-400 scale-125' : 'border-neutral-600 hover:scale-110'
                 }`}
                 style={{ backgroundColor: c.hex }}
                 title={c.name}
@@ -152,283 +482,97 @@ export default function VehicleDamageMapper3D({
         </div>
       </div>
 
-      {/* SELEÇÃO DE PERSPECTIVA E CARROCERIA */}
+      {/* CONTROLES DE ÂNGULO DE CÂMERA PRESET E CARROCERIA */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        {/* BOTÕES DE VISTA */}
-        <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center gap-1.5 bg-neutral-800/90 p-1.5 rounded-2xl w-full sm:w-auto overflow-x-auto border border-neutral-700/50">
+          <span className="text-[10px] font-mono font-bold text-neutral-400 px-2 uppercase tracking-widest flex items-center gap-1">
+            <Compass className="w-3.5 h-3.5 text-blue-400" /> Câmera 3D:
+          </span>
           {[
-            { id: 'LEFT', label: 'Lat. Esquerda' },
+            { id: 'FREE', label: '360° Livre' },
             { id: 'FRONT', label: 'Frente' },
-            { id: 'RIGHT', label: 'Lat. Direita' },
             { id: 'BACK', label: 'Traseira' },
-            { id: 'TOP', label: 'Teto / Superior' }
-          ].map(v => (
+            { id: 'LEFT', label: 'Esq' },
+            { id: 'RIGHT', label: 'Dir' },
+            { id: 'TOP', label: 'Teto' },
+          ].map(ang => (
             <button
-              key={v.id}
+              key={ang.id}
               type="button"
-              onClick={() => {
-                setActiveView(v.id as any)
-                setPendingPin(null)
-              }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shrink-0 ${
-                activeView === v.id
-                  ? 'bg-white text-black shadow-sm font-bold'
-                  : 'text-neutral-600 hover:text-black'
-              }`}
+              onClick={() => setCameraAngle(ang.id as any)}
+              className="px-3 py-1 text-xs font-bold rounded-xl transition-all bg-neutral-700/50 hover:bg-blue-600 text-neutral-200 hover:text-white"
             >
-              {v.label} ({pins.filter(p => p.view === v.id).length})
+              {ang.label}
             </button>
           ))}
         </div>
 
-        {/* TIPO DE CARROCERIA */}
-        <div className="flex items-center gap-1.5 text-xs text-neutral-600 font-medium">
-          <Layers className="w-3.5 h-3.5 text-neutral-400" />
-          <span>Modelo:</span>
+        {/* ALTERNAR MODELO DE CARROCERIA MANUALMENTE */}
+        <div className="flex items-center gap-2 text-xs font-medium text-neutral-400">
+          <span>Corpo 3D:</span>
           <select
-            value={bodyType}
-            onChange={(e) => setBodyType(e.target.value as any)}
-            className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-neutral-800 outline-none"
+            value={bodyCategory}
+            onChange={(e) => setBodyCategory(e.target.value as any)}
+            className="bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-1 text-xs font-bold text-white outline-none focus:border-blue-500"
           >
             <option value="SEDAN">Sedan</option>
             <option value="HATCH">Hatchback</option>
             <option value="SUV">SUV / Crossover</option>
-            <option value="PICKUP">Picape</option>
+            <option value="PICKUP">Picape / Truck</option>
+            <option value="COUPE">Cupê / Esportivo</option>
           </select>
         </div>
       </div>
 
-      {/* PAINEL CANVAS DO CARRO 3D / MULTI-ÂNGULO */}
-      <div className="relative w-full aspect-[2/1] sm:aspect-[2.5/1] bg-neutral-900 rounded-2xl overflow-hidden shadow-inner border border-neutral-800 flex items-center justify-center p-4">
-        {/* Fundo de Grid Técnico */}
-        <div 
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
-            backgroundSize: '24px 24px'
-          }}
-        />
-
-        {/* ILUSTRAÇÃO SVG VETORIAL DO VEÍCULO DINÂMICO */}
-        <div 
-          className="relative w-full h-full flex items-center justify-center cursor-crosshair group"
-          onClick={handleCanvasClick}
-        >
-          <svg
-            viewBox="0 0 800 350"
-            className="w-full h-full max-h-full drop-shadow-2xl transition-transform duration-500 select-none"
-          >
-            <defs>
-              {/* Gradiente dinâmico de cor da tinta metálica */}
-              <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor={carColor} stopOpacity="1" />
-                <stop offset="100%" stopColor="#000000" stopOpacity="0.45" />
-              </linearGradient>
-              <linearGradient id="glassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.7" />
-              </linearGradient>
-            </defs>
-
-            {/* RENDERIZAÇÃO DA SILHUETA POR VISÃO */}
-            {activeView === 'LEFT' && (
-              <g id="leftView">
-                {/* Sombra de chassi */}
-                <ellipse cx="400" cy="285" rx="340" ry="25" fill="#000000" opacity="0.6" filter="blur(6px)" />
-                {/* Corpo do carro */}
-                <path
-                  d={bodyType === 'SUV' 
-                    ? "M 100 240 Q 110 180 180 170 C 240 160 320 100 460 95 C 600 90 680 140 720 180 Q 730 240 700 250 L 100 250 Z" 
-                    : bodyType === 'PICKUP' 
-                    ? "M 100 240 Q 110 180 180 170 C 240 160 320 100 460 100 L 460 180 L 710 180 Q 730 240 700 250 L 100 250 Z" 
-                    : "M 90 240 Q 100 190 170 175 C 220 165 300 110 440 105 C 570 100 640 150 710 190 Q 725 240 690 250 L 90 250 Z"
-                  }
-                  fill="url(#bodyGradient)"
-                  stroke="#ffffff"
-                  strokeOpacity="0.3"
-                  strokeWidth="3"
-                />
-                {/* Vidros Lateral */}
-                <path
-                  d="M 240 165 C 290 120 420 115 450 115 L 450 165 Z M 465 115 C 530 115 600 140 630 165 L 465 165 Z"
-                  fill="url(#glassGradient)"
-                  stroke="#ffffff"
-                  strokeWidth="1.5"
-                />
-                {/* Rodas */}
-                <circle cx="210" cy="250" r="45" fill="#1e293b" stroke="#64748b" strokeWidth="6" />
-                <circle cx="210" cy="250" r="22" fill="#94a3b8" />
-                <circle cx="590" cy="250" r="45" fill="#1e293b" stroke="#64748b" strokeWidth="6" />
-                <circle cx="590" cy="250" r="22" fill="#94a3b8" />
-                {/* Farol Dianteiro / Traseiro */}
-                <path d="M 85 200 Q 95 190 110 205 Z" fill="#ef4444" opacity="0.9" />
-                <path d="M 705 200 Q 695 190 680 205 Z" fill="#fef08a" opacity="0.9" />
-              </g>
-            )}
-
-            {activeView === 'RIGHT' && (
-              <g id="rightView" transform="scale(-1, 1) translate(-800, 0)">
-                <ellipse cx="400" cy="285" rx="340" ry="25" fill="#000000" opacity="0.6" filter="blur(6px)" />
-                <path
-                  d="M 90 240 Q 100 190 170 175 C 220 165 300 110 440 105 C 570 100 640 150 710 190 Q 725 240 690 250 L 90 250 Z"
-                  fill="url(#bodyGradient)"
-                  stroke="#ffffff"
-                  strokeOpacity="0.3"
-                  strokeWidth="3"
-                />
-                <path
-                  d="M 240 165 C 290 120 420 115 450 115 L 450 165 Z M 465 115 C 530 115 600 140 630 165 L 465 165 Z"
-                  fill="url(#glassGradient)"
-                  stroke="#ffffff"
-                  strokeWidth="1.5"
-                />
-                <circle cx="210" cy="250" r="45" fill="#1e293b" stroke="#64748b" strokeWidth="6" />
-                <circle cx="210" cy="250" r="22" fill="#94a3b8" />
-                <circle cx="590" cy="250" r="45" fill="#1e293b" stroke="#64748b" strokeWidth="6" />
-                <circle cx="590" cy="250" r="22" fill="#94a3b8" />
-              </g>
-            )}
-
-            {activeView === 'FRONT' && (
-              <g id="frontView">
-                <ellipse cx="400" cy="275" rx="220" ry="20" fill="#000000" opacity="0.6" filter="blur(6px)" />
-                <path
-                  d="M 220 250 C 210 180 250 120 400 110 C 550 120 590 180 580 250 Z"
-                  fill="url(#bodyGradient)"
-                  stroke="#ffffff"
-                  strokeWidth="3"
-                />
-                {/* Pára-brisa */}
-                <path
-                  d="M 270 165 C 310 135 490 135 530 165 Z"
-                  fill="url(#glassGradient)"
-                  stroke="#ffffff"
-                  strokeWidth="1.5"
-                />
-                {/* Faróis */}
-                <polygon points="230,200 280,195 270,225 235,220" fill="#fef08a" />
-                <polygon points="570,200 520,195 530,225 565,220" fill="#fef08a" />
-                {/* Grade */}
-                <rect x="320" y="200" width="160" height="35" rx="6" fill="#0f172a" stroke="#475569" strokeWidth="2" />
-              </g>
-            )}
-
-            {activeView === 'BACK' && (
-              <g id="backView">
-                <ellipse cx="400" cy="275" rx="220" ry="20" fill="#000000" opacity="0.6" filter="blur(6px)" />
-                <path
-                  d="M 220 250 C 210 180 250 120 400 110 C 550 120 590 180 580 250 Z"
-                  fill="url(#bodyGradient)"
-                  stroke="#ffffff"
-                  strokeWidth="3"
-                />
-                <path
-                  d="M 270 165 C 310 135 490 135 530 165 Z"
-                  fill="url(#glassGradient)"
-                  stroke="#ffffff"
-                  strokeWidth="1.5"
-                />
-                {/* Lanternas Traseiras */}
-                <polygon points="230,200 280,195 270,225 235,220" fill="#ef4444" />
-                <polygon points="570,200 520,195 530,225 565,220" fill="#ef4444" />
-                {/* Placa */}
-                <rect x="350" y="210" width="100" height="25" rx="4" fill="#ffffff" stroke="#000000" strokeWidth="1.5" />
-              </g>
-            )}
-
-            {activeView === 'TOP' && (
-              <g id="topView">
-                <rect x="250" y="50" width="300" height="240" rx="60" fill="url(#bodyGradient)" stroke="#ffffff" strokeWidth="3" />
-                {/* Teto e vidros */}
-                <rect x="280" y="90" width="240" height="70" rx="10" fill="url(#glassGradient)" stroke="#ffffff" strokeWidth="1.5" />
-                <rect x="280" y="190" width="240" height="60" rx="10" fill="url(#glassGradient)" stroke="#ffffff" strokeWidth="1.5" />
-              </g>
-            )}
-          </svg>
-
-          {/* RENDERIZAÇÃO DOS PINS EXISTENTES COM CONTRASTE NEON */}
-          {activePins.map((pin, i) => {
-            const damageMeta = DAMAGE_TYPES.find(d => d.id === pin.type)
-            return (
-              <div
-                key={pin.id}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setSelectedPinId(pin.id)
-                }}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 cursor-pointer group/pin"
-                style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-              >
-                <div className="relative flex items-center justify-center">
-                  {/* Anel Pulsante Neon para se destacar em qualquer cor */}
-                  <span className="absolute w-8 h-8 rounded-full bg-red-500/40 animate-ping" />
-                  <div 
-                    className="w-7 h-7 rounded-full text-white font-mono font-bold text-xs flex items-center justify-center shadow-lg border-2 border-white ring-2 ring-black transform hover:scale-125 transition-transform"
-                    style={{ backgroundColor: damageMeta?.dot || '#ef4444' }}
-                  >
-                    #{i + 1}
-                  </div>
-                </div>
-
-                {/* Tooltip ao passar o mouse */}
-                <div className="absolute left-1/2 bottom-full mb-2 transform -translate-x-1/2 opacity-0 group-hover/pin:opacity-100 transition-opacity bg-neutral-900 text-white text-[10px] font-bold px-2.5 py-1 rounded-md whitespace-nowrap pointer-events-none shadow-xl border border-neutral-700">
-                  {damageMeta?.label} ({pin.severity})
-                </div>
-              </div>
-            )
-          })}
-
-          {/* PENDING PIN ANIMADO */}
-          {pendingPin && (
-            <div
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none"
-              style={{ left: `${pendingPin.x}%`, top: `${pendingPin.y}%` }}
-            >
-              <div className="w-8 h-8 rounded-full bg-yellow-400/50 animate-bounce border-2 border-white flex items-center justify-center text-black font-bold text-xs">
-                +
-              </div>
-            </div>
-          )}
+      {/* ÁREA DO CANVAS 3D WEBGL */}
+      <div 
+        ref={mountRef}
+        onClick={handleCanvasClick}
+        className="relative w-full aspect-[2/1] sm:aspect-[2.4/1] bg-gradient-to-b from-neutral-950 via-neutral-900 to-slate-950 rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing border border-neutral-800 shadow-inner group"
+      >
+        <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-neutral-800 text-[11px] font-mono text-neutral-300 flex items-center gap-2 pointer-events-none">
+          <RotateCw className="w-3.5 h-3.5 text-blue-400 animate-spin" style={{ animationDuration: '8s' }} />
+          Gire 360° • Zoom com a roda do mouse
         </div>
 
-        {/* MARCA D'ÁGUA TÉCNICA */}
-        <div className="absolute bottom-2 left-3 text-[10px] font-mono text-neutral-500 pointer-events-none">
-          GÊMEO DIGITAL • {vehicleModel.toUpperCase()} • VISTA {activeView}
-        </div>
+        {pendingPoint && (
+          <div className="absolute top-3 right-3 bg-blue-600/90 text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-blue-400/50 shadow-lg animate-pulse">
+            Ponto selecionado em 3D (X:{pendingPoint.x}, Y:{pendingPoint.y}, Z:{pendingPoint.z})
+          </div>
+        )}
       </div>
 
-      {/* POPUP MODAL PARA DEFINIR NOVO PIN DE AVARIA */}
-      {pendingPin && !readOnly && (
-        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-            <h4 className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
-              <Plus className="w-4 h-4 text-blue-600" /> Marcar Nova Imperfeição / Dano (Vista {activeView})
+      {/* MODAL POPUP PARA CONFIRMAR PIN DE AVARIA */}
+      {pendingPoint && !readOnly && (
+        <div className="bg-neutral-800 border border-neutral-700 rounded-2xl p-4 space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-neutral-700 pb-2">
+            <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+              <Plus className="w-4 h-4 text-blue-400" /> Marcar Nova Avaria nas Coordenadas 3D
             </h4>
             <button 
               type="button" 
-              onClick={() => setPendingPin(null)} 
-              className="text-neutral-400 hover:text-black"
+              onClick={() => setPendingPoint(null)} 
+              className="text-neutral-400 hover:text-white"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* TIPO DE DANO */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-neutral-700">Tipo de Avaria *</label>
+              <label className="text-xs font-semibold text-neutral-300">Tipo de Avaria</label>
               <div className="grid grid-cols-1 gap-1.5">
                 {DAMAGE_TYPES.map(t => (
                   <button
                     key={t.id}
                     type="button"
                     onClick={() => setPinType(t.id as any)}
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg border text-left flex items-center justify-between transition-all ${
-                      pinType === t.id ? 'bg-black text-white border-black shadow-sm' : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                    className={`px-3 py-2 text-xs font-bold rounded-xl border text-left flex items-center justify-between transition-all ${
+                      pinType === t.id ? 'bg-blue-600 text-white border-blue-400 shadow-md' : 'bg-neutral-900 text-neutral-300 border-neutral-700 hover:bg-neutral-750'
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: t.dot }} />
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: t.color }} />
                       {t.label}
                     </span>
                     {pinType === t.id && <Check className="w-3.5 h-3.5" />}
@@ -437,18 +581,17 @@ export default function VehicleDamageMapper3D({
               </div>
             </div>
 
-            {/* SEVERIDADE E DETALHES */}
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-neutral-700">Gravidade</label>
+                <label className="text-xs font-semibold text-neutral-300">Gravidade</label>
                 <div className="flex gap-2">
                   {SEVERITIES.map(s => (
                     <button
                       key={s.id}
                       type="button"
                       onClick={() => setPinSeverity(s.id as any)}
-                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all ${
-                        pinSeverity === s.id ? s.color + ' ring-2 ring-black' : 'bg-white text-neutral-600 border-neutral-200'
+                      className={`flex-1 py-2 text-xs font-bold rounded-xl border transition-all ${
+                        pinSeverity === s.id ? 'bg-white text-black border-white ring-2 ring-blue-500' : 'bg-neutral-900 text-neutral-400 border-neutral-700'
                       }`}
                     >
                       {s.label}
@@ -458,30 +601,30 @@ export default function VehicleDamageMapper3D({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-neutral-700">Observação / Detalhe (opcional)</label>
+                <label className="text-xs font-semibold text-neutral-300">Observação / Detalhe</label>
                 <input
                   type="text"
                   value={pinNote}
                   onChange={(e) => setPinNote(e.target.value)}
-                  placeholder="Ex: Risco profundo na porta traseira..."
-                  className="w-full p-2.5 bg-white border border-neutral-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-black"
+                  placeholder="Ex: Risco fundo de 10cm na lataria..."
+                  className="w-full p-2.5 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="pt-2 flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setPendingPin(null)}
-                  className="flex-1 py-2 text-xs font-semibold text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-100"
+                  onClick={() => setPendingPoint(null)}
+                  className="flex-1 py-2 text-xs font-bold text-neutral-300 bg-neutral-900 border border-neutral-700 rounded-xl hover:bg-neutral-750"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={handleAddPin}
-                  className="flex-1 py-2 text-xs font-bold text-white bg-black rounded-lg hover:bg-neutral-800 shadow-md flex items-center justify-center gap-1"
+                  className="flex-1 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-lg flex items-center justify-center gap-1"
                 >
-                  <Check className="w-3.5 h-3.5" /> Confirmar Pin
+                  <Check className="w-3.5 h-3.5" /> Salvar Pin 3D
                 </button>
               </div>
             </div>
@@ -489,12 +632,12 @@ export default function VehicleDamageMapper3D({
         </div>
       )}
 
-      {/* LISTA E RESUMO DOS PINS REGISTRADOS */}
+      {/* LISTAGEM DOS PINS 3D GRAVADOS */}
       {pins.length > 0 && (
-        <div className="space-y-2 pt-2 border-t border-neutral-100">
+        <div className="space-y-2 pt-3 border-t border-neutral-800">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider">
-              Avarias Mapeadas ({pins.length})
+            <span className="text-xs font-mono font-bold text-neutral-400 uppercase tracking-widest">
+              Avarias 3D Registradas ({pins.length})
             </span>
           </div>
 
@@ -504,21 +647,21 @@ export default function VehicleDamageMapper3D({
               return (
                 <div
                   key={p.id}
-                  className={`p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all ${
-                    selectedPinId === p.id ? 'border-black bg-neutral-50 shadow-xs' : 'border-neutral-200 bg-white'
+                  className={`p-3 rounded-2xl border flex items-center justify-between text-xs transition-all ${
+                    selectedPinId === p.id ? 'border-blue-500 bg-blue-950/40' : 'border-neutral-800 bg-neutral-900/90'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <span 
-                      className="w-6 h-6 rounded-full text-white font-mono font-bold text-[11px] flex items-center justify-center shrink-0 shadow-xs"
-                      style={{ backgroundColor: dMeta?.dot || '#ef4444' }}
+                      className="w-6 h-6 rounded-full text-white font-mono font-bold text-xs flex items-center justify-center shrink-0 shadow-md"
+                      style={{ backgroundColor: dMeta?.color || '#ef4444' }}
                     >
                       #{idx + 1}
                     </span>
                     <div>
-                      <span className="font-bold text-neutral-900 block">{dMeta?.label}</span>
-                      <span className="text-[10px] text-neutral-500 font-mono">
-                        Vista: {p.view} • Gravidade: {p.severity}
+                      <span className="font-bold text-white block">{dMeta?.label}</span>
+                      <span className="text-[10px] text-neutral-400 font-mono">
+                        Gravidade: {p.severity} • (X:{p.x}, Y:{p.y}, Z:{p.z})
                         {p.note ? ` • ${p.note}` : ''}
                       </span>
                     </div>
@@ -528,8 +671,8 @@ export default function VehicleDamageMapper3D({
                     <button
                       type="button"
                       onClick={() => handleRemovePin(p.id)}
-                      className="p-1.5 text-neutral-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-                      title="Excluir Avaria"
+                      className="p-1.5 text-neutral-500 hover:text-red-400 rounded-lg hover:bg-neutral-800 transition-colors"
+                      title="Remover Avaria"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

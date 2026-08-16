@@ -61,6 +61,8 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
   // Veículo State
   const [vehicleMode, setVehicleMode] = useState<'NEW' | 'EXISTING'>('NEW')
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
+  const [newVehicleBrand, setNewVehicleBrand] = useState<string>('')
+  const [newVehicleModel, setNewVehicleModel] = useState<string>('')
 
   // Checklist State
   const [fuelLevel, setFuelLevel] = useState<number>(50)
@@ -376,6 +378,8 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
               <input
                 type="text"
                 name="vehicleBrand"
+                value={newVehicleBrand}
+                onChange={(e) => setNewVehicleBrand(e.target.value)}
                 required={vehicleMode === 'NEW'}
                 placeholder="Ex: Chevrolet"
                 className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-black outline-none transition-all"
@@ -388,6 +392,8 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
               <input
                 type="text"
                 name="vehicleModel"
+                value={newVehicleModel}
+                onChange={(e) => setNewVehicleModel(e.target.value)}
                 required={vehicleMode === 'NEW'}
                 placeholder="Ex: Onix 1.0"
                 className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-black outline-none transition-all"
@@ -500,7 +506,8 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
         <VehicleDamageMapper3D
           pins={damagePins}
           onChange={setDamagePins}
-          vehicleModel={customerVehicles.find(v => v.id === selectedVehicleId)?.model || 'Veículo'}
+          vehicleModel={vehicleMode === 'EXISTING' ? (customerVehicles.find(v => v.id === selectedVehicleId)?.model || 'Veículo') : (newVehicleModel || 'Veículo')}
+          vehicleBrand={vehicleMode === 'EXISTING' ? (customerVehicles.find(v => v.id === selectedVehicleId)?.brand || '') : newVehicleBrand}
         />
 
         {/* Queixa / Motivo da Visita */}
