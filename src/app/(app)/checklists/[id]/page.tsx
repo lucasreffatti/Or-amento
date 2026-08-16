@@ -6,6 +6,7 @@ import { ArrowLeft, Printer, FileText, CheckCircle2, XCircle, AlertTriangle, Hel
 import { DeleteButton } from '@/components/DeleteButton'
 import { deleteChecklist } from '@/app/actions/delete'
 import ChecklistActionButtons from '@/components/ChecklistActionButtons'
+import ChecklistPhotoGallery from '@/components/ChecklistPhotoGallery'
 
 export default async function ChecklistViewPage(props: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -213,39 +214,7 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
           )}
 
           {/* GALERIA DE FOTOS DA VISTORIA */}
-          {attachedImages.length > 0 && (
-            <div className="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-                <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-blue-600" /> Fotos de Avarias e Registro Visual ({attachedImages.length})
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {attachedImages.map((imgUrl, i) => (
-                  <a
-                    key={i}
-                    href={imgUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="relative group aspect-video rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 block shadow-xs"
-                  >
-                    <img
-                      src={imgUrl}
-                      alt={`Foto Avaria ${i + 1}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
-                      Clique para Ampliar
-                    </div>
-                    <span className="absolute bottom-1 left-1.5 bg-black/70 text-white font-mono text-[9px] font-bold px-1.5 py-0.5 rounded">
-                      Foto #{i + 1}
-                    </span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+          <ChecklistPhotoGallery images={attachedImages} />
 
           <div className="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-neutral-100 bg-neutral-50/50">

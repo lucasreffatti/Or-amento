@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Camera, Upload, X, Eye, Image as ImageIcon } from 'lucide-react'
+import PhotoLightboxModal from './PhotoLightboxModal'
 
 interface ImageUploaderProps {
   images: string[]
@@ -56,7 +57,7 @@ function compressImage(file: File): Promise<string> {
 }
 
 export default function ImageUploader({ images, onChange, maxImages = 10 }: ImageUploaderProps) {
-  const [selectedPreview, setSelectedPreview] = useState<string | null>(null)
+  const [activePhotoIdx, setActivePhotoIdx] = useState<number | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -124,25 +125,35 @@ export default function ImageUploader({ images, onChange, maxImages = 10 }: Imag
       {images.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {images.map((img, idx) => (
-            <div key={idx} className="relative group rounded-xl overflow-hidden border border-neutral-200 aspect-video bg-black/5 shadow-xs">
+            <div 
+              key={idx} 
+              onClick={() => setActivePhotoIdx(idx)}
+              className="relative group rounded-xl overflow-hidden border border-neutral-200 aspect-video bg-black/5 shadow-xs cursor-pointer"
+            >
               <img
                 src={img}
                 alt={`Avaria ${idx + 1}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setSelectedPreview(img)}
-                  className="w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center hover:bg-white transition-colors"
-                  title="Expandir Foto"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActivePhotoIdx(idx)
+                  }}
+                  className="px-3 py-1.5 rounded-full bg-white/90 text-black text-xs font-semibold flex items-center gap-1.5 hover:bg-white transition-all shadow-md"
+                  title="Ampliar Foto"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-3.5 h-3.5" /> Ampliar
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleRemove(idx)}
-                  className="w-8 h-8 rounded-full bg-red-600/90 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleRemove(idx)
+                  }}
+                  className="w-8 h-8 rounded-full bg-red-600/90 text-white flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
                   title="Remover Foto"
                 >
                   <X className="w-4 h-4" />
@@ -156,26 +167,14 @@ export default function ImageUploader({ images, onChange, maxImages = 10 }: Imag
         </div>
       )}
 
-      {/* MODAL PREVIEW DA FOTO SELECIONADA */}
-      {selectedPreview && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setSelectedPreview(null)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl p-2">
-            <button
-              onClick={() => setSelectedPreview(null)}
-              className="absolute top-4 right-4 z-10 w-9 h-9 bg-black/70 hover:bg-black text-white rounded-full flex items-center justify-center transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <img
-              src={selectedPreview}
-              alt="Visualização expandida"
-              className="max-w-full max-h-[80vh] object-contain rounded-xl"
-            />
-          </div>
-        </div>
+      {/* LIGHTBOX POPUP COM ZOOM E CONTROLES */}
+      {activePhotoIdx !== null && (
+        <PhotoLightboxModal
+          images={images}
+          currentIndex={activePhotoIdx}
+          onClose={() => setActivePhotoIdx(null)}
+          onNavigate={(newIdx) => setActivePhotoIdx(newIdx)}
+        />
       )}
     </div>
   )
