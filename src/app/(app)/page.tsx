@@ -40,12 +40,20 @@ export default async function Dashboard() {
           <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight">Visão Geral</h1>
           <p className="text-[13px] text-neutral-500 mt-1">Bem-vindo à Auto Elétrica Sérgio Car. Aqui está o resumo operacional em tempo real.</p>
         </div>
-        <div className="font-mono text-[11px] font-medium bg-white border border-neutral-200 px-3 py-2 rounded-md text-neutral-600 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <Link
+            href="/reception"
+            className="bg-black text-white px-4 py-2.5 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center gap-2 min-h-[44px]"
+          >
+            <Sparkles className="w-4 h-4 text-emerald-400" /> Nova Recepção (Tudo na Mesma Tela)
+          </Link>
+          <div className="font-mono text-[11px] font-medium bg-white border border-neutral-200 px-3 py-2 rounded-md text-neutral-600 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
         </div>
       </header>
 

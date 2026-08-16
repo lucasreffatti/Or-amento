@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X, Monitor, Package, Receipt, Building2, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Users, Car, ClipboardCheck, FileText, Settings, LogOut, Command, Menu, X, Monitor, Package, Receipt, Building2, BarChart3, Sparkles } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import { useScale } from '@/components/ScaleProvider'
 
@@ -14,6 +14,7 @@ export default function Sidebar({ user }: { user?: { username: string, role: str
 
   const menus = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Nova Recepção', href: '/reception', icon: Sparkles },
     { name: 'Clientes', href: '/customers', icon: Users },
     { name: 'Veículos', href: '/vehicles', icon: Car },
     { name: 'Checklists', href: '/checklists', icon: ClipboardCheck },

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Users, Search, Edit2, Car, FileText, Calendar, CheckCircle2 } from 'lucide-react'
+import { Plus, Users, Search, Edit2, Car, FileText, Calendar, CheckCircle2, Sparkles } from 'lucide-react'
 import { DeleteButton } from '@/components/DeleteButton'
 import { deleteCustomer } from '@/app/actions/delete'
 
@@ -60,10 +60,16 @@ export default function CustomersClient({ initialCustomers }: { initialCustomers
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <Link
-            href="/customers/new"
-            className="bg-neutral-900 text-white px-4 py-2.5 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center gap-2 min-h-[44px] w-full sm:w-auto shrink-0"
+            href="/reception"
+            className="bg-black text-white px-4 py-2.5 text-[13px] font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm flex items-center justify-center gap-2 min-h-[44px] w-full sm:w-auto shrink-0"
           >
-            <Plus className="w-4 h-4" /> Novo Cliente
+            <Sparkles className="w-4 h-4 text-emerald-400" /> Nova Recepção (Tudo na Mesma Tela)
+          </Link>
+          <Link
+            href="/customers/new"
+            className="bg-white border border-neutral-200 text-neutral-800 px-4 py-2.5 text-[13px] font-medium rounded-lg hover:bg-neutral-50 transition-colors shadow-sm flex items-center justify-center gap-2 min-h-[44px] w-full sm:w-auto shrink-0"
+          >
+            <Plus className="w-4 h-4" /> Apenas Cliente
           </Link>
         </div>
       </div>
