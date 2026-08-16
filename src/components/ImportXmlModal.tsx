@@ -20,6 +20,47 @@ const fileToBase64 = (file: File): Promise<string> => {
   })
 }
 
+const preprocessImageForOCR = (file: File): Promise<string | File> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return resolve(file)
+
+        const maxDim = Math.max(img.width, img.height)
+        const scale = maxDim < 1200 ? 1.8 : 1.2
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const d = imageData.data
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
+          const contrast = 1.4
+          const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255))
+          let newGray = factor * (gray - 128) + 128
+          newGray = Math.max(0, Math.min(255, newGray))
+
+          d[i] = newGray
+          d[i + 1] = newGray
+          d[i + 2] = newGray
+        }
+        ctx.putImageData(imageData, 0, 0)
+        resolve(canvas.toDataURL('image/png'))
+      }
+      img.onerror = () => resolve(file)
+      img.src = e.target?.result as string
+    }
+    reader.onerror = () => resolve(file)
+    reader.readAsDataURL(file)
+  })
+}
+
 export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess }: ImportXmlModalProps) {
   const [step, setStep] = useState<'UPLOAD' | 'REVIEW'>('UPLOAD')
   const [uploadMode, setUploadMode] = useState<'FILE' | 'TEXT'>('FILE')
@@ -48,25 +89,28 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
         const xmlText = await file.text()
         parsed = await parseNfeXmlAction(xmlText)
       } else {
+        setStatusMessage('📷 Otimizando contraste e nitidez da foto...')
+        const processedImage = await preprocessImageForOCR(file)
+
         setStatusMessage('📷 Inicializando leitura inteligente de imagem...')
         let extractedText = ''
 
         try {
           const { recognize } = await import('tesseract.js')
           
-          const ocrPromise = recognize(file, 'por+eng', {
+          const ocrPromise = recognize(processedImage, 'por+eng', {
             logger: m => {
               if (m.status === 'recognizing text') {
                 const pct = Math.round((m.progress || 0) * 100)
                 setStatusMessage(`📷 Lendo foto da nota (${pct}%)...`)
               } else if (m.status === 'loading tesseract core' || m.status === 'initializing tesseract') {
-                setStatusMessage('📷 Carregando motor OCR...')
+                setStatusMessage('📷 Carregando motor de visão...')
               }
             }
           })
 
           const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('TIMEOUT_CLIENT_OCR')), 18000)
+            setTimeout(() => reject(new Error('TIMEOUT_CLIENT_OCR')), 22000)
           )
 
           const result = await Promise.race([ocrPromise, timeoutPromise])
@@ -80,7 +124,8 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
         }
 
         if (extractedText) {
-          setStatusMessage('⚡ Identificando peças, fornecedor e valores...')
+          setPastedText(extractedText)
+          setStatusMessage('⚡ Extraindo peças, fornecedor e valores...')
           parsed = await parsePartsNoteTextAction(extractedText)
         }
       }

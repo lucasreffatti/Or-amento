@@ -324,21 +324,26 @@ export async function getStockEntriesAction() {
 export async function parsePartsNoteTextAction(rawText: string): Promise<ParsedXmlData> {
   const session = await getSession()
 
-  const lines = rawText
+  // Normalizar correções comuns de OCR (ex: R$ 1O,OO -> R$ 10,00)
+  const normalizedText = rawText
+    .replace(/(?<=\d)[OOo](?=\d)/g, '0')
+    .replace(/(?<=\b[R\$]?\s*\d+)[\.,][OOo]{2}\b/gi, ',00')
+
+  const lines = normalizedText
     .split(/\r?\n/)
     .map(l => l.trim())
-    .filter(Boolean)
+    .filter(l => l.length > 2)
 
   if (lines.length === 0) {
-    throw new Error('Nenhum texto foi identificado na nota. Tente enviar uma foto mais nítida ou digitar os itens.')
+    throw new Error('Nenhum texto foi identificado na foto. Certifique-se de que a foto está bem iluminada e focado na nota.')
   }
 
-  // 1. Identificar Fornecedor / Nome do Estabelecimento (Linhas iniciais sem números soltos)
+  // 1. Identificar Fornecedor / Nome do Estabelecimento (Linhas iniciais)
   let supplierName = 'Fornecedor de Autopeças'
   for (let i = 0; i < Math.min(lines.length, 6); i++) {
     const line = lines[i]
     if (
-      !/total|subtotal|data|cnpj|telefone|cpf|recebimento|orcamento|pedido|item|qtd|valor/i.test(line) &&
+      !/total|subtotal|data|cnpj|telefone|cpf|recebimento|orcamento|pedido|item|qtd|valor|pagamento/i.test(line) &&
       line.length >= 3 &&
       /[a-zA-Z]/.test(line)
     ) {
@@ -360,57 +365,83 @@ export async function parsePartsNoteTextAction(rawText: string): Promise<ParsedX
     where: { tenantId: session.tenantId }
   })
 
-  // Extração inteligente de itens por linha
   const items: ParsedXmlItem[] = []
 
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx]
 
-    // Ignorar linhas de cabeçalho / rodapé conhecidas
-    if (/total|subtotal|valor\s+total|forma\s+de\s+pagamento|obrigado|vendedor|atendente|emitido/i.test(line)) {
+    // Ignorar linhas de rodapé/resumo gerais
+    if (/^(total|subtotal|valor total|forma de pagamento|obrigado|vendedor|atendente|emitido|via do cliente|troco|recebido)/i.test(line)) {
       continue
     }
 
-    // Tentar extrair preço e quantidade da linha
-    const priceMatches = [...line.matchAll(/(?:R\$\s*)?(\d{1,5}[\.,]\d{2})/gi)]
+    // Extrair todos os números e valores em potencial na linha
+    // Procura formatos: R$ 150,00 | 150,00 | 150.00 | 150 | R$ 150
+    const moneyMatches = [...line.matchAll(/(?:R\$\s*)?(\d{1,6}(?:[\.,]\d{1,2})?)/gi)]
+    
+    // Filtra valores que fazem sentido como preço
+    const numbersFound = moneyMatches
+      .map(m => parseFloat(m[1].replace(',', '.')))
+      .filter(n => !isNaN(n) && n > 0)
 
-    if (priceMatches.length > 0) {
-      const rawPrices = priceMatches.map(m => {
-        let p = m[1].replace(',', '.')
-        return parseFloat(p)
-      }).filter(p => !isNaN(p) && p > 0)
+    // Se a linha tiver pelo menos 1 palavra significativa
+    const textOnly = line.replace(/(?:R\$\s*)?\d+(?:[\.,]\d+)?/gi, '').trim()
+    const hasWord = /[a-zA-ZÀ-ú]{3,}/.test(textOnly)
 
-      if (rawPrices.length === 0) continue
-
+    if (hasWord || numbersFound.length > 0) {
       let quantity = 1
-      const qtyMatch = line.match(/(?:qtd|qnt|quant|x)\s*:?\s*(\d+)/i) || line.match(/(\d+)\s*(?:un|pc|pça|litro|lt|cx|jg)/i)
+
+      // Buscar padrões de quantidade: "2x", "2 un", "2 pç", "Qtd: 2", ou número solto no início
+      const qtyMatch = line.match(/(?:qtd|qnt|quant|x)\s*:?\s*(\d+)/i) ||
+                       line.match(/(\d+)\s*(?:un|pc|pça|litro|lt|cx|jg|jogo|par|m|kit)/i) ||
+                       line.match(/^(\d+)\s+[a-zA-Z]/)
+
       if (qtyMatch) {
-        quantity = parseInt(qtyMatch[1], 10) || 1
+        const parsedQty = parseInt(qtyMatch[1], 10)
+        if (parsedQty > 0 && parsedQty < 1000) {
+          quantity = parsedQty
+        }
       }
 
-      let costPrice = rawPrices[0]
-      let totalPrice = rawPrices.length > 1 ? rawPrices[rawPrices.length - 1] : costPrice * quantity
+      let costPrice = 0
+      let totalPrice = 0
 
-      if (rawPrices.length === 1 && quantity > 1 && costPrice > 100) {
-        totalPrice = costPrice
-        costPrice = Math.round((totalPrice / quantity) * 100) / 100
+      if (numbersFound.length >= 2) {
+        // Se houver múltiplos números, o último costuma ser o valor total e o primeiro o preço unitário
+        costPrice = numbersFound[0]
+        totalPrice = numbersFound[numbersFound.length - 1]
+      } else if (numbersFound.length === 1) {
+        costPrice = numbersFound[0]
+        totalPrice = Math.round(costPrice * quantity * 100) / 100
       }
 
+      // Se o preço total for menor que o unitário, corrigir
+      if (totalPrice < costPrice) {
+        totalPrice = costPrice * quantity
+      }
+
+      // Limpar a descrição removendo termos numéricos e ruídos
       let description = line
-        .replace(/(?:R\$\s*)?(\d{1,5}[\.,]\d{2})/gi, '')
-        .replace(/(?:qtd|qnt|quant|x|un|pc|pça|litro|lt|cx|jg)\s*:?\s*\d+/gi, '')
+        .replace(/(?:R\$\s*)?\d+(?:[\.,]\d+)?/gi, '')
+        .replace(/(?:qtd|qnt|quant|x|un|pc|pça|litro|lt|cx|jg|jogo|par|kit)\s*:?\s*\d*/gi, '')
         .replace(/^\d+[\s\.\-]+/, '')
         .replace(/[^a-zA-Z0-9\s\&À-ú\.\/-]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()
 
-      if (description.length < 3) {
-        description = `Peça / Item ${items.length + 1}`
+      if (description.length < 2) {
+        description = textOnly.length >= 2 ? textOnly : `Peça / Item ${items.length + 1}`
+      }
+
+      // Ignorar palavras como "TOTAL", "SUBTOTAL", "CNPJ", "DATA" se viraram descrição isolada
+      if (/^(total|subtotal|cnpj|cpf|data|telefone|endereco|rua|avenida|bairro|cidade|uf|cep)$/i.test(description)) {
+        continue
       }
 
       const code = `NOTE-${Date.now().toString().slice(-4)}-${items.length + 1}`
       const suggestedSalePrice = Math.round(costPrice * 1.6 * 100) / 100
 
+      // Match com peças existentes do estoque
       const matchedItem = existingStock.find(i =>
         i.description.toLowerCase().includes(description.toLowerCase()) ||
         description.toLowerCase().includes(i.description.toLowerCase())
@@ -422,8 +453,8 @@ export async function parsePartsNoteTextAction(rawText: string): Promise<ParsedX
         ncm: '8708.29.99',
         unit: 'UN',
         quantity: Math.max(1, quantity),
-        costPrice: Math.max(0.01, costPrice),
-        totalPrice: Math.max(0.01, totalPrice),
+        costPrice: Math.max(0, costPrice),
+        totalPrice: Math.max(0, totalPrice),
         suggestedSalePrice,
         matchedStockItemId: matchedItem?.id || null,
         matchedStockItemName: matchedItem?.description || null
@@ -431,16 +462,17 @@ export async function parsePartsNoteTextAction(rawText: string): Promise<ParsedX
     }
   }
 
+  // Garantir pelo menos 1 linha para o usuário preencher se OCR for fraco
   if (items.length === 0) {
     items.push({
       code: `NOTE-${Date.now().toString().slice(-4)}-1`,
-      description: lines[0] || 'Peça da Nota',
+      description: lines[0] ? lines[0].slice(0, 40) : 'Peça da Nota',
       ncm: '8708.29.99',
       unit: 'UN',
       quantity: 1,
-      costPrice: 50.00,
-      totalPrice: 50.00,
-      suggestedSalePrice: 80.00,
+      costPrice: 0.00,
+      totalPrice: 0.00,
+      suggestedSalePrice: 0.00,
       matchedStockItemId: null,
       matchedStockItemName: null
     })
