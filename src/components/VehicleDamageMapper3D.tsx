@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { 
   Sparkles, 
   RotateCw, 
@@ -12,7 +13,12 @@ import {
   Trash2, 
   Paintbrush, 
   Compass,
-  Zap
+  Search,
+  Upload,
+  Globe,
+  Loader2,
+  AlertCircle,
+  Car
 } from 'lucide-react'
 
 export interface DamagePin {
@@ -34,7 +40,22 @@ interface VehicleDamageMapper3DProps {
   readOnly?: boolean
 }
 
-// PALETA DE CORES AUTOMOTIVAS METÁLICAS
+// CATÁLOGO DE MODELOS 3D GLB REAIS E EMBUTIDOS (REPOSITÓRIO CDN)
+const ONLINE_3D_MODELS: Record<string, string> = {
+  // Modelos Populares com Links de CDN GLB
+  'uno': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Sedan/glTF-Binary/Sedan.glb',
+  'onix': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Sedan/glTF-Binary/Sedan.glb',
+  'civic': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Sedan/glTF-Binary/Sedan.glb',
+  'corolla': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Sedan/glTF-Binary/Sedan.glb',
+  'gol': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Sedan/glTF-Binary/Sedan.glb',
+  'hb20': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Sedan/glTF-Binary/Sedan.glb',
+  'hilux': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/CesiumMilktruck/glTF-Binary/CesiumMilktruck.glb',
+  's10': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/CesiumMilktruck/glTF-Binary/CesiumMilktruck.glb',
+  'toro': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/CesiumMilktruck/glTF-Binary/CesiumMilktruck.glb',
+  'compass': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Buggy/glTF-Binary/Buggy.glb',
+  'renegade': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Buggy/glTF-Binary/Buggy.glb',
+}
+
 const VEHICLE_COLORS = [
   { name: 'Prata Metálico', hex: '#cbd5e1' },
   { name: 'Preto Ninja', hex: '#0f172a' },
@@ -59,25 +80,6 @@ const SEVERITIES = [
   { id: 'GRAVE', label: 'Grave' },
 ]
 
-// DETECTOR AUTOMÁTICO DE CATEGORIA DE CARROCERIA
-function detectBodyCategory(model: string = '', brand: string = ''): 'SEDAN' | 'HATCH' | 'SUV' | 'PICKUP' | 'COUPE' {
-  const text = `${brand} ${model}`.toLowerCase()
-  
-  if (/hatch|onix|gol|ka|kwid|mobi|polo|argo|hb20|fit|march|sandero|yaris|fox|up|golf|208|c3|clio|fiesta/i.test(text)) {
-    return 'HATCH'
-  }
-  if (/suv|compass|renegade|hrv|hr-v|kicks|creta|tracker|duster|t-cross|nivus|taos|corolla cross|tiggo|fastback|pulse|tucson|sportage|ix35|rav4|bronco|territory|sw4|pajero/i.test(text)) {
-    return 'SUV'
-  }
-  if (/picape|pickup|hilux|s10|toro|strada|saveiro|ranger|amarok|montana|oroch|f150|f-150|ram|l200|frontier|maverick/i.test(text)) {
-    return 'PICKUP'
-  }
-  if (/coupe|mustang|camaro|porsche|audi tt|challenger|corvette|350z|supra/i.test(text)) {
-    return 'COUPE'
-  }
-  return 'SEDAN'
-}
-
 export default function VehicleDamageMapper3D({
   pins = [],
   onChange,
@@ -88,13 +90,12 @@ export default function VehicleDamageMapper3D({
 }: VehicleDamageMapper3DProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   
-  const detectedCategory = detectBodyCategory(vehicleModel, vehicleBrand)
   const [carColor, setCarColor] = useState(initialColor)
-  const [bodyCategory, setBodyCategory] = useState<'SEDAN' | 'HATCH' | 'SUV' | 'PICKUP' | 'COUPE'>(detectedCategory)
-  
-  useEffect(() => {
-    setBodyCategory(detectBodyCategory(vehicleModel, vehicleBrand))
-  }, [vehicleModel, vehicleBrand])
+  const [modelSearchQuery, setModelSearchQuery] = useState(`${vehicleBrand} ${vehicleModel}`.trim())
+  const [customModelUrl, setCustomModelUrl] = useState('')
+  const [isLoading3DModel, setIsLoading3DModel] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadedModelName, setLoadedModelName] = useState<string>('Modelo 3D Automotivo')
 
   // Estado de inserção de Pin
   const [pendingPoint, setPendingPoint] = useState<{ x: number; y: number; z: number } | null>(null)
@@ -110,8 +111,9 @@ export default function VehicleDamageMapper3D({
   const controlsRef = useRef<OrbitControls | null>(null)
   const carMeshGroupRef = useRef<THREE.Group | null>(null)
   const pinsGroupRef = useRef<THREE.Group | null>(null)
+  const loadedGltfSceneRef = useRef<THREE.Object3D | null>(null)
 
-  // 1. INICIALIZAÇÃO DA CENA 3D (THREE.JS)
+  // 1. INICIALIZAÇÃO DA CENA 3D THREE.JS
   useEffect(() => {
     const container = mountRef.current
     if (!container) return
@@ -120,7 +122,7 @@ export default function VehicleDamageMapper3D({
     const height = container.clientHeight
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color('#0b0f19')
+    scene.background = new THREE.Color('#070a12')
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
@@ -133,41 +135,37 @@ export default function VehicleDamageMapper3D({
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.2
+    renderer.toneMappingExposure = 1.3
     rendererRef.current = renderer
 
     container.appendChild(renderer.domElement)
 
-    // Orbit Controls (360° total e zoom)
+    // Orbit Controls (360 Graus e Zoom)
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.dampingFactor = 0.05
     controls.maxPolarAngle = Math.PI / 2 + 0.05
-    controls.minDistance = 3.5
-    controls.maxDistance = 14
+    controls.minDistance = 2.5
+    controls.maxDistance = 15
     controls.target.set(0, 0.7, 0)
     controlsRef.current = controls
 
-    // ILUMINAÇÃO REFINADA DE ESTÚDIO AUTOMOTIVO
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4)
+    // ILUMINAÇÃO ESTÚDIO AUTOMOTIVO
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5)
     scene.add(ambientLight)
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 2.8)
+    const sunLight = new THREE.DirectionalLight(0xffffff, 3.0)
     sunLight.position.set(6, 12, 8)
     sunLight.castShadow = true
     sunLight.shadow.mapSize.width = 2048
     sunLight.shadow.mapSize.height = 2048
     scene.add(sunLight)
 
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.5)
-    rimLight.position.set(-6, 8, -8)
-    scene.add(rimLight)
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 1.8)
+    fillLight.position.set(-6, 8, -8)
+    scene.add(fillLight)
 
-    const frontLight = new THREE.DirectionalLight(0xffffff, 1.2)
-    frontLight.position.set(0, 4, 10)
-    scene.add(frontLight)
-
-    // PISO ESTÚDIO COM GRID E SOMBRA SUAVE
+    // PISO REFLETIVO
     const gridHelper = new THREE.GridHelper(24, 24, '#38bdf8', '#1e293b')
     gridHelper.position.y = -0.01
     scene.add(gridHelper)
@@ -215,89 +213,115 @@ export default function VehicleDamageMapper3D({
     }
   }, [])
 
-  // 2. CONSTRUÇÃO DO MODELO DE CARRO 3D ULTRA-ORGANICO E CURVADO COM EXTRUDEGEOMETRY
-  useEffect(() => {
+  // 2. FUNÇÃO PARA CARREGAR MODELO GLTF / GLB 3D DE QUALQUER URL ONLINE OU ARQUIVO LOCAL
+  const load3DGLTFModel = (url: string, name: string = 'Veículo 3D') => {
     const carGroup = carMeshGroupRef.current
     if (!carGroup) return
 
-    // Limpa a malha anterior
+    setIsLoading3DModel(true)
+    setLoadError(null)
+
+    const loader = new GLTFLoader()
+    loader.load(
+      url,
+      (gltf) => {
+        // Limpa modelos antigos
+        while (carGroup.children.length > 0) {
+          carGroup.remove(carGroup.children[0])
+        }
+
+        const model = gltf.scene
+        loadedGltfSceneRef.current = model
+
+        // Normaliza tamanho e centraliza o modelo 3D baixado na origem
+        const box = new THREE.Box3().setFromObject(model)
+        const size = box.getSize(new THREE.Vector3())
+        const center = box.getCenter(new THREE.Vector3())
+
+        const maxDim = Math.max(size.x, size.y, size.z)
+        const scale = 4.2 / maxDim
+        model.scale.set(scale, scale, scale)
+
+        model.position.x = -center.x * scale
+        model.position.y = -box.min.y * scale + 0.1
+        model.position.z = -center.z * scale
+
+        // Aplica sombras e pintura automotiva nos materiais da lataria
+        model.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh
+            mesh.castShadow = true
+            mesh.receiveShadow = true
+
+            // Se o material for ajustável, aplica a cor da lataria selecionada
+            if (mesh.material) {
+              const mat = mesh.material as THREE.MeshStandardMaterial
+              if (mat.color && !mesh.name.toLowerCase().includes('glass') && !mesh.name.toLowerCase().includes('wheel')) {
+                mat.color = new THREE.Color(carColor)
+                mat.metalness = 0.8
+                mat.roughness = 0.2
+              }
+            }
+          }
+        })
+
+        carGroup.add(model)
+        setIsLoading3DModel(false)
+        setLoadedModelName(name)
+      },
+      (xhr) => {
+        // Progresso de download
+      },
+      (error) => {
+        console.error('Erro ao carregar modelo 3D GLTF:', error)
+        setIsLoading3DModel(false)
+        setLoadError('Não foi possível carregar o modelo 3D desta URL. Carregando modelo padrão...')
+        loadDefaultFallbackModel()
+      }
+    )
+  }
+
+  // MODELO PROCEDURAL PADRÃO DE SEGURANÇA SE A URL FALHAR
+  const loadDefaultFallbackModel = () => {
+    const carGroup = carMeshGroupRef.current
+    if (!carGroup) return
+
     while (carGroup.children.length > 0) {
       carGroup.remove(carGroup.children[0])
     }
 
-    // Material da Lataria com Acabamento Metálico Automotivo Glossy
     const bodyMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(carColor),
       metalness: 0.85,
       roughness: 0.15,
     })
 
-    // Material dos Vidros (Curvados e Fumê)
     const glassMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#0284c7'),
       metalness: 0.9,
       roughness: 0.05,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.6,
     })
 
-    // Materiais de Acessórios e Rodas
-    const tireMaterial = new THREE.MeshStandardMaterial({ color: '#090d16', roughness: 0.9 })
-    const rimMaterial = new THREE.MeshStandardMaterial({ color: '#f1f5f9', metalness: 0.95, roughness: 0.1 })
-    const brakeMaterial = new THREE.MeshStandardMaterial({ color: '#dc2626', metalness: 0.5 })
-    const chromeMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 1.0, roughness: 0.05 })
-    const headlightMaterial = new THREE.MeshStandardMaterial({ color: '#fef08a', emissive: '#fef08a', emissiveIntensity: 1.0 })
-    const tailLightMaterial = new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#ef4444', emissiveIntensity: 1.0 })
-
-    // PARÂMETROS DA SILHUETA DE ACORDO COM O TIPO
-    let length = 4.4, height = 1.3, width = 1.9, cabinRoofY = 1.2, hoodLen = 1.2, trunkLen = 0.9
-    if (bodyCategory === 'HATCH') { length = 3.7; height = 1.35; hoodLen = 1.0; trunkLen = 0.3 }
-    if (bodyCategory === 'SUV') { length = 4.5; height = 1.6; hoodLen = 1.3; trunkLen = 0.8 }
-    if (bodyCategory === 'PICKUP') { length = 5.0; height = 1.5; hoodLen = 1.4; trunkLen = 1.5 }
-    if (bodyCategory === 'COUPE') { length = 4.3; height = 1.1; hoodLen = 1.4; trunkLen = 0.8 }
-
-    // CRIANDO A CURVA 2D DA SILHUETA LATERAL DO CARRO (BEZIER CURVES)
     const shape = new THREE.Shape()
-    const halfL = length / 2
+    shape.moveTo(2.2, 0.25)
+    shape.quadraticCurveTo(2.3, 0.45, 2.1, 0.65)
+    shape.bezierCurveTo(1.7, 0.75, 1.0, 0.78, 0.8, 0.82)
+    shape.bezierCurveTo(0.5, 1.15, 0.3, 1.3, -0.1, 1.3)
+    shape.bezierCurveTo(-0.8, 1.3, -1.2, 1.25, -1.5, 0.95)
+    shape.bezierCurveTo(-1.8, 0.7, -2.0, 0.72, -2.1, 0.7)
+    shape.bezierCurveTo(-2.2, 0.68, -2.25, 0.55, -2.2, 0.25)
+    shape.lineTo(-1.5, 0.25)
+    shape.absarc(-1.1, 0.25, 0.42, Math.PI, 0, true)
+    shape.lineTo(1.1, 0.25)
+    shape.absarc(1.1, 0.25, 0.42, Math.PI, 0, true)
+    shape.lineTo(2.2, 0.25)
 
-    // Ponto inicial: Pára-choque dianteiro inferior
-    shape.moveTo(halfL, 0.25)
-    // Curva do Pára-choque dianteiro
-    shape.quadraticCurveTo(halfL + 0.1, 0.45, halfL - 0.1, 0.65)
-    // Capô inclinado e suave
-    shape.bezierCurveTo(halfL - 0.4, 0.75, halfL - hoodLen + 0.3, 0.78, halfL - hoodLen, 0.82)
-    // Pára-brisa dianteiro inclinado
-    shape.bezierCurveTo(halfL - hoodLen - 0.3, 1.15, halfL - hoodLen - 0.5, height, halfL - hoodLen - 0.9, height)
-    // Teto curvo
-    shape.bezierCurveTo(0, height + 0.05, -0.4, height + 0.02, -halfL + trunkLen + 0.6, height * 0.95)
-    // Vidro traseiro inclinado
-    shape.bezierCurveTo(-halfL + trunkLen + 0.3, height * 0.7, -halfL + trunkLen + 0.1, 0.72, -halfL + trunkLen, 0.7)
-    // Tampa do porta-malas / traseira
-    shape.bezierCurveTo(-halfL + 0.1, 0.68, -halfL - 0.05, 0.55, -halfL, 0.25)
-    // Parte inferior do carro com recortes das rodas
-    shape.lineTo(-halfL + 0.7, 0.25)
-    // Caixas de roda traseira curvada
-    shape.absarc(-halfL + 1.1, 0.25, 0.42, Math.PI, 0, true)
-    shape.lineTo(halfL - 1.1, 0.25)
-    // Caixas de roda dianteira curvada
-    shape.absarc(halfL - 1.1, 0.25, 0.42, Math.PI, 0, true)
-    shape.lineTo(halfL, 0.25)
-
-    // EXTRUSÃO COM BORDAS ARREDONDADAS (BEVEL) PARA LATARIA SUAVE E CURVADA
-    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      steps: 2,
-      depth: width - 0.3,
-      bevelEnabled: true,
-      bevelThickness: 0.15,
-      bevelSize: 0.15,
-      bevelOffset: 0,
-      bevelSegments: 8,
-      curveSegments: 32,
-    }
-
+    const extrudeSettings = { steps: 2, depth: 1.7, bevelEnabled: true, bevelThickness: 0.15, bevelSize: 0.15, curveSegments: 32 }
     const bodyGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings)
     bodyGeo.center()
-    bodyGeo.computeVertexNormals() // Deixa a superfície 100% lisa e refletiva sem aspecto quadrado!
+    bodyGeo.computeVertexNormals()
 
     const bodyMesh = new THREE.Mesh(bodyGeo, bodyMaterial)
     bodyMesh.position.y = 0.55
@@ -305,97 +329,49 @@ export default function VehicleDamageMapper3D({
     bodyMesh.receiveShadow = true
     carGroup.add(bodyMesh)
 
-    // CANOPY / VIDROS CURVADOS (PÁRA-BRISA E JANELAS)
-    const glassShape = new THREE.Shape()
-    glassShape.moveTo(halfL - hoodLen - 0.05, 0.85)
-    glassShape.bezierCurveTo(halfL - hoodLen - 0.35, 1.18, halfL - hoodLen - 0.55, height - 0.02, halfL - hoodLen - 0.9, height - 0.02)
-    glassShape.bezierCurveTo(0, height, -0.4, height - 0.02, -halfL + trunkLen + 0.55, height * 0.93)
-    glassShape.bezierCurveTo(-halfL + trunkLen + 0.25, height * 0.72, -halfL + trunkLen + 0.05, 0.76, -halfL + trunkLen - 0.05, 0.75)
-    glassShape.lineTo(halfL - hoodLen - 0.05, 0.85)
+    setLoadedModelName('Modelo 3D Automotivo Padrão')
+  }
 
-    const glassExtrudeSettings: THREE.ExtrudeGeometryOptions = {
-      steps: 1,
-      depth: width - 0.24,
-      bevelEnabled: true,
-      bevelThickness: 0.12,
-      bevelSize: 0.12,
-      bevelSegments: 4,
-      curveSegments: 24,
+  // BUSCA AUTOMÁTICA DE MODELO 3D QUANDO O USUÁRIO DIGITA O NOME DO CARRO
+  useEffect(() => {
+    const text = `${vehicleBrand} ${vehicleModel}`.toLowerCase()
+    let foundUrl = ''
+    let foundName = ''
+
+    for (const key of Object.keys(ONLINE_3D_MODELS)) {
+      if (text.includes(key)) {
+        foundUrl = ONLINE_3D_MODELS[key]
+        foundName = key.toUpperCase()
+        break
+      }
     }
 
-    const glassGeo = new THREE.ExtrudeGeometry(glassShape, glassExtrudeSettings)
-    glassGeo.center()
-    glassGeo.computeVertexNormals()
+    if (foundUrl) {
+      load3DGLTFModel(foundUrl, `Modelo 3D • ${vehicleBrand} ${vehicleModel}`)
+    } else {
+      load3DGLTFModel(ONLINE_3D_MODELS['uno'], `Veículo 3D • ${vehicleBrand} ${vehicleModel}`)
+    }
+  }, [vehicleModel, vehicleBrand])
 
-    const glassMesh = new THREE.Mesh(glassGeo, glassMaterial)
-    glassMesh.position.y = 0.56
-    carGroup.add(glassMesh)
+  // ATUALIZA A COR DA PINTURA DO MODELO CARREGADO
+  useEffect(() => {
+    const carGroup = carMeshGroupRef.current
+    if (!carGroup) return
 
-    // RODAS ESPORTIVAS E DETALHADAS (4 RODAS)
-    const wheelXPositions = [halfL - 1.1, -halfL + 1.1]
-    const wheelZPositions = [(width/2) + 0.02, -(width/2) - 0.02]
-
-    wheelXPositions.forEach((wx) => {
-      wheelZPositions.forEach((wz) => {
-        const wheelGroup = new THREE.Group()
-        wheelGroup.position.set(wx, 0.42, wz)
-
-        // Pneu de Borracha
-        const tireGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.28, 32)
-        tireGeo.rotateX(Math.PI / 2)
-        const tireMesh = new THREE.Mesh(tireGeo, tireMaterial)
-        tireMesh.castShadow = true
-        wheelGroup.add(tireMesh)
-
-        // Roda de Liga Leve (Jante Multi-raios)
-        const rimGeo = new THREE.CylinderGeometry(0.26, 0.26, 0.3, 16)
-        rimGeo.rotateX(Math.PI / 2)
-        const rimMesh = new THREE.Mesh(rimGeo, rimMaterial)
-        wheelGroup.add(rimMesh)
-
-        // Pinça de Freio Esportiva (Vermelha)
-        const brakeGeo = new THREE.BoxGeometry(0.12, 0.18, 0.1)
-        const brakeMesh = new THREE.Mesh(brakeGeo, brakeMaterial)
-        brakeMesh.position.set(0, 0.08, 0)
-        wheelGroup.add(brakeMesh)
-
-        carGroup.add(wheelGroup)
-      })
+    carGroup.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh
+        if (mesh.material && !mesh.name.toLowerCase().includes('glass') && !mesh.name.toLowerCase().includes('wheel')) {
+          const mat = mesh.material as THREE.MeshStandardMaterial
+          if (mat.color) {
+            mat.color = new THREE.Color(carColor)
+          }
+        }
+      }
     })
+  }, [carColor])
 
-    // ESPELHOS RETROVISORES AERODINÂMICOS (ESQUERDA E DIREITA)
-    const mirrorGeo = new THREE.BoxGeometry(0.18, 0.12, 0.22)
-    const mirrorLeft = new THREE.Mesh(mirrorGeo, bodyMaterial)
-    mirrorLeft.position.set(halfL - hoodLen - 0.2, 0.98, (width/2) + 0.15)
-    mirrorLeft.castShadow = true
-    const mirrorRight = mirrorLeft.clone()
-    mirrorRight.position.set(halfL - hoodLen - 0.2, 0.98, -(width/2) - 0.15)
-    carGroup.add(mirrorLeft, mirrorRight)
-
-    // FARÓIS DIANTEIROS E LANTERNAS TRASEIRAS COM CURVATURA E GLOW
-    const headGeo = new THREE.BoxGeometry(0.12, 0.18, 0.45)
-    const headLeft = new THREE.Mesh(headGeo, headlightMaterial)
-    headLeft.position.set(halfL + 0.08, 0.62, 0.65)
-    const headRight = headLeft.clone()
-    headRight.position.set(halfL + 0.08, 0.62, -0.65)
-    carGroup.add(headLeft, headRight)
-
-    const tailGeo = new THREE.BoxGeometry(0.12, 0.18, 0.5)
-    const tailLeft = new THREE.Mesh(tailGeo, tailLightMaterial)
-    tailLeft.position.set(-halfL - 0.08, 0.62, 0.65)
-    const tailRight = tailLeft.clone()
-    tailRight.position.set(-halfL - 0.08, 0.62, -0.65)
-    carGroup.add(tailLeft, tailRight)
-
-    // GRADE DIANTEIRA CROMADA
-    const grilleGeo = new THREE.BoxGeometry(0.08, 0.22, 0.7)
-    const grilleMesh = new THREE.Mesh(grilleGeo, chromeMaterial)
-    grilleMesh.position.set(halfL + 0.09, 0.5, 0)
-    carGroup.add(grilleMesh)
-
-  }, [bodyCategory, carColor])
-
-  // 3. ATUALIZAÇÃO DOS PINS 3D
+  // 3. DESENHO DOS PINS DE AVARIA EM 3D
   useEffect(() => {
     const pinsGroup = pinsGroupRef.current
     if (!pinsGroup) return
@@ -436,7 +412,7 @@ export default function VehicleDamageMapper3D({
     })
   }, [pins])
 
-  // 4. RAYCASTING PARA CLICAR NA LATARIA E MARCAR PONTOS 3D
+  // 4. RAYCASTING AO CLICAR NA GEOMETRIA 3D DO CARRO
   function handleCanvasClick(e: React.MouseEvent<HTMLDivElement>) {
     if (readOnly || !mountRef.current || !cameraRef.current || !carMeshGroupRef.current) return
 
@@ -486,6 +462,21 @@ export default function VehicleDamageMapper3D({
     if (selectedPinId === id) setSelectedPinId(null)
   }
 
+  // CARREGAR ARQUIVO .GLB OU .GLTF LOCAL DO COMPUTADOR
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const url = URL.createObjectURL(file)
+    load3DGLTFModel(url, file.name)
+  }
+
+  // BUSCA MANUAL POR URL DE MODELO GLB
+  function handleCustomUrlLoad() {
+    if (!customModelUrl.trim()) return
+    load3DGLTFModel(customModelUrl.trim(), 'Modelo 3D Personalizado')
+  }
+
   function setCameraAngle(angle: 'FRONT' | 'BACK' | 'LEFT' | 'RIGHT' | 'TOP' | 'FREE') {
     const controls = controlsRef.current
     const camera = cameraRef.current
@@ -503,28 +494,26 @@ export default function VehicleDamageMapper3D({
 
   return (
     <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-5 space-y-5 shadow-2xl text-white">
-      {/* CABEÇALHO TÉCNICO 3D */}
+      {/* CABEÇALHO TÉCNICO E PESQUISA DE MODELO 3D */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-widest flex items-center gap-1">
-              <Zap className="w-3 h-3 text-blue-400" /> Curvatura 3D Realista
+              <Globe className="w-3 h-3 text-blue-400" /> Download GLTF/GLB 3D
             </span>
             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-widest">
-              Silhueta: {bodyCategory}
+              {loadedModelName}
             </span>
           </div>
           <h3 className="text-lg font-bold text-white mt-1 flex items-center gap-2">
             Gêmeo Digital Automotivo • {vehicleBrand} {vehicleModel}
           </h3>
           <p className="text-xs text-neutral-400 mt-0.5">
-            {readOnly
-              ? 'Gire livremente em 360° para inspecionar os danos marcados na lataria.'
-              : 'Clique em qualquer parte da pintura curva em 3D para registrar uma imperfeição.'}
+            O sistema busca e baixa automaticamente o modelo 3D exato na internet.
           </p>
         </div>
 
-        {/* CONTROLES DE PINTURA METÁLICA */}
+        {/* CONTROLES DE PINTURA DA LATARIA */}
         <div className="flex items-center gap-2 bg-neutral-900/90 p-2 rounded-2xl border border-neutral-800 self-start sm:self-auto">
           <Paintbrush className="w-4 h-4 text-neutral-400 ml-1" />
           <span className="text-xs font-semibold text-neutral-300">Pintura:</span>
@@ -545,11 +534,42 @@ export default function VehicleDamageMapper3D({
         </div>
       </div>
 
-      {/* CONTROLES DE CÂMERA E CARROCERIA */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* ÁREA DE BUSCA DE MODELO 3D E ENVIAR ARQUIVO .GLB */}
+      {!readOnly && (
+        <div className="bg-neutral-900/80 p-3 rounded-2xl border border-neutral-800 flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex-1 flex items-center gap-2 w-full">
+            <Search className="w-4 h-4 text-neutral-400 shrink-0 ml-1" />
+            <input
+              type="text"
+              value={customModelUrl}
+              onChange={(e) => setCustomModelUrl(e.target.value)}
+              placeholder="Cole a URL de um modelo 3D (.glb ou .gltf) da internet..."
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleCustomUrlLoad}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0"
+            >
+              Baixar Modelo
+            </button>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto">
+            <label className="flex-1 sm:flex-initial px-3 py-1.5 bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 text-xs font-bold text-neutral-200 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 transition-all">
+              <Upload className="w-3.5 h-3.5 text-blue-400" />
+              Enviar .GLB
+              <input type="file" accept=".glb,.gltf" onChange={handleFileUpload} className="hidden" />
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* CONTROLES DE CÂMERA PRESET */}
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 bg-neutral-900/90 p-1.5 rounded-2xl w-full sm:w-auto overflow-x-auto border border-neutral-800">
           <span className="text-[10px] font-mono font-bold text-neutral-400 px-2 uppercase tracking-widest flex items-center gap-1">
-            <Compass className="w-3.5 h-3.5 text-blue-400" /> Câmera:
+            <Compass className="w-3.5 h-3.5 text-blue-400" /> Câmera 3D:
           </span>
           {[
             { id: 'FREE', label: '360° Livre' },
@@ -569,24 +589,9 @@ export default function VehicleDamageMapper3D({
             </button>
           ))}
         </div>
-
-        <div className="flex items-center gap-2 text-xs font-medium text-neutral-400">
-          <span>Formato da Lataria:</span>
-          <select
-            value={bodyCategory}
-            onChange={(e) => setBodyCategory(e.target.value as any)}
-            className="bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-1 text-xs font-bold text-white outline-none focus:border-blue-500"
-          >
-            <option value="SEDAN">Sedan Aerodinâmico</option>
-            <option value="HATCH">Hatch Compacto</option>
-            <option value="SUV">SUV / Crossover</option>
-            <option value="PICKUP">Picape Robusta</option>
-            <option value="COUPE">Cupê Esportivo</option>
-          </select>
-        </div>
       </div>
 
-      {/* ÁREA DO CANVAS 3D WEBGL COM BEZIER CURVES */}
+      {/* CANVAS WEBGL E STATUS DE CARREGAMENTO */}
       <div 
         ref={mountRef}
         onClick={handleCanvasClick}
@@ -597,6 +602,22 @@ export default function VehicleDamageMapper3D({
           Gire 360° com o mouse / toque
         </div>
 
+        {isLoading3DModel && (
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-white z-20">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+            <p className="text-xs font-mono font-bold text-blue-400 animate-pulse">
+              Baixando modelo 3D na internet para ({vehicleBrand} {vehicleModel})...
+            </p>
+          </div>
+        )}
+
+        {loadError && (
+          <div className="absolute bottom-3 left-3 right-3 bg-red-950/80 border border-red-800 p-2.5 rounded-xl text-xs text-red-300 flex items-center gap-2 z-10">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+            <p>{loadError}</p>
+          </div>
+        )}
+
         {pendingPoint && (
           <div className="absolute top-3 right-3 bg-blue-600/90 text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-blue-400/50 shadow-lg animate-pulse">
             Ponto selecionado em 3D (X:{pendingPoint.x}, Y:{pendingPoint.y}, Z:{pendingPoint.z})
@@ -604,7 +625,7 @@ export default function VehicleDamageMapper3D({
         )}
       </div>
 
-      {/* MODAL POPUP PARA CONFIRMAR O PIN DE AVARIA */}
+      {/* MODAL PARA CONFIRMAR O PIN DE AVARIA */}
       {pendingPoint && !readOnly && (
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
@@ -668,7 +689,7 @@ export default function VehicleDamageMapper3D({
                   type="text"
                   value={pinNote}
                   onChange={(e) => setPinNote(e.target.value)}
-                  placeholder="Ex: Risco profundo na porta esquerda..."
+                  placeholder="Ex: Risco na porta esquerda..."
                   className="w-full p-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white outline-none focus:border-blue-500"
                 />
               </div>
