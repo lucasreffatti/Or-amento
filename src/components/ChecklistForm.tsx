@@ -1,12 +1,10 @@
 'use client'
-
 import { useState, useTransition } from 'react'
 import { createChecklist, updateChecklist } from '@/app/actions/checklist'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import ImageUploader from '@/components/ImageUploader'
-import VehicleDamageMapper3D, { DamagePin } from '@/components/VehicleDamageMapper3D'
 
 type Customer = { id: string, name: string, phone: string }
 type Vehicle = { id: string, plate: string, brand: string, model: string }
@@ -54,7 +52,7 @@ export default function ChecklistForm({
       defaultImages = JSON.parse(initialData.imagesUrls)
     } catch(e) {}
   }
-  let defaultPins: DamagePin[] = []
+  let defaultPins: any[] = []
   if (initialData?.damagePins) {
     try {
       defaultPins = JSON.parse(initialData.damagePins)
@@ -62,7 +60,7 @@ export default function ChecklistForm({
   }
   const [itemsStatus, setItemsStatus] = useState<Record<string, string>>(defaultStatus)
   const [images, setImages] = useState<string[]>(defaultImages)
-  const [damagePins, setDamagePins] = useState<DamagePin[]>(defaultPins)
+  const [damagePins, setDamagePins] = useState<any[]>(defaultPins)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialData?.vehicleId ?? '')
 
   const handleStatusChange = (item: string, status: string) => {
@@ -238,13 +236,6 @@ export default function ChecklistForm({
         </div>
       </div>
 
-      {/* MAPEIADOR 3D DE AVARIAS */}
-      <VehicleDamageMapper3D
-        pins={damagePins}
-        onChange={setDamagePins}
-        vehicleModel={vehicles.find(v => v.id === selectedVehicleId)?.model || 'Veículo'}
-        vehicleBrand={vehicles.find(v => v.id === selectedVehicleId)?.brand || ''}
-      />
 
       <div className="bg-white border border-neutral-200 rounded-lg p-5 space-y-4 shadow-sm">
         <h3 className="text-sm font-semibold text-neutral-900">Observações & Diagnóstico Inicial</h3>

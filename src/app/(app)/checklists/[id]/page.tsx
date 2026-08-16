@@ -7,7 +7,6 @@ import { DeleteButton } from '@/components/DeleteButton'
 import { deleteChecklist } from '@/app/actions/delete'
 import ChecklistActionButtons from '@/components/ChecklistActionButtons'
 import ChecklistPhotoGallery from '@/components/ChecklistPhotoGallery'
-import VehicleDamageMapper3D from '@/components/VehicleDamageMapper3D'
 
 export default async function ChecklistViewPage(props: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -221,13 +220,6 @@ export default async function ChecklistViewPage(props: { params: Promise<{ id: s
             </div>
           )}
 
-          {/* MAPEADOR 3D / MULTI-ÂNGULO DE AVARIAS */}
-          <VehicleDamageMapper3D
-            pins={damagePins}
-            vehicleModel={checklist.vehicle.model}
-            vehicleBrand={checklist.vehicle.brand}
-            readOnly={true}
-          />
 
           {/* GALERIA DE FOTOS DA VISTORIA */}
           <ChecklistPhotoGallery images={attachedImages} />
