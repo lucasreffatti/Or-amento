@@ -39,20 +39,53 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
 
     setError(null)
     setLoading(true)
-    setStatusMessage(isXml ? '📄 Lendo arquivo XML...' : '📷 Lendo foto/documento da Nota via OCR Inteligente...')
+    setStatusMessage(isXml ? '📄 Lendo arquivo XML...' : '📷 Preparando leitor de foto...')
 
     try {
-      let parsed: ParsedXmlData
+      let parsed: ParsedXmlData | null = null
 
       if (isXml) {
         const xmlText = await file.text()
         parsed = await parseNfeXmlAction(xmlText)
       } else {
-        const base64 = await fileToBase64(file)
-        parsed = await parsePartsNoteImageAction(base64)
+        setStatusMessage('📷 Inicializando leitura inteligente de imagem...')
+        let extractedText = ''
+
+        try {
+          const { recognize } = await import('tesseract.js')
+          
+          const ocrPromise = recognize(file, 'por+eng', {
+            logger: m => {
+              if (m.status === 'recognizing text') {
+                const pct = Math.round((m.progress || 0) * 100)
+                setStatusMessage(`📷 Lendo foto da nota (${pct}%)...`)
+              } else if (m.status === 'loading tesseract core' || m.status === 'initializing tesseract') {
+                setStatusMessage('📷 Carregando motor OCR...')
+              }
+            }
+          })
+
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('TIMEOUT_CLIENT_OCR')), 18000)
+          )
+
+          const result = await Promise.race([ocrPromise, timeoutPromise])
+          extractedText = result.data.text
+        } catch (ocrErr: any) {
+          console.warn('Client OCR notice:', ocrErr)
+          // Fallback para Server Action
+          setStatusMessage('📷 Processando imagem no servidor...')
+          const base64 = await fileToBase64(file)
+          parsed = await parsePartsNoteImageAction(base64)
+        }
+
+        if (extractedText) {
+          setStatusMessage('⚡ Identificando peças, fornecedor e valores...')
+          parsed = await parsePartsNoteTextAction(extractedText)
+        }
       }
 
-      if (!parsed.items || parsed.items.length === 0) {
+      if (!parsed || !parsed.items || parsed.items.length === 0) {
         throw new Error('Nenhum item/peça foi encontrado no arquivo. Você pode colar o texto ou adicionar os itens manualmente.')
       }
 

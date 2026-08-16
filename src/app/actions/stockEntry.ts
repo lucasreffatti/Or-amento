@@ -473,7 +473,13 @@ export async function parsePartsNoteImageAction(base64Data: string): Promise<Par
   try {
     const { createWorker } = await import('tesseract.js')
     const worker = await createWorker('por')
-    const ret = await worker.recognize(base64Data)
+
+    const recognizePromise = worker.recognize(base64Data)
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('A leitura da foto demorou muito. Tente enviar uma foto menor ou utilize a opção de colar texto.')), 15000)
+    )
+
+    const ret = await Promise.race([recognizePromise, timeoutPromise])
     await worker.terminate()
     return await parsePartsNoteTextAction(ret.data.text)
   } catch (err: any) {
