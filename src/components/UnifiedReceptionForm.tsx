@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { createUnifiedReception } from '@/app/actions/unifiedReception'
 import ImageUploader from '@/components/ImageUploader'
+import VehicleDamageMapper3D, { DamagePin } from '@/components/VehicleDamageMapper3D'
 
 interface CustomerOption {
   id: string
@@ -68,6 +69,7 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
   const [obd2Codes, setObd2Codes] = useState<string>('')
 
   const [images, setImages] = useState<string[]>([])
+  const [damagePins, setDamagePins] = useState<DamagePin[]>([])
 
   // Status de cada item: 'OK' | 'WARNING' | 'BAD'
   const [itemsStatus, setItemsStatus] = useState<Record<string, 'OK' | 'WARNING' | 'BAD'>>(() => {
@@ -111,6 +113,7 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
     formData.set('fuelLevel', fuelLevel.toString())
     formData.set('itemsStatus', JSON.stringify(itemsStatus))
     formData.set('imagesUrls', JSON.stringify(images))
+    formData.set('damagePins', JSON.stringify(damagePins))
 
     startTransition(async () => {
       const res = await createUnifiedReception(formData)
@@ -492,6 +495,13 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
             })}
           </div>
         </div>
+
+        {/* MAPEIADOR 3D / MULTI-ÂNGULO DE AVARIAS */}
+        <VehicleDamageMapper3D
+          pins={damagePins}
+          onChange={setDamagePins}
+          vehicleModel={customerVehicles.find(v => v.id === selectedVehicleId)?.model || 'Veículo'}
+        />
 
         {/* Queixa / Motivo da Visita */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">

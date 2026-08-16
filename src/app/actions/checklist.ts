@@ -61,6 +61,7 @@ export async function createChecklist(formData: FormData): Promise<ActionState> 
     }
 
     const imagesUrlsRaw = (formData.get('imagesUrls') as string) || '[]'
+    const damagePinsRaw = (formData.get('damagePins') as string) || '[]'
 
     const checklist = await prisma.checklist.create({
       data: {
@@ -70,6 +71,7 @@ export async function createChecklist(formData: FormData): Promise<ActionState> 
         fuelLevel,
         itemsStatus: JSON.stringify(itemsStatus),
         imagesUrls: imagesUrlsRaw,
+        damagePins: damagePinsRaw,
         reportedIssue: reportedIssue || '',
         additionalInfo: additionalInfo || '',
         obd2Codes: obd2Codes || '',
@@ -123,6 +125,7 @@ export async function updateChecklist(id: string, formData: FormData): Promise<A
     }
 
     const imagesUrlsRaw = formData.get('imagesUrls') as string
+    const damagePinsRaw = formData.get('damagePins') as string
 
     const updateData: any = {
       vehicleId,
@@ -136,6 +139,9 @@ export async function updateChecklist(id: string, formData: FormData): Promise<A
 
     if (imagesUrlsRaw !== null) {
       updateData.imagesUrls = imagesUrlsRaw
+    }
+    if (damagePinsRaw !== null) {
+      updateData.damagePins = damagePinsRaw
     }
 
     await prisma.checklist.update({

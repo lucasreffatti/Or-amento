@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import ImageUploader from '@/components/ImageUploader'
+import VehicleDamageMapper3D, { DamagePin } from '@/components/VehicleDamageMapper3D'
 
 type Customer = { id: string, name: string, phone: string }
 type Vehicle = { id: string, plate: string, brand: string, model: string }
@@ -53,8 +54,15 @@ export default function ChecklistForm({
       defaultImages = JSON.parse(initialData.imagesUrls)
     } catch(e) {}
   }
+  let defaultPins: DamagePin[] = []
+  if (initialData?.damagePins) {
+    try {
+      defaultPins = JSON.parse(initialData.damagePins)
+    } catch(e) {}
+  }
   const [itemsStatus, setItemsStatus] = useState<Record<string, string>>(defaultStatus)
   const [images, setImages] = useState<string[]>(defaultImages)
+  const [damagePins, setDamagePins] = useState<DamagePin[]>(defaultPins)
 
   const handleStatusChange = (item: string, status: string) => {
     setItemsStatus(prev => ({ ...prev, [item]: status }))
@@ -88,6 +96,7 @@ export default function ChecklistForm({
       {budgetId && <input type="hidden" name="budgetId" value={budgetId} />}
       <input type="hidden" name="itemsStatus" value={JSON.stringify(itemsStatus)} />
       <input type="hidden" name="imagesUrls" value={JSON.stringify(images)} />
+      <input type="hidden" name="damagePins" value={JSON.stringify(damagePins)} />
       
       {error && (
         <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-md flex items-center gap-2">
@@ -227,7 +236,14 @@ export default function ChecklistForm({
         </div>
       </div>
 
-      <div className="space-y-5 pt-4 border-t border-neutral-100">
+      {/* MAPEIADOR 3D DE AVARIAS */}
+      <VehicleDamageMapper3D
+        pins={damagePins}
+        onChange={setDamagePins}
+        vehicleModel={vehicles.find(v => v.id === initialData?.vehicleId)?.model || 'Veículo'}
+      />
+
+      <div className="bg-white border border-neutral-200 rounded-lg p-5 space-y-4 shadow-sm">
         <h3 className="text-sm font-semibold text-neutral-900">Observações & Diagnóstico Inicial</h3>
         
         <div className="space-y-1.5">

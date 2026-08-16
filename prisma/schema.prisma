@@ -121,6 +121,7 @@ model Checklist {
   
   itemsStatus   String   // JSON convertido para String
   imagesUrls    String   @default("[]") // Lista convertida para String JSON
+  damagePins    String?  @default("[]") // Pins de avaria 3D convertidos para String JSON
   additionalInfo String?
   
   status        String   @default("PENDENTE") // PENDENTE, APROVADO, RECUSADO

@@ -117,6 +117,7 @@ export async function createUnifiedReception(formData: FormData): Promise<Unifie
     }
 
     const imagesUrlsRaw = (formData.get('imagesUrls') as string) || '[]'
+    const damagePinsRaw = (formData.get('damagePins') as string) || '[]'
 
     const checklist = await prisma.checklist.create({
       data: {
@@ -129,6 +130,7 @@ export async function createUnifiedReception(formData: FormData): Promise<Unifie
         obd2Codes,
         itemsStatus: JSON.stringify(itemsStatus),
         imagesUrls: imagesUrlsRaw,
+        damagePins: damagePinsRaw,
       }
     })
 
