@@ -146,38 +146,9 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
         )
 
         const base64List = await Promise.all(files.map(f => fileToBase64(f)))
-
-        try {
-          const storedApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') || undefined : undefined
-          parsed = await parsePartsNoteImageAction(base64List, storedApiKey)
-        } catch (serverErr) {
-          console.warn('Server Vision OCR notice:', serverErr)
-        }
-
-        // Se o servidor Gemini não retornou ou falhou, usar OCR local com pré-processamento para cada foto
-        if (!parsed || !parsed.items || parsed.items.length === 0) {
-          let combinedText = ''
-          for (let i = 0; i < files.length; i++) {
-            const file = files[i]
-            setStatusMessage(`📷 Otimizando nitidez da foto ${i + 1} de ${files.length}...`)
-            const processedImage = await preprocessImageForOCR(file)
-
-            setStatusMessage(`📷 Lendo foto ${i + 1} de ${files.length}...`)
-            try {
-              const { recognize } = await import('tesseract.js')
-              const result = await recognize(processedImage, 'por+eng')
-              combinedText += '\n' + result.data.text
-            } catch (ocrErr: any) {
-              console.warn('Client OCR notice:', ocrErr)
-            }
-          }
-
-          if (combinedText.trim()) {
-            setPastedText(combinedText)
-            setStatusMessage('⚡ Extraindo peças, fornecedor e valores das fotos...')
-            parsed = await parsePartsNoteTextAction(combinedText)
-          }
-        }
+        const storedApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') || undefined : undefined
+        
+        parsed = await parsePartsNoteImageAction(base64List, storedApiKey)
       }
 
       if (!parsed || !parsed.items || parsed.items.length === 0) {

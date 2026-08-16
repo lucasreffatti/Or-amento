@@ -518,41 +518,44 @@ export async function parsePartsNoteImageAction(
     process.env.GOOGLE_API_KEY ||
     process.env.GEMINI_KEY
 
-  if (apiKey) {
-    try {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai')
-      const genAI = new GoogleGenerativeAI(apiKey)
-      let model
-      try {
-        model = genAI.getGenerativeModel({
-          model: 'gemini-3.5-flash',
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.1
-          }
-        })
-      } catch {
-        model = genAI.getGenerativeModel({
-          model: 'gemini-flash-latest',
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.1
-          }
-        })
-      }
+  if (!apiKey) {
+    throw new Error('Chave de API do Gemini não encontrada. Por favor, abra o Assistente de IA e insira sua chave de API (AIzaSy...).')
+  }
 
-      const imageParts = base64List.map(base64Data => {
-        const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
-        const mimeType = base64Data.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg'
-        return {
-          inlineData: {
-            data: cleanBase64,
-            mimeType
-          }
+  try {
+    const { GoogleGenerativeAI } = await import('@google/generative-ai')
+    const genAI = new GoogleGenerativeAI(apiKey)
+    let model
+    try {
+      model = genAI.getGenerativeModel({
+        model: 'gemini-3.5-flash',
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.1
         }
       })
+    } catch {
+      model = genAI.getGenerativeModel({
+        model: 'gemini-flash-latest',
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.1
+        }
+      })
+    }
 
-      const prompt = `Analise ${imageParts.length === 1 ? 'esta foto' : `estas ${imageParts.length} fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
+    const imageParts = base64List.map(base64Data => {
+      const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
+      const mimeType = base64Data.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg'
+      return {
+        inlineData: {
+          data: cleanBase64,
+          mimeType
+        }
+      }
+    })
+
+    const prompt = `Analise ${imageParts.length === 1 ? 'esta foto' : `estas ${imageParts.length} fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
 ${imageParts.length > 1 ? 'IMPORTANTE: As fotos são partes da mesma nota (ex: topo, meio ou continuação). Combine os dados e extraia todas as peças sem duplicar.' : ''}
 Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte formato, sem texto antes ou depois:
 
@@ -571,92 +574,83 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
   ]
 }`
 
-      const result = await model.generateContent([
-        prompt,
-        ...imageParts
-      ])
+    const result = await model.generateContent([
+      prompt,
+      ...imageParts
+    ])
 
-      const responseText = result.response.text().trim()
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/)
-      
-      if (jsonMatch) {
-        const parsedJson = JSON.parse(jsonMatch[0])
-        const session = await getSession()
-        const existingStock = await prisma.stockItem.findMany({
+    const responseText = result.response.text().trim()
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+    
+    if (!jsonMatch) {
+      throw new Error('A IA não retornou um formato válido. Verifique se as fotos estão nítidas e tente novamente.')
+    }
+
+    const parsedJson = JSON.parse(jsonMatch[0])
+    
+    let existingStock: any[] = []
+    try {
+      const session = await getSession()
+      if (session?.tenantId) {
+        existingStock = await prisma.stockItem.findMany({
           where: { tenantId: session.tenantId }
         })
-
-        const rawItems = Array.isArray(parsedJson.items) ? parsedJson.items : []
-        const items: ParsedXmlItem[] = rawItems.map((item: any, idx: number) => {
-          const qty = Number(item.quantity) || 1
-          const cost = Number(item.costPrice) || 0
-          const desc = String(item.description || `Peça ${idx + 1}`).trim()
-
-          const matchedItem = existingStock.find(i =>
-            i.description.toLowerCase().includes(desc.toLowerCase()) ||
-            desc.toLowerCase().includes(i.description.toLowerCase())
-          )
-
-          return {
-            code: item.code || `NOTE-${Date.now().toString().slice(-4)}-${idx + 1}`,
-            description: desc,
-            ncm: '8708.29.99',
-            unit: String(item.unit || 'UN').toUpperCase(),
-            quantity: Math.max(1, qty),
-            costPrice: Math.max(0, cost),
-            totalPrice: Math.round(Math.max(0, cost) * Math.max(1, qty) * 100) / 100,
-            suggestedSalePrice: Math.round(cost * 1.6 * 100) / 100,
-            matchedStockItemId: matchedItem?.id || null,
-            matchedStockItemName: matchedItem?.description || null
-          }
-        })
-
-        if (items.length > 0) {
-          const totalAmount = items.reduce((acc, i) => acc + i.totalPrice, 0)
-          return {
-            nfeKey: `GEMINI_${Date.now()}`,
-            nfeNumber: String(parsedJson.nfeNumber || Math.floor(Date.now() / 1000).toString().slice(-5)),
-            nfeSeries: 'GEMINI',
-            issueDate: new Date().toISOString().split('T')[0],
-            totalAmount,
-            supplier: {
-              document: String(parsedJson.cnpj || '').replace(/\D/g, ''),
-              name: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
-              tradeName: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
-              ie: null,
-              phone: null,
-              address: null,
-              city: null,
-              state: null,
-              cep: null
-            },
-            items
-          }
-        }
       }
-    } catch (geminiError) {
-      console.warn('Gemini Vision OCR falhou, recorrendo ao Tesseract local:', geminiError)
+    } catch {
+      // Ignora falha de busca de estoque existente se sessão não estiver ativa
     }
-  }
 
-  // Fallback Tesseract Local
-  try {
-    const { createWorker } = await import('tesseract.js')
-    const worker = await createWorker('por')
+    const rawItems = Array.isArray(parsedJson.items) ? parsedJson.items : []
+    const items: ParsedXmlItem[] = rawItems.map((item: any, idx: number) => {
+      const qty = Number(item.quantity) || 1
+      const cost = Number(item.costPrice) || 0
+      const desc = String(item.description || `Peça ${idx + 1}`).trim()
 
-    let fullText = ''
-    for (const b64 of base64List) {
-      const recognizePromise = worker.recognize(b64)
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('A leitura da foto demorou muito. Tente enviar uma foto menor ou utilize a opção de colar texto.')), 15000)
+      const matchedItem = existingStock.find(i =>
+        i.description.toLowerCase().includes(desc.toLowerCase()) ||
+        desc.toLowerCase().includes(i.description.toLowerCase())
       )
-      const ret = await Promise.race([recognizePromise, timeoutPromise])
-      fullText += '\n' + ret.data.text
+
+      return {
+        code: item.code || `NOTE-${Date.now().toString().slice(-4)}-${idx + 1}`,
+        description: desc,
+        ncm: '8708.29.99',
+        unit: String(item.unit || 'UN').toUpperCase(),
+        quantity: Math.max(1, qty),
+        costPrice: Math.max(0, cost),
+        totalPrice: Math.round(Math.max(0, cost) * Math.max(1, qty) * 100) / 100,
+        suggestedSalePrice: Math.round(cost * 1.6 * 100) / 100,
+        matchedStockItemId: matchedItem?.id || null,
+        matchedStockItemName: matchedItem?.description || null
+      }
+    })
+
+    if (items.length === 0) {
+      throw new Error('Não foi possível identificar nenhuma peça ou item nas fotos enviadas.')
     }
-    await worker.terminate()
-    return await parsePartsNoteTextAction(fullText)
-  } catch (err: any) {
-    throw new Error(err.message || 'Não foi possível ler o texto das fotos da nota. Verifique a nitidez da imagem ou utilize a opção de colar texto.')
+
+    const totalAmount = items.reduce((acc, i) => acc + i.totalPrice, 0)
+    return {
+      nfeKey: `GEMINI_${Date.now()}`,
+      nfeNumber: String(parsedJson.nfeNumber || Math.floor(Date.now() / 1000).toString().slice(-5)),
+      nfeSeries: 'GEMINI',
+      issueDate: new Date().toISOString().split('T')[0],
+      totalAmount,
+      supplier: {
+        document: String(parsedJson.cnpj || '').replace(/\D/g, ''),
+        name: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
+        tradeName: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
+        ie: null,
+        phone: null,
+        address: null,
+        city: null,
+        state: null,
+        cep: null
+      },
+      items
+    }
+  } catch (geminiError: any) {
+    throw new Error(geminiError.message || 'Falha no processamento de visão da IA. Verifique a nitidez da foto ou sua chave de API.')
   }
 }
 
