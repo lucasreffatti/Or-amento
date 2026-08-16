@@ -514,7 +514,12 @@ export async function parsePartsNoteImageAction(base64Data: string, customApiKey
     try {
       const { GoogleGenerativeAI } = await import('@google/generative-ai')
       const genAI = new GoogleGenerativeAI(apiKey)
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      let model
+      try {
+        model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' })
+      } catch {
+        model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+      }
 
       // Remover prefixo data:image/...;base64, se houver
       const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
