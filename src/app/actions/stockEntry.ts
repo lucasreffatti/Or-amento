@@ -528,40 +528,24 @@ export async function parsePartsNoteImageAction(
     }
   }
 
-  try {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai')
-    const genAI = new GoogleGenerativeAI(apiKey)
-    let model
-    try {
-      model = genAI.getGenerativeModel({
-        model: 'gemini-flash-latest',
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.1
-        }
-      })
-    } catch {
-      model = genAI.getGenerativeModel({
-        model: 'gemini-3.5-flash',
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.1
-        }
-      })
-    }
+  const candidateModels = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest']
+  let lastError: any = null
 
-    const imageParts = base64List.map(base64Data => {
-      const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
-      const mimeType = base64Data.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg'
-      return {
-        inlineData: {
-          data: cleanBase64,
-          mimeType
-        }
+  const { GoogleGenerativeAI } = await import('@google/generative-ai')
+  const genAI = new GoogleGenerativeAI(apiKey)
+
+  const imageParts = base64List.map(base64Data => {
+    const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
+    const mimeType = base64Data.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg'
+    return {
+      inlineData: {
+        data: cleanBase64,
+        mimeType
       }
-    })
+    }
+  })
 
-    const prompt = `Analise ${imageParts.length === 1 ? 'esta foto' : `estas ${imageParts.length} fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
+  const prompt = `Analise ${imageParts.length === 1 ? 'esta foto' : `estas ${imageParts.length} fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
 ${imageParts.length > 1 ? 'IMPORTANTE: As fotos são partes da mesma nota (ex: topo, meio ou continuação). Combine os dados e extraia todas as peças sem duplicar.' : ''}
 Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte formato, sem texto antes ou depois:
 
@@ -580,103 +564,131 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
   ]
 }`
 
-    const result = await model.generateContent([
-      prompt,
-      ...imageParts
-    ])
-
-    const responseText = result.response.text().trim()
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
-    
-    if (!jsonMatch) {
-      return {
-        success: false,
-        error: 'A IA não retornou um formato JSON válido. Verifique se as fotos estão nítidas e tente novamente.'
-      }
-    }
-
-    const parsedJson = JSON.parse(jsonMatch[0])
-    
-    let existingStock: any[] = []
+  for (const modelName of candidateModels) {
     try {
-      const session = await getSession()
-      if (session?.tenantId) {
-        existingStock = await prisma.stockItem.findMany({
-          where: { tenantId: session.tenantId }
-        })
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.1
+        }
+      })
+
+      const result = await model.generateContent([
+        prompt,
+        ...imageParts
+      ])
+
+      const responseText = result.response.text().trim()
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+      
+      if (!jsonMatch) {
+        continue
       }
-    } catch {
-      // Ignora falha de busca de estoque se sessão não estiver ativa
-    }
 
-    const rawItems = Array.isArray(parsedJson.items) ? parsedJson.items : []
-    const items: ParsedXmlItem[] = rawItems.map((item: any, idx: number) => {
-      const qty = Number(item.quantity) || 1
-      const cost = Number(item.costPrice) || 0
-      const desc = String(item.description || `Peça ${idx + 1}`).trim()
+      const parsedJson = JSON.parse(jsonMatch[0])
+      
+      let existingStock: any[] = []
+      try {
+        const session = await getSession()
+        if (session?.tenantId) {
+          existingStock = await prisma.stockItem.findMany({
+            where: { tenantId: session.tenantId }
+          })
+        }
+      } catch {
+        // Ignora falha de busca de estoque se sessão não estiver ativa
+      }
 
-      const matchedItem = existingStock.find(i =>
-        i.description.toLowerCase().includes(desc.toLowerCase()) ||
-        desc.toLowerCase().includes(i.description.toLowerCase())
-      )
+      const rawItems = Array.isArray(parsedJson.items) ? parsedJson.items : []
+      const items: ParsedXmlItem[] = rawItems.map((item: any, idx: number) => {
+        const qty = Number(item.quantity) || 1
+        const cost = Number(item.costPrice) || 0
+        const desc = String(item.description || `Peça ${idx + 1}`).trim()
 
+        const matchedItem = existingStock.find(i =>
+          i.description.toLowerCase().includes(desc.toLowerCase()) ||
+          desc.toLowerCase().includes(i.description.toLowerCase())
+        )
+
+        return {
+          code: item.code || `NOTE-${Date.now().toString().slice(-4)}-${idx + 1}`,
+          description: desc,
+          ncm: '8708.29.99',
+          unit: String(item.unit || 'UN').toUpperCase(),
+          quantity: Math.max(1, qty),
+          costPrice: Math.max(0, cost),
+          totalPrice: Math.round(Math.max(0, cost) * Math.max(1, qty) * 100) / 100,
+          suggestedSalePrice: Math.round(cost * 1.6 * 100) / 100,
+          matchedStockItemId: matchedItem?.id || null,
+          matchedStockItemName: matchedItem?.description || null
+        }
+      })
+
+      if (items.length === 0) {
+        return {
+          success: false,
+          error: 'Não foi possível identificar nenhuma peça ou item nas fotos enviadas. Certifique-se de que a foto da nota está nítida.'
+        }
+      }
+
+      const totalAmount = items.reduce((acc, i) => acc + i.totalPrice, 0)
       return {
-        code: item.code || `NOTE-${Date.now().toString().slice(-4)}-${idx + 1}`,
-        description: desc,
-        ncm: '8708.29.99',
-        unit: String(item.unit || 'UN').toUpperCase(),
-        quantity: Math.max(1, qty),
-        costPrice: Math.max(0, cost),
-        totalPrice: Math.round(Math.max(0, cost) * Math.max(1, qty) * 100) / 100,
-        suggestedSalePrice: Math.round(cost * 1.6 * 100) / 100,
-        matchedStockItemId: matchedItem?.id || null,
-        matchedStockItemName: matchedItem?.description || null
+        success: true,
+        data: {
+          nfeKey: `GEMINI_${Date.now()}`,
+          nfeNumber: String(parsedJson.nfeNumber || Math.floor(Date.now() / 1000).toString().slice(-5)),
+          nfeSeries: 'GEMINI',
+          issueDate: new Date().toISOString().split('T')[0],
+          totalAmount,
+          supplier: {
+            document: String(parsedJson.cnpj || '').replace(/\D/g, ''),
+            name: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
+            tradeName: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
+            ie: null,
+            phone: null,
+            address: null,
+            city: null,
+            state: null,
+            cep: null
+          },
+          items
+        }
       }
-    })
+    } catch (err: any) {
+      console.warn(`Tentativa com modelo ${modelName} falhou:`, err?.message || err)
+      lastError = err
+    }
+  }
 
-    if (items.length === 0) {
-      return {
-        success: false,
-        error: 'Não foi possível identificar nenhuma peça ou item nas fotos enviadas.'
-      }
-    }
+  // Se todos os modelos falharem, analisa a mensagem de erro real
+  const status = lastError?.status
+  const msg = String(lastError?.message || '')
 
-    const totalAmount = items.reduce((acc, i) => acc + i.totalPrice, 0)
-    return {
-      success: true,
-      data: {
-        nfeKey: `GEMINI_${Date.now()}`,
-        nfeNumber: String(parsedJson.nfeNumber || Math.floor(Date.now() / 1000).toString().slice(-5)),
-        nfeSeries: 'GEMINI',
-        issueDate: new Date().toISOString().split('T')[0],
-        totalAmount,
-        supplier: {
-          document: String(parsedJson.cnpj || '').replace(/\D/g, ''),
-          name: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
-          tradeName: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
-          ie: null,
-          phone: null,
-          address: null,
-          city: null,
-          state: null,
-          cep: null
-        },
-        items
-      }
-    }
-  } catch (geminiError: any) {
-    console.error('Gemini Vision OCR Error:', geminiError)
-    const msg = geminiError?.message || ''
-    if (msg.includes('401') || msg.includes('API key') || msg.includes('credentials') || msg.includes('UNAUTHORIZED')) {
-      return {
-        success: false,
-        error: 'Chave API do Gemini inválida ou não autorizada. Acesse https://aistudio.google.com/ para criar uma chave grátis (começando com AIzaSy...) e atualize no Assistente de IA.'
-      }
-    }
+  if (status === 401 || msg.includes('401') || msg.includes('UNAUTHORIZED') || msg.includes('API_KEY_INVALID')) {
     return {
       success: false,
-      error: `Erro no processamento da IA: ${msg || 'Verifique a nitidez da foto e sua chave API.'}`
+      error: 'Chave API do Gemini não autorizada (Erro 401). Verifique sua chave no Assistente IA.'
     }
+  }
+
+  if (status === 429 || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+    return {
+      success: false,
+      error: 'Limite de requisições da chave do Gemini atingido temporariamente (Erro 429). Aguarde 1 minuto e tente novamente.'
+    }
+  }
+
+  if (status === 503 || msg.includes('503') || msg.includes('Service Unavailable')) {
+    return {
+      success: false,
+      error: 'O serviço de IA do Google está em alta demanda temporária (Erro 503). Tente enviar a foto novamente em alguns segundos.'
+    }
+  }
+
+  return {
+    success: false,
+    error: `Erro ao analisar foto com Gemini: ${msg.slice(0, 150) || 'Falha de comunicação com a IA'}`
   }
 }
 
