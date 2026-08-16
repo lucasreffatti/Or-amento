@@ -501,7 +501,111 @@ export async function parsePartsNoteTextAction(rawText: string): Promise<ParsedX
   }
 }
 
-export async function parsePartsNoteImageAction(base64Data: string): Promise<ParsedXmlData> {
+export async function parsePartsNoteImageAction(base64Data: string, customApiKey?: string): Promise<ParsedXmlData> {
+  const apiKey = customApiKey || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY
+
+  if (apiKey) {
+    try {
+      const { GoogleGenerativeAI } = await import('@google/generative-ai')
+      const genAI = new GoogleGenerativeAI(apiKey)
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+      // Remover prefixo data:image/...;base64, se houver
+      const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
+      const mimeType = base64Data.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg'
+
+      const prompt = `Analise esta foto de nota fiscal, recibo ou cupom de peças de veículos/autopeças.
+Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte formato, sem texto antes ou depois:
+
+{
+  "supplierName": "Nome da empresa/fornecedor ou Fornecedor de Autopeças",
+  "nfeNumber": "Número da nota/pedido/cupom se houver",
+  "cnpj": "CNPJ se houver",
+  "items": [
+    {
+      "code": "Código do produto se houver ou Peça 1",
+      "description": "Descrição clara da peça ou serviço",
+      "quantity": 1,
+      "costPrice": 150.00,
+      "unit": "UN"
+    }
+  ]
+}`
+
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: cleanBase64,
+            mimeType
+          }
+        }
+      ])
+
+      const responseText = result.response.text().trim()
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+      
+      if (jsonMatch) {
+        const parsedJson = JSON.parse(jsonMatch[0])
+        const session = await getSession()
+        const existingStock = await prisma.stockItem.findMany({
+          where: { tenantId: session.tenantId }
+        })
+
+        const rawItems = Array.isArray(parsedJson.items) ? parsedJson.items : []
+        const items: ParsedXmlItem[] = rawItems.map((item: any, idx: number) => {
+          const qty = Number(item.quantity) || 1
+          const cost = Number(item.costPrice) || 0
+          const desc = String(item.description || `Peça ${idx + 1}`).trim()
+
+          const matchedItem = existingStock.find(i =>
+            i.description.toLowerCase().includes(desc.toLowerCase()) ||
+            desc.toLowerCase().includes(i.description.toLowerCase())
+          )
+
+          return {
+            code: item.code || `NOTE-${Date.now().toString().slice(-4)}-${idx + 1}`,
+            description: desc,
+            ncm: '8708.29.99',
+            unit: String(item.unit || 'UN').toUpperCase(),
+            quantity: Math.max(1, qty),
+            costPrice: Math.max(0, cost),
+            totalPrice: Math.round(Math.max(0, cost) * Math.max(1, qty) * 100) / 100,
+            suggestedSalePrice: Math.round(cost * 1.6 * 100) / 100,
+            matchedStockItemId: matchedItem?.id || null,
+            matchedStockItemName: matchedItem?.description || null
+          }
+        })
+
+        if (items.length > 0) {
+          const totalAmount = items.reduce((acc, i) => acc + i.totalPrice, 0)
+          return {
+            nfeKey: `GEMINI_${Date.now()}`,
+            nfeNumber: String(parsedJson.nfeNumber || Math.floor(Date.now() / 1000).toString().slice(-5)),
+            nfeSeries: 'GEMINI',
+            issueDate: new Date().toISOString().split('T')[0],
+            totalAmount,
+            supplier: {
+              document: String(parsedJson.cnpj || '').replace(/\D/g, ''),
+              name: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
+              tradeName: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
+              ie: null,
+              phone: null,
+              address: null,
+              city: null,
+              state: null,
+              cep: null
+            },
+            items
+          }
+        }
+      }
+    } catch (geminiError) {
+      console.warn('Gemini Vision OCR falhou, recorrendo ao Tesseract local:', geminiError)
+    }
+  }
+
+  // Fallback Tesseract Local
   try {
     const { createWorker } = await import('tesseract.js')
     const worker = await createWorker('por')

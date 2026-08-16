@@ -89,44 +89,52 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
         const xmlText = await file.text()
         parsed = await parseNfeXmlAction(xmlText)
       } else {
-        setStatusMessage('📷 Otimizando contraste e nitidez da foto...')
-        const processedImage = await preprocessImageForOCR(file)
-
-        setStatusMessage('📷 Inicializando leitura inteligente de imagem...')
-        let extractedText = ''
+        setStatusMessage('🧠 Analisando foto com IA de Visão Computacional (Gemini)...')
+        const base64 = await fileToBase64(file)
 
         try {
-          const { recognize } = await import('tesseract.js')
-          
-          const ocrPromise = recognize(processedImage, 'por+eng', {
-            logger: m => {
-              if (m.status === 'recognizing text') {
-                const pct = Math.round((m.progress || 0) * 100)
-                setStatusMessage(`📷 Lendo foto da nota (${pct}%)...`)
-              } else if (m.status === 'loading tesseract core' || m.status === 'initializing tesseract') {
-                setStatusMessage('📷 Carregando motor de visão...')
-              }
-            }
-          })
-
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('TIMEOUT_CLIENT_OCR')), 22000)
-          )
-
-          const result = await Promise.race([ocrPromise, timeoutPromise])
-          extractedText = result.data.text
-        } catch (ocrErr: any) {
-          console.warn('Client OCR notice:', ocrErr)
-          // Fallback para Server Action
-          setStatusMessage('📷 Processando imagem no servidor...')
-          const base64 = await fileToBase64(file)
           parsed = await parsePartsNoteImageAction(base64)
+        } catch (serverErr) {
+          console.warn('Server Vision OCR notice:', serverErr)
         }
 
-        if (extractedText) {
-          setPastedText(extractedText)
-          setStatusMessage('⚡ Extraindo peças, fornecedor e valores...')
-          parsed = await parsePartsNoteTextAction(extractedText)
+        // Se o servidor Gemini não retornou ou falhou, usar OCR local com pré-processamento
+        if (!parsed || !parsed.items || parsed.items.length === 0) {
+          setStatusMessage('📷 Otimizando contraste e nitidez da foto...')
+          const processedImage = await preprocessImageForOCR(file)
+
+          setStatusMessage('📷 Inicializando leitura inteligente local...')
+          let extractedText = ''
+
+          try {
+            const { recognize } = await import('tesseract.js')
+            
+            const ocrPromise = recognize(processedImage, 'por+eng', {
+              logger: m => {
+                if (m.status === 'recognizing text') {
+                  const pct = Math.round((m.progress || 0) * 100)
+                  setStatusMessage(`📷 Lendo foto da nota (${pct}%)...`)
+                } else if (m.status === 'loading tesseract core' || m.status === 'initializing tesseract') {
+                  setStatusMessage('📷 Carregando motor de visão...')
+                }
+              }
+            })
+
+            const timeoutPromise = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('TIMEOUT_CLIENT_OCR')), 22000)
+            )
+
+            const result = await Promise.race([ocrPromise, timeoutPromise])
+            extractedText = result.data.text
+          } catch (ocrErr: any) {
+            console.warn('Client OCR notice:', ocrErr)
+          }
+
+          if (extractedText) {
+            setPastedText(extractedText)
+            setStatusMessage('⚡ Extraindo peças, fornecedor e valores...')
+            parsed = await parsePartsNoteTextAction(extractedText)
+          }
         }
       }
 
