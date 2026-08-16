@@ -5,6 +5,7 @@ import { encrypt } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 export async function loginAction(formData: FormData) {
   try {
@@ -58,10 +59,13 @@ export async function loginAction(formData: FormData) {
 
     return { success: true }
   } catch (error: any) {
-    console.error('Erro na ação de login:', error)
+    if (isRedirectError(error)) {
+      throw error
+    }
+    console.error('Erro detalhado na ação de login:', error)
     return { 
       success: false, 
-      error: 'Erro ao conectar ao banco de dados. Verifique a conexão do servidor.' 
+      error: error?.message || 'Erro inesperado ao realizar o login.' 
     }
   }
 }
@@ -120,10 +124,13 @@ export async function registerAction(formData: FormData) {
 
     return { success: true }
   } catch (error: any) {
-    console.error('Erro na ação de registro:', error)
+    if (isRedirectError(error)) {
+      throw error
+    }
+    console.error('Erro detalhado na ação de registro:', error)
     return { 
       success: false, 
-      error: 'Erro ao registrar usuário. Tente novamente.' 
+      error: error?.message || 'Erro inesperado ao registrar usuário.' 
     }
   }
 }
