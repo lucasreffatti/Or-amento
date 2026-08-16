@@ -504,10 +504,13 @@ export async function parsePartsNoteTextAction(rawText: string): Promise<ParsedX
 export async function parsePartsNoteImageAction(
   base64DataInput: string | string[],
   customApiKey?: string
-): Promise<ParsedXmlData> {
+): Promise<{ success: boolean; data?: ParsedXmlData; error?: string }> {
   const base64List = Array.isArray(base64DataInput) ? base64DataInput : [base64DataInput]
   if (base64List.length === 0) {
-    return { supplier: { document: '', name: 'Fornecedor', tradeName: null, ie: null, phone: null, address: null, city: null, state: null, cep: null }, nfeNumber: '', nfeKey: '', nfeSeries: '', issueDate: new Date().toISOString(), totalAmount: 0, items: [] }
+    return {
+      success: true,
+      data: { supplier: { document: '', name: 'Fornecedor', tradeName: null, ie: null, phone: null, address: null, city: null, state: null, cep: null }, nfeNumber: '', nfeKey: '', nfeSeries: '', issueDate: new Date().toISOString(), totalAmount: 0, items: [] }
+    }
   }
 
   const apiKey =
@@ -519,7 +522,17 @@ export async function parsePartsNoteImageAction(
     process.env.GEMINI_KEY
 
   if (!apiKey) {
-    throw new Error('Chave de API do Gemini não encontrada. Por favor, abra o Assistente de IA e insira sua chave de API (AIzaSy...).')
+    return {
+      success: false,
+      error: 'Chave de API do Gemini não encontrada. Por favor, abra o Assistente de IA no canto inferior direito e insira sua chave de API (AIzaSy...).'
+    }
+  }
+
+  if (!apiKey.startsWith('AIzaSy')) {
+    return {
+      success: false,
+      error: 'A chave da API do Gemini configurada é inválida (precisa começar com "AIzaSy..."). Crie uma chave gratuita em https://aistudio.google.com/ e insira no Assistente IA.'
+    }
   }
 
   try {
@@ -528,7 +541,7 @@ export async function parsePartsNoteImageAction(
     let model
     try {
       model = genAI.getGenerativeModel({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-2.5-flash',
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.1
@@ -583,7 +596,10 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
     const jsonMatch = responseText.match(/\{[\s\S]*\}/)
     
     if (!jsonMatch) {
-      throw new Error('A IA não retornou um formato válido. Verifique se as fotos estão nítidas e tente novamente.')
+      return {
+        success: false,
+        error: 'A IA não retornou um formato JSON válido. Verifique se as fotos estão nítidas e tente novamente.'
+      }
     }
 
     const parsedJson = JSON.parse(jsonMatch[0])
@@ -597,7 +613,7 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
         })
       }
     } catch {
-      // Ignora falha de busca de estoque existente se sessão não estiver ativa
+      // Ignora falha de busca de estoque se sessão não estiver ativa
     }
 
     const rawItems = Array.isArray(parsedJson.items) ? parsedJson.items : []
@@ -626,31 +642,48 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
     })
 
     if (items.length === 0) {
-      throw new Error('Não foi possível identificar nenhuma peça ou item nas fotos enviadas.')
+      return {
+        success: false,
+        error: 'Não foi possível identificar nenhuma peça ou item nas fotos enviadas.'
+      }
     }
 
     const totalAmount = items.reduce((acc, i) => acc + i.totalPrice, 0)
     return {
-      nfeKey: `GEMINI_${Date.now()}`,
-      nfeNumber: String(parsedJson.nfeNumber || Math.floor(Date.now() / 1000).toString().slice(-5)),
-      nfeSeries: 'GEMINI',
-      issueDate: new Date().toISOString().split('T')[0],
-      totalAmount,
-      supplier: {
-        document: String(parsedJson.cnpj || '').replace(/\D/g, ''),
-        name: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
-        tradeName: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
-        ie: null,
-        phone: null,
-        address: null,
-        city: null,
-        state: null,
-        cep: null
-      },
-      items
+      success: true,
+      data: {
+        nfeKey: `GEMINI_${Date.now()}`,
+        nfeNumber: String(parsedJson.nfeNumber || Math.floor(Date.now() / 1000).toString().slice(-5)),
+        nfeSeries: 'GEMINI',
+        issueDate: new Date().toISOString().split('T')[0],
+        totalAmount,
+        supplier: {
+          document: String(parsedJson.cnpj || '').replace(/\D/g, ''),
+          name: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
+          tradeName: String(parsedJson.supplierName || 'Fornecedor de Autopeças'),
+          ie: null,
+          phone: null,
+          address: null,
+          city: null,
+          state: null,
+          cep: null
+        },
+        items
+      }
     }
   } catch (geminiError: any) {
-    throw new Error(geminiError.message || 'Falha no processamento de visão da IA. Verifique a nitidez da foto ou sua chave de API.')
+    console.error('Gemini Vision OCR Error:', geminiError)
+    const msg = geminiError?.message || ''
+    if (msg.includes('401') || msg.includes('API key') || msg.includes('credentials') || msg.includes('UNAUTHORIZED')) {
+      return {
+        success: false,
+        error: 'Chave API do Gemini inválida ou não autorizada. Acesse https://aistudio.google.com/ para criar uma chave grátis (começando com AIzaSy...) e atualize no Assistente de IA.'
+      }
+    }
+    return {
+      success: false,
+      error: `Erro no processamento da IA: ${msg || 'Verifique a nitidez da foto e sua chave API.'}`
+    }
   }
 }
 

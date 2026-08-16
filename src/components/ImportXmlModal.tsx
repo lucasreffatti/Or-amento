@@ -147,8 +147,11 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
 
         const base64List = await Promise.all(files.map(f => fileToBase64(f)))
         const storedApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') || undefined : undefined
-        
-        parsed = await parsePartsNoteImageAction(base64List, storedApiKey)
+        const res = await parsePartsNoteImageAction(base64List, storedApiKey)
+        if (!res.success || !res.data) {
+          throw new Error(res.error || 'Erro ao analisar fotos com a IA.')
+        }
+        parsed = res.data
       }
 
       if (!parsed || !parsed.items || parsed.items.length === 0) {

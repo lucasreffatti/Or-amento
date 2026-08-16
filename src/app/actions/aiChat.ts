@@ -33,9 +33,9 @@ export async function sendAiChatMessageAction(
       prisma.vehicle.count({ where: { tenantId: session.tenantId } }).catch(() => 0)
     ])
 
-    if (!apiKey) {
+    if (!apiKey || !apiKey.startsWith('AIzaSy')) {
       return {
-        text: `Olá! Sou o Assistente IA da sua Oficina. 🚗🔧\n\nNo momento, a **GEMINI_API_KEY** não foi configurada nas variáveis de ambiente (.env).\n\nPara ativar minhas respostas completas via Google Gemini Pro/Flash:\n1. Obtenha uma chave gratuita em: **https://aistudio.google.com/**\n2. Cole sua chave no arquivo **.env** como \`GEMINI_API_KEY=sua_chave\`\n\nResumo atual da oficina:\n- Itens no Estoque: ${stockCount}\n- Orçamentos Registrados: ${budgetsCount}\n- Veículos Cadastrados: ${vehiclesCount}`
+        text: `⚠️ **Chave de API Inválida ou Ausente**\n\nA chave configurada atualmente é inválida. As chaves oficiais do Google Gemini AI Studio sempre começam com **\`AIzaSy...\`**.\n\n**Como resolver em 1 minuto (Gratuito):**\n1. Acesse o site oficial do Google: **https://aistudio.google.com/**\n2. Clique em **"Create API key"**\n3. Clique no botão de engrenagem ⚙️ acima neste chat e cole sua chave **\`AIzaSy...\`**!`
       }
     }
 
@@ -43,7 +43,7 @@ export async function sendAiChatMessageAction(
     let model
     try {
       model = genAI.getGenerativeModel({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-2.5-flash',
         systemInstruction: `Você é o "Mecânico IA", o assistente virtual inteligente e especialista para oficinas mecânicas de automóveis e gestão de autopeças.
 Você ajuda o mecânico ou gestor da oficina com:
 - Dúvidas sobre códigos de peças, diagnósticos automotivos e manutenção.
