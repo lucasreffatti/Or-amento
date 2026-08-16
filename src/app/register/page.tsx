@@ -1,54 +1,31 @@
-import { prisma } from '@/lib/prisma'
-import { redirect } from 'next/navigation'
-import bcrypt from 'bcryptjs'
+'use client'
+
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ShieldAlert, UserPlus, KeyRound, Lock, Tag } from 'lucide-react'
+import { ShieldAlert, UserPlus, KeyRound, Lock, Tag, User, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { registerAction } from '@/app/actions/auth'
 
 export default function RegisterPage() {
-  async function handleRegister(formData: FormData) {
-    'use server'
-    const name = formData.get('name') as string
-    const username = formData.get('username') as string
-    const password = formData.get('password') as string
-    const accessCode = formData.get('accessCode') as string
+  const router = useRouter()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const [showPassword, setShowPassword] = useState(false)
 
-    if (!name || !username || !password || !accessCode) {
-      return
-    }
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setErrorMessage(null)
 
-    // Validação estrita do código no servidor (Nunca vai pro frontend)
-    const SECRET_ACCESS_CODE = 'Lucas15032003.'
-    
-    if (accessCode !== SECRET_ACCESS_CODE) {
-      // Simplesmente retorna, sem vazamento de stacktrace ou dicas
-      return
-    }
+    const formData = new FormData(e.currentTarget)
 
-    // Verifica se username já existe
-    const existing = await prisma.user.findUnique({
-      where: { username }
-    })
-
-    if (existing) {
-      return
-    }
-
-    // Assumindo que a oficina principal é a tenant-1 (Para o MVP)
-    const tenantId = 'tenant-1'
-
-    const passwordHash = await bcrypt.hash(password, 12)
-
-    await prisma.user.create({
-      data: {
-        name,
-        username,
-        password: passwordHash,
-        role: 'USER',
-        tenantId
+    startTransition(async () => {
+      const res = await registerAction(formData)
+      if (res.success) {
+        router.push('/login?registered=true')
+      } else {
+        setErrorMessage(res.error || 'Erro ao criar conta.')
       }
     })
-
-    redirect('/login')
   }
 
   return (
@@ -63,8 +40,18 @@ export default function RegisterPage() {
           <p className="text-neutral-400 text-sm mt-2 font-mono tracking-wider uppercase">Requer Código de Autorização</p>
         </div>
 
-        <form action={handleRegister} className="p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="p-8 space-y-5">
           
+          {errorMessage && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm flex items-start gap-3 animate-in fade-in duration-200">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">Falha no registro</p>
+                <p className="text-xs text-red-700 mt-0.5">{errorMessage}</p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest block">Nome Completo</label>
             <div className="relative">
@@ -75,8 +62,9 @@ export default function RegisterPage() {
                 type="text" 
                 name="name"
                 required
+                disabled={isPending}
                 placeholder="Seu nome"
-                className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900"
+                className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 disabled:opacity-50"
               />
             </div>
           </div>
@@ -85,14 +73,15 @@ export default function RegisterPage() {
             <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest block">Usuário de Acesso</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <UserIcon className="h-4 w-4 text-neutral-400" />
+                <User className="h-4 w-4 text-neutral-400" />
               </div>
               <input 
                 type="text" 
                 name="username"
                 required
+                disabled={isPending}
                 placeholder="Ex: joaomecanico"
-                className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900"
+                className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 disabled:opacity-50"
               />
             </div>
           </div>
@@ -104,12 +93,21 @@ export default function RegisterPage() {
                 <KeyRound className="h-4 w-4 text-neutral-400" />
               </div>
               <input 
-                type="password" 
+                type={showPassword ? 'text' : 'password'} 
                 name="password"
                 required
+                disabled={isPending}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900"
+                className="w-full pl-10 pr-10 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-neutral-900 disabled:opacity-50"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 
@@ -123,18 +121,29 @@ export default function RegisterPage() {
                 type="password" 
                 name="accessCode"
                 required
+                disabled={isPending}
                 placeholder="Código fornecido pelo administrador"
-                className="w-full px-4 py-3 bg-red-50/50 border border-red-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none text-red-900 placeholder:text-red-300"
+                className="w-full px-4 py-3 bg-red-50/50 border border-red-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none text-red-900 placeholder:text-red-300 disabled:opacity-50"
               />
             </div>
           </div>
 
           <button 
             type="submit" 
-            className="w-full bg-black text-white font-semibold text-sm px-4 py-3.5 rounded-lg hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 mt-4"
+            disabled={isPending}
+            className="w-full bg-black text-white font-semibold text-sm px-4 py-3.5 rounded-lg hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:cursor-not-allowed shadow-md hover:shadow-lg active:scale-[0.99]"
           >
-            <ShieldAlert className="w-4 h-4" />
-            Validar e Criar Conta
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Criando Conta...
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="w-4 h-4" />
+                Validar e Criar Conta
+              </>
+            )}
           </button>
 
           <div className="pt-6 mt-6 border-t border-neutral-100 text-center">
@@ -148,25 +157,5 @@ export default function RegisterPage() {
         </form>
       </div>
     </div>
-  )
-}
-
-function UserIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
   )
 }
