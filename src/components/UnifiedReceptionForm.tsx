@@ -19,6 +19,7 @@ import {
   UserCheck
 } from 'lucide-react'
 import { createUnifiedReception } from '@/app/actions/unifiedReception'
+import ImageUploader from '@/components/ImageUploader'
 
 interface CustomerOption {
   id: string
@@ -66,6 +67,8 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
   const [additionalInfo, setAdditionalInfo] = useState<string>('')
   const [obd2Codes, setObd2Codes] = useState<string>('')
 
+  const [images, setImages] = useState<string[]>([])
+
   // Status de cada item: 'OK' | 'WARNING' | 'BAD'
   const [itemsStatus, setItemsStatus] = useState<Record<string, 'OK' | 'WARNING' | 'BAD'>>(() => {
     const initial: Record<string, 'OK' | 'WARNING' | 'BAD'> = {}
@@ -107,6 +110,7 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
 
     formData.set('fuelLevel', fuelLevel.toString())
     formData.set('itemsStatus', JSON.stringify(itemsStatus))
+    formData.set('imagesUrls', JSON.stringify(images))
 
     startTransition(async () => {
       const res = await createUnifiedReception(formData)
@@ -517,6 +521,11 @@ export default function UnifiedReceptionForm({ existingCustomers }: UnifiedRecep
               className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-black outline-none transition-all"
             />
           </div>
+        </div>
+
+        {/* Anexo de Fotos */}
+        <div className="pt-4 border-t border-neutral-100">
+          <ImageUploader images={images} onChange={setImages} maxImages={10} />
         </div>
       </section>
 

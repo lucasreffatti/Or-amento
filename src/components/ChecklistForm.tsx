@@ -5,6 +5,7 @@ import { createChecklist, updateChecklist } from '@/app/actions/checklist'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, Loader2 } from 'lucide-react'
+import ImageUploader from '@/components/ImageUploader'
 
 type Customer = { id: string, name: string, phone: string }
 type Vehicle = { id: string, plate: string, brand: string, model: string }
@@ -46,7 +47,14 @@ export default function ChecklistForm({
     defaultStatus = checklistItemsTemplate.reduce((acc, item) => ({ ...acc, [item]: 'OK' }), {})
   }
 
+  let defaultImages: string[] = []
+  if (initialData?.imagesUrls) {
+    try {
+      defaultImages = JSON.parse(initialData.imagesUrls)
+    } catch(e) {}
+  }
   const [itemsStatus, setItemsStatus] = useState<Record<string, string>>(defaultStatus)
+  const [images, setImages] = useState<string[]>(defaultImages)
 
   const handleStatusChange = (item: string, status: string) => {
     setItemsStatus(prev => ({ ...prev, [item]: status }))
@@ -79,6 +87,7 @@ export default function ChecklistForm({
     <form onSubmit={handleSubmit} className="space-y-8">
       {budgetId && <input type="hidden" name="budgetId" value={budgetId} />}
       <input type="hidden" name="itemsStatus" value={JSON.stringify(itemsStatus)} />
+      <input type="hidden" name="imagesUrls" value={JSON.stringify(images)} />
       
       {error && (
         <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-md flex items-center gap-2">
@@ -258,6 +267,10 @@ export default function ChecklistForm({
             placeholder="Digite qualquer detalhe adicional relevante sobre o estado do veículo ou objetos deixados no interior..."
             className="w-full px-3.5 py-2.5 bg-white border border-neutral-200 rounded-md text-sm outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition-all placeholder:text-neutral-400 text-neutral-900 disabled:opacity-50"
           />
+        </div>
+        
+        <div className="pt-4 border-t border-neutral-100">
+          <ImageUploader images={images} onChange={setImages} maxImages={10} />
         </div>
       </div>
 

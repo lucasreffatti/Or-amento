@@ -116,6 +116,8 @@ export async function createUnifiedReception(formData: FormData): Promise<Unifie
       console.error('Invalid itemsStatus JSON', e)
     }
 
+    const imagesUrlsRaw = (formData.get('imagesUrls') as string) || '[]'
+
     const checklist = await prisma.checklist.create({
       data: {
         tenantId,
@@ -126,7 +128,7 @@ export async function createUnifiedReception(formData: FormData): Promise<Unifie
         additionalInfo,
         obd2Codes,
         itemsStatus: JSON.stringify(itemsStatus),
-        imagesUrls: '[]',
+        imagesUrls: imagesUrlsRaw,
       }
     })
 

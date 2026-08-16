@@ -60,6 +60,8 @@ export async function createChecklist(formData: FormData): Promise<ActionState> 
       console.error('[Action createChecklist]: Invalid itemsStatus JSON string')
     }
 
+    const imagesUrlsRaw = (formData.get('imagesUrls') as string) || '[]'
+
     const checklist = await prisma.checklist.create({
       data: {
         tenantId: session.tenantId,
@@ -67,7 +69,7 @@ export async function createChecklist(formData: FormData): Promise<ActionState> 
         customerId,
         fuelLevel,
         itemsStatus: JSON.stringify(itemsStatus),
-        imagesUrls: '[]',
+        imagesUrls: imagesUrlsRaw,
         reportedIssue: reportedIssue || '',
         additionalInfo: additionalInfo || '',
         obd2Codes: obd2Codes || '',
@@ -120,20 +122,28 @@ export async function updateChecklist(id: string, formData: FormData): Promise<A
       console.error('[Action updateChecklist]: Invalid itemsStatus JSON string')
     }
 
+    const imagesUrlsRaw = formData.get('imagesUrls') as string
+
+    const updateData: any = {
+      vehicleId,
+      customerId,
+      fuelLevel,
+      itemsStatus: JSON.stringify(itemsStatus),
+      reportedIssue: reportedIssue || '',
+      additionalInfo: additionalInfo || '',
+      obd2Codes: obd2Codes || '',
+    }
+
+    if (imagesUrlsRaw !== null) {
+      updateData.imagesUrls = imagesUrlsRaw
+    }
+
     await prisma.checklist.update({
       where: { 
         id,
         tenantId: session.tenantId 
       },
-      data: {
-        vehicleId,
-        customerId,
-        fuelLevel,
-        itemsStatus: JSON.stringify(itemsStatus),
-        reportedIssue: reportedIssue || '',
-        additionalInfo: additionalInfo || '',
-        obd2Codes: obd2Codes || '',
-      }
+      data: updateData
     })
 
     revalidatePath(`/checklists/${id}`)

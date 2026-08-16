@@ -46,6 +46,13 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
     itemsStatus = JSON.parse(checklist.itemsStatus as string)
   } catch (e) {}
 
+  let attachedImages: string[] = []
+  try {
+    if (checklist.imagesUrls) {
+      attachedImages = JSON.parse(checklist.imagesUrls)
+    }
+  } catch (e) {}
+
   return (
     <div className="bg-white min-h-screen text-black font-sans print:p-0 p-4 sm:p-6 flex justify-center">
       <div className="w-[210mm] max-w-full bg-white print:shadow-none shadow-xl border border-neutral-200 print:border-none p-6 print:p-2 print:w-full print:max-w-none print:m-0 relative">
@@ -164,6 +171,23 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
                 <p className="text-black whitespace-pre-wrap">{checklist.additionalInfo}</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* FOTOS DE AVARIAS IMPRESSAS */}
+        {attachedImages.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-2 border-b border-black pb-0.5">
+              Registro Fotográfico de Avarias / Estado do Veículo ({attachedImages.length})
+            </h3>
+            <div className="grid grid-cols-3 gap-2">
+              {attachedImages.map((imgUrl, i) => (
+                <div key={i} className="border border-black rounded p-1 bg-white flex flex-col items-center">
+                  <img src={imgUrl} alt={`Foto Avaria ${i + 1}`} className="w-full h-24 object-cover rounded-sm" />
+                  <span className="text-[9px] font-mono font-bold mt-1 text-black uppercase">Foto #{i + 1}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
