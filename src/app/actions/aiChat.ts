@@ -18,7 +18,13 @@ export async function sendAiChatMessageAction(
 ): Promise<{ text: string }> {
   try {
     const session = await getSession()
-    const apiKey = customApiKey || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY
+    const apiKey =
+      customApiKey ||
+      process.env.GEMINI_API_KEY ||
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.GEMINI_KEY
 
     // Coletar contexto básico da oficina para personalizar respostas da IA
     const [stockCount, budgetsCount, vehiclesCount] = await Promise.all([
