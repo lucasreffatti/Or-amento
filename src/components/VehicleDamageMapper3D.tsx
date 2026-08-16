@@ -514,17 +514,17 @@ export default function VehicleDamageMapper3D({
         </div>
 
         {/* CONTROLES DE PINTURA DA LATARIA */}
-        <div className="flex items-center gap-2 bg-neutral-900/90 p-2 rounded-2xl border border-neutral-800 self-start sm:self-auto">
-          <Paintbrush className="w-4 h-4 text-neutral-400 ml-1" />
+        <div className="flex items-center gap-2 bg-neutral-900/90 p-2.5 rounded-2xl border border-neutral-800 self-start sm:self-auto min-h-[44px]">
+          <Paintbrush className="w-4 h-4 text-neutral-400 ml-1 shrink-0" />
           <span className="text-xs font-semibold text-neutral-300">Pintura:</span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2 overflow-x-auto py-1">
             {VEHICLE_COLORS.map(c => (
               <button
                 key={c.name}
                 type="button"
                 onClick={() => setCarColor(c.hex)}
-                className={`w-5 h-5 rounded-full border transition-all ${
-                  carColor === c.hex ? 'ring-2 ring-blue-400 scale-125' : 'border-neutral-700 hover:scale-110'
+                className={`w-7 h-7 rounded-full border transition-all shrink-0 flex items-center justify-center ${
+                  carColor === c.hex ? 'ring-2 ring-blue-400 scale-110 border-white' : 'border-neutral-700 hover:scale-105'
                 }`}
                 style={{ backgroundColor: c.hex }}
                 title={c.name}
@@ -543,21 +543,21 @@ export default function VehicleDamageMapper3D({
               type="text"
               value={customModelUrl}
               onChange={(e) => setCustomModelUrl(e.target.value)}
-              placeholder="Cole a URL de um modelo 3D (.glb ou .gltf) da internet..."
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-blue-500"
+              placeholder="Cole a URL de um modelo 3D (.glb ou .gltf)..."
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 min-h-[44px] text-xs text-white outline-none focus:border-blue-500"
             />
             <button
               type="button"
               onClick={handleCustomUrlLoad}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0"
+              className="px-4 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0 flex items-center justify-center"
             >
               Baixar Modelo
             </button>
           </div>
 
           <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto">
-            <label className="flex-1 sm:flex-initial px-3 py-1.5 bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 text-xs font-bold text-neutral-200 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 transition-all">
-              <Upload className="w-3.5 h-3.5 text-blue-400" />
+            <label className="flex-1 sm:flex-initial px-4 py-2.5 min-h-[44px] bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 text-xs font-bold text-neutral-200 rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-all">
+              <Upload className="w-4 h-4 text-blue-400" />
               Enviar .GLB
               <input type="file" accept=".glb,.gltf" onChange={handleFileUpload} className="hidden" />
             </label>
@@ -567,9 +567,9 @@ export default function VehicleDamageMapper3D({
 
       {/* CONTROLES DE CÂMERA PRESET */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 bg-neutral-900/90 p-1.5 rounded-2xl w-full sm:w-auto overflow-x-auto border border-neutral-800">
-          <span className="text-[10px] font-mono font-bold text-neutral-400 px-2 uppercase tracking-widest flex items-center gap-1">
-            <Compass className="w-3.5 h-3.5 text-blue-400" /> Câmera 3D:
+        <div className="flex items-center gap-2 bg-neutral-900/90 p-2 rounded-2xl w-full sm:w-auto overflow-x-auto border border-neutral-800 min-h-[44px]">
+          <span className="text-[10px] font-mono font-bold text-neutral-400 px-2 uppercase tracking-widest flex items-center gap-1 shrink-0">
+            <Compass className="w-4 h-4 text-blue-400" /> Câmera 3D:
           </span>
           {[
             { id: 'FREE', label: '360° Livre' },
@@ -583,7 +583,7 @@ export default function VehicleDamageMapper3D({
               key={ang.id}
               type="button"
               onClick={() => setCameraAngle(ang.id as any)}
-              className="px-3 py-1 text-xs font-bold rounded-xl transition-all bg-neutral-800/60 hover:bg-blue-600 text-neutral-200 hover:text-white"
+              className="px-3.5 py-2 min-h-[36px] text-xs font-bold rounded-xl transition-all bg-neutral-800/80 hover:bg-blue-600 text-neutral-200 hover:text-white shrink-0"
             >
               {ang.label}
             </button>
@@ -591,11 +591,11 @@ export default function VehicleDamageMapper3D({
         </div>
       </div>
 
-      {/* CANVAS WEBGL E STATUS DE CARREGAMENTO */}
+      {/* CANVAS WEBGL COM TOUCH-ACTION PARA PREVENÇÃO DE OVERFLOW E ROLAGEM */}
       <div 
         ref={mountRef}
         onClick={handleCanvasClick}
-        className="relative w-full aspect-[2/1] sm:aspect-[2.4/1] bg-gradient-to-b from-neutral-950 via-slate-950 to-black rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing border border-neutral-800/80 shadow-2xl group"
+        className="relative w-full aspect-[2/1] sm:aspect-[2.4/1] bg-gradient-to-b from-neutral-950 via-slate-950 to-black rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing border border-neutral-800/80 shadow-2xl group touch-none"
       >
         <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-neutral-800 text-[11px] font-mono text-neutral-300 flex items-center gap-2 pointer-events-none">
           <RotateCw className="w-3.5 h-3.5 text-blue-400 animate-spin" style={{ animationDuration: '8s' }} />
