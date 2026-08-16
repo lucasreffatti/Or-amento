@@ -501,7 +501,15 @@ export async function parsePartsNoteTextAction(rawText: string): Promise<ParsedX
   }
 }
 
-export async function parsePartsNoteImageAction(base64Data: string, customApiKey?: string): Promise<ParsedXmlData> {
+export async function parsePartsNoteImageAction(
+  base64DataInput: string | string[],
+  customApiKey?: string
+): Promise<ParsedXmlData> {
+  const base64List = Array.isArray(base64DataInput) ? base64DataInput : [base64DataInput]
+  if (base64List.length === 0) {
+    return { supplier: { document: '', name: 'Fornecedor', tradeName: null, ie: null, phone: null, address: null, city: null, state: null, cep: null }, nfeNumber: '', nfeKey: '', nfeSeries: '', issueDate: new Date().toISOString(), totalAmount: 0, items: [] }
+  }
+
   const apiKey =
     customApiKey ||
     process.env.GEMINI_API_KEY ||
@@ -521,11 +529,19 @@ export async function parsePartsNoteImageAction(base64Data: string, customApiKey
         model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
       }
 
-      // Remover prefixo data:image/...;base64, se houver
-      const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
-      const mimeType = base64Data.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg'
+      const imageParts = base64List.map(base64Data => {
+        const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
+        const mimeType = base64Data.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg'
+        return {
+          inlineData: {
+            data: cleanBase64,
+            mimeType
+          }
+        }
+      })
 
-      const prompt = `Analise esta foto de nota fiscal, recibo ou cupom de peças de veículos/autopeças.
+      const prompt = `Analise ${imageParts.length === 1 ? 'esta foto' : `estas ${imageParts.length} fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
+${imageParts.length > 1 ? 'IMPORTANTE: As fotos são partes da mesma nota (ex: topo, meio ou continuação). Combine os dados e extraia todas as peças sem duplicar.' : ''}
 Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte formato, sem texto antes ou depois:
 
 {
@@ -545,12 +561,7 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
 
       const result = await model.generateContent([
         prompt,
-        {
-          inlineData: {
-            data: cleanBase64,
-            mimeType
-          }
-        }
+        ...imageParts
       ])
 
       const responseText = result.response.text().trim()
@@ -621,16 +632,19 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
     const { createWorker } = await import('tesseract.js')
     const worker = await createWorker('por')
 
-    const recognizePromise = worker.recognize(base64Data)
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('A leitura da foto demorou muito. Tente enviar uma foto menor ou utilize a opção de colar texto.')), 15000)
-    )
-
-    const ret = await Promise.race([recognizePromise, timeoutPromise])
+    let fullText = ''
+    for (const b64 of base64List) {
+      const recognizePromise = worker.recognize(b64)
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('A leitura da foto demorou muito. Tente enviar uma foto menor ou utilize a opção de colar texto.')), 15000)
+      )
+      const ret = await Promise.race([recognizePromise, timeoutPromise])
+      fullText += '\n' + ret.data.text
+    }
     await worker.terminate()
-    return await parsePartsNoteTextAction(ret.data.text)
+    return await parsePartsNoteTextAction(fullText)
   } catch (err: any) {
-    throw new Error(err.message || 'Não foi possível ler o texto da foto da nota. Verifique a nitidez da imagem ou utilize a opção de colar texto.')
+    throw new Error(err.message || 'Não foi possível ler o texto das fotos da nota. Verifique a nitidez da imagem ou utilize a opção de colar texto.')
   }
 }
 

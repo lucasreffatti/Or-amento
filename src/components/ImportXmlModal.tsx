@@ -75,72 +75,73 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
 
   if (!isOpen) return null
 
-  const handleFileUpload = async (file: File) => {
-    const isXml = file.name.toLowerCase().endsWith('.xml')
+  const handleFilesUpload = async (inputFiles: File[] | FileList | File) => {
+    const files = Array.isArray(inputFiles)
+      ? inputFiles
+      : inputFiles instanceof FileList
+        ? Array.from(inputFiles)
+        : [inputFiles]
+
+    if (files.length === 0) return
+
+    const xmlFile = files.find(f => f.name.toLowerCase().endsWith('.xml'))
+    const isXml = !!xmlFile
 
     setError(null)
     setLoading(true)
-    setStatusMessage(isXml ? '📄 Lendo arquivo XML...' : '📷 Preparando leitor de foto...')
 
     try {
       let parsed: ParsedXmlData | null = null
 
-      if (isXml) {
-        const xmlText = await file.text()
+      if (isXml && xmlFile) {
+        setStatusMessage('📄 Lendo arquivo XML...')
+        const xmlText = await xmlFile.text()
         parsed = await parseNfeXmlAction(xmlText)
       } else {
-        setStatusMessage('🧠 Analisando foto com IA de Visão Computacional (Gemini)...')
-        const base64 = await fileToBase64(file)
+        const photoCount = files.length
+        setStatusMessage(
+          photoCount > 1
+            ? `🧠 Analisando ${photoCount} fotos juntas com IA de Visão Computacional (Gemini)...`
+            : '🧠 Analisando foto com IA de Visão Computacional (Gemini)...'
+        )
+
+        const base64List = await Promise.all(files.map(f => fileToBase64(f)))
 
         try {
           const storedApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') || undefined : undefined
-          parsed = await parsePartsNoteImageAction(base64, storedApiKey)
+          parsed = await parsePartsNoteImageAction(base64List, storedApiKey)
         } catch (serverErr) {
           console.warn('Server Vision OCR notice:', serverErr)
         }
 
-        // Se o servidor Gemini não retornou ou falhou, usar OCR local com pré-processamento
+        // Se o servidor Gemini não retornou ou falhou, usar OCR local com pré-processamento para cada foto
         if (!parsed || !parsed.items || parsed.items.length === 0) {
-          setStatusMessage('📷 Otimizando contraste e nitidez da foto...')
-          const processedImage = await preprocessImageForOCR(file)
+          let combinedText = ''
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i]
+            setStatusMessage(`📷 Otimizando nitidez da foto ${i + 1} de ${files.length}...`)
+            const processedImage = await preprocessImageForOCR(file)
 
-          setStatusMessage('📷 Inicializando leitura inteligente local...')
-          let extractedText = ''
-
-          try {
-            const { recognize } = await import('tesseract.js')
-            
-            const ocrPromise = recognize(processedImage, 'por+eng', {
-              logger: m => {
-                if (m.status === 'recognizing text') {
-                  const pct = Math.round((m.progress || 0) * 100)
-                  setStatusMessage(`📷 Lendo foto da nota (${pct}%)...`)
-                } else if (m.status === 'loading tesseract core' || m.status === 'initializing tesseract') {
-                  setStatusMessage('📷 Carregando motor de visão...')
-                }
-              }
-            })
-
-            const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('TIMEOUT_CLIENT_OCR')), 22000)
-            )
-
-            const result = await Promise.race([ocrPromise, timeoutPromise])
-            extractedText = result.data.text
-          } catch (ocrErr: any) {
-            console.warn('Client OCR notice:', ocrErr)
+            setStatusMessage(`📷 Lendo foto ${i + 1} de ${files.length}...`)
+            try {
+              const { recognize } = await import('tesseract.js')
+              const result = await recognize(processedImage, 'por+eng')
+              combinedText += '\n' + result.data.text
+            } catch (ocrErr: any) {
+              console.warn('Client OCR notice:', ocrErr)
+            }
           }
 
-          if (extractedText) {
-            setPastedText(extractedText)
-            setStatusMessage('⚡ Extraindo peças, fornecedor e valores...')
-            parsed = await parsePartsNoteTextAction(extractedText)
+          if (combinedText.trim()) {
+            setPastedText(combinedText)
+            setStatusMessage('⚡ Extraindo peças, fornecedor e valores das fotos...')
+            parsed = await parsePartsNoteTextAction(combinedText)
           }
         }
       }
 
       if (!parsed || !parsed.items || parsed.items.length === 0) {
-        throw new Error('Nenhum item/peça foi encontrado no arquivo. Você pode colar o texto ou adicionar os itens manualmente.')
+        throw new Error('Nenhum item/peça foi encontrado no(s) arquivo(s). Você pode colar o texto ou adicionar os itens manualmente.')
       }
 
       setParsedData(parsed)
@@ -383,20 +384,21 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault()
-                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                      handleFileUpload(e.dataTransfer.files[0])
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleFilesUpload(e.dataTransfer.files)
                     }
                   }}
                   className="border-2 border-dashed border-neutral-300 hover:border-neutral-400 bg-neutral-50/50 hover:bg-neutral-50 rounded-2xl p-10 cursor-pointer transition-all flex flex-col items-center justify-center group"
                 >
                   <input
                     type="file"
-                    accept="*"
+                    accept="image/*,.xml,.pdf"
+                    multiple
                     className="hidden"
                     id="file-input"
                     onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload(e.target.files[0])
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleFilesUpload(e.target.files)
                       }
                     }}
                   />
@@ -405,14 +407,14 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
                       <Camera className="w-7 h-7 text-blue-600" />
                     </div>
                     <h3 className="font-semibold text-neutral-900 text-sm">
-                      Arraste ou selecione qualquer Foto da Nota (JPG, PNG, WEBP), PDF ou XML
+                      Arraste ou selecione 1 ou mais Fotos da Nota (JPG, PNG, WEBP), PDF ou XML
                     </h3>
-                    <p className="text-xs text-neutral-500 mt-1">
-                      O sistema aceita qualquer tipo de arquivo e lê o nome da loja, peças, quantidades e valores!
+                    <p className="text-xs text-neutral-500 mt-1 max-w-md">
+                      💡 <strong>Dica:</strong> Se a nota for longa e você tirou 2 ou mais fotos (ex: topo e continuação), selecione todas juntas! A IA analisará todas em conjunto.
                     </p>
                     <span className="mt-4 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-2">
                       <UploadCloud className="w-4 h-4" />
-                      <span>Selecionar Foto ou Arquivo da Nota</span>
+                      <span>Selecionar 1 ou mais Foto(s) / Arquivo</span>
                     </span>
                   </label>
                 </div>
