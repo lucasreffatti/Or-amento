@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, AlertTriangle, Package, DollarSign, ArrowUpRight, Edit2, Trash2, ShieldAlert, FileCode2, RotateCw, FileText, ChevronDown, ChevronUp, Building2 } from 'lucide-react'
+import { Plus, Search, AlertTriangle, Package, DollarSign, ArrowUpRight, Edit2, Trash2, ShieldAlert, FileCode2, RotateCw, FileText, ChevronDown, ChevronUp, Building2, Camera } from 'lucide-react'
 import { createStockItem, updateStockItem, deleteStockItem, adjustStockQuantity } from '@/app/actions/stock'
 import { ImportXmlModal } from '@/components/ImportXmlModal'
 
@@ -127,10 +127,10 @@ export default function StockClient({
           <button
             onClick={() => setIsXmlModalOpen(true)}
             className="bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-200 px-3.5 py-2.5 min-h-[44px] text-[13px] font-medium rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
-            title="Importar XML da Distribuidora para dar entrada de estoque e cadastrar fornecedor"
+            title="Importar Foto de Nota de Peça (JPG/PNG), PDF ou XML para dar entrada no estoque"
           >
-            <FileCode2 className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>Importar Nota de Compra (XML)</span>
+            <Camera className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Importar Nota (Foto ou XML)</span>
           </button>
 
           <button

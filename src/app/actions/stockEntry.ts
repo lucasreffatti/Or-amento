@@ -319,3 +319,165 @@ export async function getStockEntriesAction() {
     orderBy: { createdAt: 'desc' }
   })
 }
+
+// Helper para converter texto extraído de foto JPG ou digitação em ParsedXmlData
+export async function parsePartsNoteTextAction(rawText: string): Promise<ParsedXmlData> {
+  const session = await getSession()
+
+  const lines = rawText
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean)
+
+  if (lines.length === 0) {
+    throw new Error('Nenhum texto foi identificado na nota. Tente enviar uma foto mais nítida ou digitar os itens.')
+  }
+
+  // 1. Identificar Fornecedor / Nome do Estabelecimento (Linhas iniciais sem números soltos)
+  let supplierName = 'Fornecedor de Autopeças'
+  for (let i = 0; i < Math.min(lines.length, 6); i++) {
+    const line = lines[i]
+    if (
+      !/total|subtotal|data|cnpj|telefone|cpf|recebimento|orcamento|pedido|item|qtd|valor/i.test(line) &&
+      line.length >= 3 &&
+      /[a-zA-Z]/.test(line)
+    ) {
+      supplierName = line.replace(/[^a-zA-Z0-9\s\&À-ú\.-]/g, '').trim()
+      break
+    }
+  }
+
+  // CNPJ se presente
+  const cnpjMatch = rawText.match(/\d{2}\.?\d{3}\.?\d{3}\/\d{4}-?\d{2}/)
+  const document = cnpjMatch ? cnpjMatch[0].replace(/\D/g, '') : ''
+
+  // Número da Nota / Recibo / Pedido
+  const numberMatch = rawText.match(/(?:nota|pedido|orcamento|cupom|nº|no|num|n°)\s*:?\s*(\d+)/i)
+  const nfeNumber = numberMatch ? numberMatch[1] : `${Math.floor(Date.now() / 1000).toString().slice(-5)}`
+
+  // Buscar estoque existente para correspondência automática de peças
+  const existingStock = await prisma.stockItem.findMany({
+    where: { tenantId: session.tenantId }
+  })
+
+  // Extração inteligente de itens por linha
+  const items: ParsedXmlItem[] = []
+
+  for (let idx = 0; idx < lines.length; idx++) {
+    const line = lines[idx]
+
+    // Ignorar linhas de cabeçalho / rodapé conhecidas
+    if (/total|subtotal|valor\s+total|forma\s+de\s+pagamento|obrigado|vendedor|atendente|emitido/i.test(line)) {
+      continue
+    }
+
+    // Tentar extrair preço e quantidade da linha
+    const priceMatches = [...line.matchAll(/(?:R\$\s*)?(\d{1,5}[\.,]\d{2})/gi)]
+
+    if (priceMatches.length > 0) {
+      const rawPrices = priceMatches.map(m => {
+        let p = m[1].replace(',', '.')
+        return parseFloat(p)
+      }).filter(p => !isNaN(p) && p > 0)
+
+      if (rawPrices.length === 0) continue
+
+      let quantity = 1
+      const qtyMatch = line.match(/(?:qtd|qnt|quant|x)\s*:?\s*(\d+)/i) || line.match(/(\d+)\s*(?:un|pc|pça|litro|lt|cx|jg)/i)
+      if (qtyMatch) {
+        quantity = parseInt(qtyMatch[1], 10) || 1
+      }
+
+      let costPrice = rawPrices[0]
+      let totalPrice = rawPrices.length > 1 ? rawPrices[rawPrices.length - 1] : costPrice * quantity
+
+      if (rawPrices.length === 1 && quantity > 1 && costPrice > 100) {
+        totalPrice = costPrice
+        costPrice = Math.round((totalPrice / quantity) * 100) / 100
+      }
+
+      let description = line
+        .replace(/(?:R\$\s*)?(\d{1,5}[\.,]\d{2})/gi, '')
+        .replace(/(?:qtd|qnt|quant|x|un|pc|pça|litro|lt|cx|jg)\s*:?\s*\d+/gi, '')
+        .replace(/^\d+[\s\.\-]+/, '')
+        .replace(/[^a-zA-Z0-9\s\&À-ú\.\/-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+      if (description.length < 3) {
+        description = `Peça / Item ${items.length + 1}`
+      }
+
+      const code = `NOTE-${Date.now().toString().slice(-4)}-${items.length + 1}`
+      const suggestedSalePrice = Math.round(costPrice * 1.6 * 100) / 100
+
+      const matchedItem = existingStock.find(i =>
+        i.description.toLowerCase().includes(description.toLowerCase()) ||
+        description.toLowerCase().includes(i.description.toLowerCase())
+      )
+
+      items.push({
+        code,
+        description,
+        ncm: '8708.29.99',
+        unit: 'UN',
+        quantity: Math.max(1, quantity),
+        costPrice: Math.max(0.01, costPrice),
+        totalPrice: Math.max(0.01, totalPrice),
+        suggestedSalePrice,
+        matchedStockItemId: matchedItem?.id || null,
+        matchedStockItemName: matchedItem?.description || null
+      })
+    }
+  }
+
+  if (items.length === 0) {
+    items.push({
+      code: `NOTE-${Date.now().toString().slice(-4)}-1`,
+      description: lines[0] || 'Peça da Nota',
+      ncm: '8708.29.99',
+      unit: 'UN',
+      quantity: 1,
+      costPrice: 50.00,
+      totalPrice: 50.00,
+      suggestedSalePrice: 80.00,
+      matchedStockItemId: null,
+      matchedStockItemName: null
+    })
+  }
+
+  const totalAmount = items.reduce((acc, i) => acc + i.totalPrice, 0)
+
+  return {
+    nfeKey: `FOTO_${Date.now()}_${nfeNumber}`,
+    nfeNumber,
+    nfeSeries: 'FOTO',
+    issueDate: new Date().toISOString().split('T')[0],
+    totalAmount,
+    supplier: {
+      document: document,
+      name: supplierName,
+      tradeName: supplierName,
+      ie: null,
+      phone: null,
+      address: null,
+      city: null,
+      state: null,
+      cep: null
+    },
+    items
+  }
+}
+
+export async function parsePartsNoteImageAction(base64Data: string): Promise<ParsedXmlData> {
+  try {
+    const { createWorker } = await import('tesseract.js')
+    const worker = await createWorker('por')
+    const ret = await worker.recognize(base64Data)
+    await worker.terminate()
+    return await parsePartsNoteTextAction(ret.data.text)
+  } catch (err: any) {
+    throw new Error(err.message || 'Não foi possível ler o texto da foto da nota. Verifique a nitidez da imagem ou utilize a opção de colar texto.')
+  }
+}
+
