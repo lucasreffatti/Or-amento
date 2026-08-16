@@ -12,11 +12,51 @@ interface ImportXmlModalProps {
 }
 
 const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.xml')) {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => resolve('')
+      reader.readAsDataURL(file)
+      return
+    }
+
     const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return resolve(e.target?.result as string)
+
+        let width = img.width
+        let height = img.height
+        const maxDim = 1400
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width)
+            width = maxDim
+          } else {
+            width = Math.round((width * maxDim) / height)
+            height = maxDim
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillRect(0, 0, width, height)
+        ctx.drawImage(img, 0, 0, width, height)
+
+        resolve(canvas.toDataURL('image/jpeg', 0.80))
+      }
+      img.onerror = () => resolve((e.target?.result as string) || '')
+      img.src = e.target?.result as string
+    }
+    reader.onerror = () => resolve('')
     reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = error => reject(error)
   })
 }
 

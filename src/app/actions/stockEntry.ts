@@ -524,9 +524,21 @@ export async function parsePartsNoteImageAction(
       const genAI = new GoogleGenerativeAI(apiKey)
       let model
       try {
-        model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' })
+        model = genAI.getGenerativeModel({
+          model: 'gemini-3.5-flash',
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.1
+          }
+        })
       } catch {
-        model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+        model = genAI.getGenerativeModel({
+          model: 'gemini-flash-latest',
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.1
+          }
+        })
       }
 
       const imageParts = base64List.map(base64Data => {
