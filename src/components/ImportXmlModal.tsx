@@ -93,7 +93,8 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
         const base64 = await fileToBase64(file)
 
         try {
-          parsed = await parsePartsNoteImageAction(base64)
+          const storedApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') || undefined : undefined
+          parsed = await parsePartsNoteImageAction(base64, storedApiKey)
         } catch (serverErr) {
           console.warn('Server Vision OCR notice:', serverErr)
         }

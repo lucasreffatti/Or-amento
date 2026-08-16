@@ -1,12 +1,15 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Bot, X, Send, Sparkles, Minimize2, Maximize2, RefreshCw } from 'lucide-react'
+import { Bot, X, Send, Sparkles, Minimize2, Maximize2, RefreshCw, Key, Check } from 'lucide-react'
 import { sendAiChatMessageAction, ChatMessage } from '@/app/actions/aiChat'
 
 export function AiAssistantChat() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [customKey, setCustomKey] = useState('')
+  const [savedKeySuccess, setSavedKeySuccess] = useState(false)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -17,6 +20,23 @@ export function AiAssistantChat() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ])
+
+  useEffect(() => {
+    const storedKey = localStorage.getItem('gemini_api_key')
+    if (storedKey) setCustomKey(storedKey)
+  }, [])
+
+  const saveApiKey = (key: string) => {
+    const trimmed = key.trim()
+    setCustomKey(trimmed)
+    if (trimmed) {
+      localStorage.setItem('gemini_api_key', trimmed)
+    } else {
+      localStorage.removeItem('gemini_api_key')
+    }
+    setSavedKeySuccess(true)
+    setTimeout(() => setSavedKeySuccess(false), 2500)
+  }
 
   const chatEndRef = useRef<HTMLDivElement>(null)
 
@@ -46,8 +66,8 @@ export function AiAssistantChat() {
     setLoading(true)
 
     try {
-      // Enviar histórico (excluindo a mensagem inicial de boas vindas se desejar)
-      const res = await sendAiChatMessageAction(query, messages.filter(m => m.id !== 'welcome'))
+      const activeKey = customKey.trim() || localStorage.getItem('gemini_api_key') || undefined
+      const res = await sendAiChatMessageAction(query, messages.filter(m => m.id !== 'welcome'), activeKey)
 
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -146,6 +166,15 @@ export function AiAssistantChat() {
 
         <div className="flex items-center space-x-1">
           <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-1.5 rounded-lg transition ${
+              showSettings ? 'text-blue-400 bg-slate-800' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+            title="Configurar Chave Gemini API"
+          >
+            <Key className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => setIsMinimized(!isMinimized)}
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
             title={isMinimized ? 'Expandir' : 'Minimizar'}
@@ -161,6 +190,25 @@ export function AiAssistantChat() {
           </button>
         </div>
       </div>
+
+      {showSettings && !isMinimized && (
+        <div className="p-3 bg-slate-950/90 border-b border-slate-800 text-xs">
+          <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
+            <span>Chave Gemini API (Começa com AIzaSy...):</span>
+            {savedKeySuccess && <span className="text-emerald-400 font-bold flex items-center"><Check className="w-3 h-3 mr-0.5" /> Salva!</span>}
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="password"
+              value={customKey}
+              onChange={e => saveApiKey(e.target.value)}
+              placeholder="Cole sua chave AIzaSy..."
+              className="flex-1 bg-slate-900 text-slate-100 placeholder-slate-500 px-2.5 py-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1">Obtenha sua chave gratuita em: https://aistudio.google.com/</p>
+        </div>
+      )}
 
       {!isMinimized && (
         <>
