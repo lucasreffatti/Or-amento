@@ -524,14 +524,7 @@ export async function parsePartsNoteImageAction(
   if (!apiKey) {
     return {
       success: false,
-      error: 'Chave de API do Gemini não encontrada. Por favor, abra o Assistente de IA no canto inferior direito e insira sua chave de API (AIzaSy...).'
-    }
-  }
-
-  if (!apiKey.startsWith('AIzaSy')) {
-    return {
-      success: false,
-      error: 'A chave da API do Gemini configurada é inválida (precisa começar com "AIzaSy..."). Crie uma chave gratuita em https://aistudio.google.com/ e insira no Assistente IA.'
+      error: 'Chave de API do Gemini não encontrada. Por favor, abra o Assistente de IA no canto inferior direito e insira sua chave de API.'
     }
   }
 
@@ -541,7 +534,7 @@ export async function parsePartsNoteImageAction(
     let model
     try {
       model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.1
@@ -549,7 +542,7 @@ export async function parsePartsNoteImageAction(
       })
     } catch {
       model = genAI.getGenerativeModel({
-        model: 'gemini-flash-latest',
+        model: 'gemini-3.5-flash',
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.1
