@@ -537,8 +537,10 @@ export async function parsePartsNoteImageAction(
   const genAI = new GoogleGenerativeAI(apiKey)
 
   const imageParts = base64List.map(base64Data => {
-    const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '')
-    const mimeType = base64Data.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg'
+    const mimeMatch = base64Data.match(/^data:([^;]+);base64,/)
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg'
+    const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '').trim()
+
     return {
       inlineData: {
         data: cleanBase64,
@@ -547,8 +549,8 @@ export async function parsePartsNoteImageAction(
     }
   })
 
-  const prompt = `Analise ${imageParts.length === 1 ? 'esta foto' : `estas ${imageParts.length} fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
-${imageParts.length > 1 ? 'IMPORTANTE: As fotos são partes da mesma nota (ex: topo, meio ou continuação). Combine os dados e extraia todas as peças sem duplicar.' : ''}
+  const prompt = `Analise ${imageParts.length === 1 ? 'este documento/foto (Nota Fiscal, DANFE, PDF ou Cupom)' : `estes ${imageParts.length} documentos/fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
+${imageParts.length > 1 ? 'IMPORTANTE: As fotos/arquivos são partes da mesma nota (ex: topo, meio ou continuação). Combine os dados e extraia todas as peças sem duplicar.' : ''}
 Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte formato, sem texto antes ou depois:
 
 {

@@ -138,18 +138,31 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
         const xmlText = await xmlFile.text()
         parsed = await parseNfeXmlAction(xmlText)
       } else {
+        const hasPdf = files.some(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'))
         const photoCount = files.length
         setStatusMessage(
-          photoCount > 1
-            ? `🧠 Analisando ${photoCount} fotos juntas com IA de Visão Computacional (Gemini)...`
-            : '🧠 Analisando foto com IA de Visão Computacional (Gemini)...'
+          hasPdf
+            ? '🧠 Analisando documento PDF com IA (Gemini)...'
+            : photoCount > 1
+              ? `🧠 Analisando ${photoCount} fotos juntas com IA (Gemini)...`
+              : '🧠 Analisando foto da nota com IA (Gemini)...'
         )
 
         const base64List = await Promise.all(files.map(f => fileToBase64(f)))
         const storedApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') || undefined : undefined
-        const res = await parsePartsNoteImageAction(base64List, storedApiKey)
+        
+        // Timeout de proteção de 30 segundos para evitar carregamento infinito
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Tempo limite excedido ao analisar o documento com a IA. Verifique sua conexão ou tente enviar uma foto/PDF menor.')), 30000)
+        )
+
+        const res = await Promise.race([
+          parsePartsNoteImageAction(base64List, storedApiKey),
+          timeoutPromise
+        ])
+
         if (!res.success || !res.data) {
-          throw new Error(res.error || 'Erro ao analisar fotos com a IA.')
+          throw new Error(res.error || 'Erro ao analisar o documento com a IA.')
         }
         parsed = res.data
       }
