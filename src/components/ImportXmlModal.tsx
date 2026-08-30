@@ -31,7 +31,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 
         let width = img.width
         let height = img.height
-        const maxDim = 1400
+        const maxDim = 1000
 
         if (width > maxDim || height > maxDim) {
           if (width > height) {
@@ -50,7 +50,7 @@ const fileToBase64 = (file: File): Promise<string> => {
         ctx.fillRect(0, 0, width, height)
         ctx.drawImage(img, 0, 0, width, height)
 
-        resolve(canvas.toDataURL('image/jpeg', 0.80))
+        resolve(canvas.toDataURL('image/jpeg', 0.75))
       }
       img.onerror = () => resolve((e.target?.result as string) || '')
       img.src = e.target?.result as string

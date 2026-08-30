@@ -530,7 +530,7 @@ export async function parsePartsNoteImageAction(
     }
   }
 
-  const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-flash-latest']
+  const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest']
   let lastError: any = null
 
   const { GoogleGenerativeAI } = await import('@google/generative-ai')
@@ -572,7 +572,8 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
         model: modelName,
         generationConfig: {
           responseMimeType: 'application/json',
-          temperature: 0.1
+          temperature: 0.1,
+          maxOutputTokens: 1000
         }
       })
 

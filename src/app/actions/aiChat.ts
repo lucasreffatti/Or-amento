@@ -42,11 +42,11 @@ export async function sendAiChatMessageAction(
     ])
 
     const genAI = new GoogleGenerativeAI(apiKey)
-    const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-flash-latest']
+    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest']
     let lastError: any = null
 
-    // Montar histórico de mensagens formatado para a SDK
-    const formattedHistory = history.map(msg => ({
+    // Montar histórico de mensagens formatado para a SDK (limitar últimas 10 para resposta ultrarrápida)
+    const formattedHistory = history.slice(-10).map(msg => ({
       role: msg.role === 'user' ? 'user' : 'model',
       parts: [{ text: msg.text }]
     }))
@@ -55,6 +55,10 @@ export async function sendAiChatMessageAction(
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
+          generationConfig: {
+            maxOutputTokens: 800,
+            temperature: 0.5
+          },
           systemInstruction: `Você é o "Mecânico IA", o assistente virtual inteligente e especialista para oficinas mecânicas de automóveis e gestão de autopeças.
 Você ajuda o mecânico ou gestor da oficina com:
 - Dúvidas sobre códigos de peças, diagnósticos automotivos e manutenção.
@@ -66,7 +70,7 @@ Dados atuais da Oficina do Usuário:
 - Orçamentos no sistema: ${budgetsCount}
 - Veículos no sistema: ${vehiclesCount}
 
-Responda sempre em português do Brasil de forma direta, amigável, profissional e formatada com marcações em negrito e tópicos quando útil.`
+Responda sempre em português do Brasil de forma direta, objetiva, amigável, profissional e formatada com marcações em negrito e tópicos quando útil.`
         })
 
         const chat = model.startChat({
