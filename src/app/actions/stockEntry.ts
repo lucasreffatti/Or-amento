@@ -584,7 +584,7 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
           contents: [{ parts }],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 1000
+            maxOutputTokens: 4000
           }
         })
       })
@@ -598,14 +598,36 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
         continue
       }
 
-      const responseText = resData.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      const responseText = (resData.candidates?.[0]?.content?.parts?.[0]?.text || '').trim()
+      
+      let parsedJson: any = null
       const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+      const rawJson = jsonMatch ? jsonMatch[0] : responseText
 
-      if (!jsonMatch) {
-        continue
+      try {
+        parsedJson = JSON.parse(rawJson)
+      } catch (errParse) {
+        // Tenta reparar JSON truncado em documentos grandes
+        const lastObjIndex = rawJson.lastIndexOf('}')
+        if (lastObjIndex !== -1) {
+          let repaired = rawJson.slice(0, lastObjIndex + 1)
+          if (!repaired.trim().endsWith(']}')) {
+            if (!repaired.trim().endsWith(']')) repaired += ']'
+            repaired += '}'
+          }
+          try {
+            parsedJson = JSON.parse(repaired)
+          } catch (err2) {
+            try {
+              parsedJson = JSON.parse(rawJson.slice(0, lastObjIndex + 1) + ']}')
+            } catch (err3) {}
+          }
+        }
       }
 
-      const parsedJson = JSON.parse(jsonMatch[0])
+      if (!parsedJson) {
+        continue
+      }
 
       let existingStock: any[] = []
       try {
