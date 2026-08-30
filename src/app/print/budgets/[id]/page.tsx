@@ -104,16 +104,22 @@ export default async function PrintLegalBudgetPage(props: { params: Promise<{ id
           </div>
           <div className="p-2 grid grid-cols-2 gap-4 text-xs">
             <div className="space-y-1">
-              <p><span className="font-bold">Cliente:</span> {budget.customer.name}</p>
-              <p><span className="font-bold">CPF/CNPJ:</span> {budget.customer.document || 'Não informado'}</p>
-              <p><span className="font-bold">Telefone:</span> {budget.customer.phone}</p>
-              {budget.customer.email && <p><span className="font-bold">E-mail:</span> {budget.customer.email}</p>}
+              <p><span className="font-bold">Cliente:</span> {budget.customer?.name || 'Cliente Avulso'}</p>
+              <p><span className="font-bold">CPF/CNPJ:</span> {budget.customer?.document || 'Não informado'}</p>
+              <p><span className="font-bold">Telefone:</span> {budget.customer?.phone || '-'}</p>
+              {budget.customer?.email && <p><span className="font-bold">E-mail:</span> {budget.customer.email}</p>}
             </div>
             <div className="space-y-1">
-              <p><span className="font-bold">Veículo:</span> {budget.vehicle.brand} {budget.vehicle.model}</p>
-              <p><span className="font-bold">Placa:</span> <span className="font-mono uppercase">{budget.vehicle.plate}</span></p>
-              <p><span className="font-bold">Ano/Motor:</span> {budget.vehicle.year} - {budget.vehicle.engineType}</p>
-              {budget.vehicle.mileage && <p><span className="font-bold">Quilometragem:</span> {budget.vehicle.mileage.toLocaleString('pt-BR')} km</p>}
+              {budget.vehicle ? (
+                <>
+                  <p><span className="font-bold">Veículo:</span> {budget.vehicle.brand} {budget.vehicle.model}</p>
+                  <p><span className="font-bold">Placa:</span> <span className="font-mono uppercase">{budget.vehicle.plate}</span></p>
+                  <p><span className="font-bold">Ano/Motor:</span> {budget.vehicle.year} - {budget.vehicle.engineType}</p>
+                  {budget.vehicle.mileage && <p><span className="font-bold">Quilometragem:</span> {budget.vehicle.mileage.toLocaleString('pt-BR')} km</p>}
+                </>
+              ) : (
+                <p><span className="font-bold">Veículo:</span> <span className="italic text-neutral-600">Venda de Balcão (Sem Veículo)</span></p>
+              )}
             </div>
           </div>
         </div>

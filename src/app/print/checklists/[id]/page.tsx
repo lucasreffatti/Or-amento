@@ -79,15 +79,21 @@ export default async function PrintChecklistPage(props: { params: Promise<{ id: 
         <div className="grid grid-cols-2 gap-4 mb-4 border border-black p-3 bg-gray-50/50 rounded">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-1 border-b border-black/20 pb-0.5">Cliente</h3>
-            <p className="font-bold text-sm text-black">{checklist.customer.name}</p>
-            <p className="text-xs text-neutral-800">Telefone: {checklist.customer.phone}</p>
-            {checklist.customer.document && <p className="text-xs text-neutral-800">CPF/CNPJ: {checklist.customer.document}</p>}
+            <p className="font-bold text-sm text-black">{checklist.customer?.name || 'Cliente Avulso'}</p>
+            <p className="text-xs text-neutral-800">Telefone: {checklist.customer?.phone || '-'}</p>
+            {checklist.customer?.document && <p className="text-xs text-neutral-800">CPF/CNPJ: {checklist.customer.document}</p>}
           </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-1 border-b border-black/20 pb-0.5">Veículo</h3>
-            <p className="font-bold text-sm text-black">{checklist.vehicle.brand} {checklist.vehicle.model}</p>
-            <p className="text-xs text-neutral-800 font-mono">Placa: <span className="uppercase font-bold">{checklist.vehicle.plate}</span></p>
-            <p className="text-xs text-neutral-800">Ano: {checklist.vehicle.year}</p>
+            {checklist.vehicle ? (
+              <>
+                <p className="font-bold text-sm text-black">{checklist.vehicle.brand} {checklist.vehicle.model}</p>
+                <p className="text-xs text-neutral-800 font-mono">Placa: <span className="uppercase font-bold">{checklist.vehicle.plate}</span></p>
+                <p className="text-xs text-neutral-800">Ano: {checklist.vehicle.year}</p>
+              </>
+            ) : (
+              <p className="text-xs text-neutral-800 italic">Veículo não informado</p>
+            )}
           </div>
         </div>
 

@@ -143,8 +143,10 @@ export default async function PrintReportPage({
                   {budgets.map((b) => (
                     <tr key={b.id}>
                       <td className="py-1.5 px-2 font-mono">{new Date(b.createdAt).toLocaleDateString('pt-BR')}</td>
-                      <td className="py-1.5 px-2 font-medium">{b.customer.name}</td>
-                      <td className="py-1.5 px-2">{b.vehicle.brand} {b.vehicle.model} ({b.vehicle.plate})</td>
+                      <td className="py-1.5 px-2 font-medium">{b.customer?.name || 'Cliente Avulso'}</td>
+                      <td className="py-1.5 px-2">
+                        {b.vehicle ? `${b.vehicle.brand} ${b.vehicle.model} (${b.vehicle.plate})` : 'Venda de Balcão'}
+                      </td>
                       <td className="py-1.5 px-2">
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                           b.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
@@ -188,7 +190,7 @@ export default async function PrintReportPage({
                     <tr key={inv.id}>
                       <td className="py-1.5 px-2 font-mono">{new Date(inv.createdAt).toLocaleDateString('pt-BR')}</td>
                       <td className="py-1.5 px-2 font-mono">Nº {inv.number || 'Pendente'} (Série {inv.series})</td>
-                      <td className="py-1.5 px-2">{inv.customer.name}</td>
+                      <td className="py-1.5 px-2">{inv.customer?.name || 'Cliente Avulso'}</td>
                       <td className="py-1.5 px-2 font-bold">{inv.status}</td>
                       <td className="py-1.5 px-2 text-right font-mono font-bold">
                         R$ {inv.finalTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -223,8 +225,10 @@ export default async function PrintReportPage({
                   {checklists.map((c) => (
                     <tr key={c.id}>
                       <td className="py-1.5 px-2 font-mono">{new Date(c.createdAt).toLocaleDateString('pt-BR')}</td>
-                      <td className="py-1.5 px-2 font-medium">{c.customer.name}</td>
-                      <td className="py-1.5 px-2">{c.vehicle.model} ({c.vehicle.plate})</td>
+                      <td className="py-1.5 px-2 font-medium">{c.customer?.name || 'Cliente Avulso'}</td>
+                      <td className="py-1.5 px-2">
+                        {c.vehicle ? `${c.vehicle.model} (${c.vehicle.plate})` : 'Venda de Balcão'}
+                      </td>
                       <td className="py-1.5 px-2 font-mono">{c.fuelLevel || 'N/I'}</td>
                     </tr>
                   ))}
