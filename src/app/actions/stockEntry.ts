@@ -530,7 +530,7 @@ export async function parsePartsNoteImageAction(
     }
   }
 
-  const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest']
+  const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest']
   let lastError: any = null
 
   const { GoogleGenerativeAI } = await import('@google/generative-ai')

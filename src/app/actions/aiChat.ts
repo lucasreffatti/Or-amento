@@ -42,7 +42,7 @@ export async function sendAiChatMessageAction(
     ])
 
     const genAI = new GoogleGenerativeAI(apiKey)
-    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest']
+    const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest']
     let lastError: any = null
 
     // Montar histórico de mensagens formatado para a SDK (limitar últimas 10 para resposta ultrarrápida)
