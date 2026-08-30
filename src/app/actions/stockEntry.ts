@@ -513,22 +513,24 @@ export async function parsePartsNoteImageAction(
     }
   }
 
-  const apiKey =
+  const apiKey = (
     customApiKey ||
     process.env.GEMINI_API_KEY ||
     process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
     process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
     process.env.GOOGLE_API_KEY ||
-    process.env.GEMINI_KEY
+    process.env.GEMINI_KEY ||
+    ''
+  ).trim()
 
-  if (!apiKey) {
+  if (!apiKey || apiKey.length < 10) {
     return {
       success: false,
-      error: 'Chave de API do Gemini não encontrada. Por favor, abra o Assistente de IA no canto inferior direito e insira sua chave de API.'
+      error: 'Chave de API do Gemini não encontrada. Por favor, insira sua chave de API no Assistente de IA ou no arquivo .env.'
     }
   }
 
-  const candidateModels = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest']
+  const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-flash-latest']
   let lastError: any = null
 
   const { GoogleGenerativeAI } = await import('@google/generative-ai')

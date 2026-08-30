@@ -18,13 +18,21 @@ export async function sendAiChatMessageAction(
 ): Promise<{ text: string }> {
   try {
     const session = await getSession()
-    const apiKey =
+    const apiKey = (
       customApiKey ||
       process.env.GEMINI_API_KEY ||
       process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
       process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
       process.env.GOOGLE_API_KEY ||
-      process.env.GEMINI_KEY
+      process.env.GEMINI_KEY ||
+      ''
+    ).trim()
+
+    if (!apiKey || apiKey.length < 10) {
+      return {
+        text: `⚠️ **Chave de API Ausente ou Curta Demais**\n\nPor favor, insira sua chave do Gemini no Assistente de IA clicando no ícone de engrenagem ⚙️ acima ou no seu arquivo \`.env\`!`
+      }
+    }
 
     // Coletar contexto básico da oficina para personalizar respostas da IA
     const [stockCount, budgetsCount, vehiclesCount] = await Promise.all([
@@ -33,18 +41,21 @@ export async function sendAiChatMessageAction(
       prisma.vehicle.count({ where: { tenantId: session.tenantId } }).catch(() => 0)
     ])
 
-    if (!apiKey) {
-      return {
-        text: `⚠️ **Chave de API Ausente**\n\nInsira sua chave no Assistente de IA clicando no ícone de engrenagem ⚙️ acima!`
-      }
-    }
-
     const genAI = new GoogleGenerativeAI(apiKey)
-    let model
-    try {
-      model = genAI.getGenerativeModel({
-        model: 'gemini-flash-latest',
-        systemInstruction: `Você é o "Mecânico IA", o assistente virtual inteligente e especialista para oficinas mecânicas de automóveis e gestão de autopeças.
+    const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-flash-latest']
+    let lastError: any = null
+
+    // Montar histórico de mensagens formatado para a SDK
+    const formattedHistory = history.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.text }]
+    }))
+
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: `Você é o "Mecânico IA", o assistente virtual inteligente e especialista para oficinas mecânicas de automóveis e gestão de autopeças.
 Você ajuda o mecânico ou gestor da oficina com:
 - Dúvidas sobre códigos de peças, diagnósticos automotivos e manutenção.
 - Dicas de margem de lucro, precificação e orçamentos.
@@ -56,25 +67,34 @@ Dados atuais da Oficina do Usuário:
 - Veículos no sistema: ${vehiclesCount}
 
 Responda sempre em português do Brasil de forma direta, amigável, profissional e formatada com marcações em negrito e tópicos quando útil.`
-      })
-    } catch {
-      model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+        })
+
+        const chat = model.startChat({
+          history: formattedHistory
+        })
+
+        const result = await chat.sendMessage(userMessage)
+        const responseText = result.response.text()
+
+        return { text: responseText }
+      } catch (err: any) {
+        console.warn(`Tentativa com modelo ${modelName} falhou:`, err?.message || err)
+        lastError = err
+      }
     }
 
-    // Montar histórico de mensagens formatado para a SDK
-    const formattedHistory = history.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
-    }))
+    const status = lastError?.status
+    const msg = String(lastError?.message || '')
 
-    const chat = model.startChat({
-      history: formattedHistory
-    })
+    if (status === 400 || msg.includes('400') || msg.includes('API_KEY_INVALID')) {
+      return {
+        text: `⚠️ **Chave de API Rejeitada pelo Google (Erro 400)**\n\nSua chave de API foi rejeitada pelo servidor do Gemini. Verifique se a chave gerada no Google AI Studio (https://aistudio.google.com/app/apikey) está ativa e correta.`
+      }
+    }
 
-    const result = await chat.sendMessage(userMessage)
-    const responseText = result.response.text()
-
-    return { text: responseText }
+    return {
+      text: `Ops! Tive um problema ao conectar com a IA do Gemini: ${msg || 'Erro de conexão'}. Verifique se a chave de API é válida.`
+    }
   } catch (error: any) {
     console.error('Erro no Chat com Gemini IA:', error)
     return {
