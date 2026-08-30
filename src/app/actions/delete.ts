@@ -111,3 +111,110 @@ export async function deleteCustomer(id: string) {
   revalidatePath('/invoices')
   redirect('/customers')
 }
+
+export async function deleteChecklistsBulk(ids: string[]) {
+  const session = await getSession()
+  if (!session?.tenantId || !ids.length) return { success: false, message: 'Nenhum item informado' }
+
+  await prisma.budget.updateMany({
+    where: { checklistId: { in: ids }, tenantId: session.tenantId },
+    data: { checklistId: null }
+  })
+
+  await prisma.checklist.deleteMany({
+    where: { id: { in: ids }, tenantId: session.tenantId }
+  })
+
+  revalidatePath('/checklists')
+  revalidatePath('/budgets')
+  return { success: true }
+}
+
+export async function deleteBudgetsBulk(ids: string[]) {
+  const session = await getSession()
+  if (!session?.tenantId || !ids.length) return { success: false, message: 'Nenhum item informado' }
+
+  await prisma.invoice.deleteMany({
+    where: { budgetId: { in: ids }, tenantId: session.tenantId }
+  })
+
+  await prisma.budgetItem.deleteMany({
+    where: { budgetId: { in: ids } }
+  })
+
+  await prisma.budget.deleteMany({
+    where: { id: { in: ids }, tenantId: session.tenantId }
+  })
+
+  revalidatePath('/budgets')
+  revalidatePath('/checklists')
+  revalidatePath('/customers')
+  revalidatePath('/vehicles')
+  revalidatePath('/invoices')
+  return { success: true }
+}
+
+export async function deleteVehiclesBulk(ids: string[]) {
+  const session = await getSession()
+  if (!session?.tenantId || !ids.length) return { success: false, message: 'Nenhum item informado' }
+
+  await prisma.$transaction(async (tx) => {
+    const budgets = await tx.budget.findMany({ where: { vehicleId: { in: ids }, tenantId: session.tenantId } })
+    const budgetIds = budgets.map(b => b.id)
+
+    await tx.invoice.deleteMany({
+      where: { budgetId: { in: budgetIds } }
+    })
+
+    await tx.budgetItem.deleteMany({
+      where: { budgetId: { in: budgetIds } }
+    })
+
+    await tx.budget.deleteMany({ where: { vehicleId: { in: ids }, tenantId: session.tenantId } })
+    await tx.checklist.deleteMany({ where: { vehicleId: { in: ids }, tenantId: session.tenantId } })
+    await tx.vehicle.deleteMany({ where: { id: { in: ids }, tenantId: session.tenantId } })
+  })
+
+  revalidatePath('/vehicles')
+  revalidatePath('/budgets')
+  revalidatePath('/checklists')
+  revalidatePath('/invoices')
+  return { success: true }
+}
+
+export async function deleteCustomersBulk(ids: string[]) {
+  const session = await getSession()
+  if (!session?.tenantId || !ids.length) return { success: false, message: 'Nenhum item informado' }
+
+  await prisma.$transaction(async (tx) => {
+    const budgets = await tx.budget.findMany({ where: { customerId: { in: ids }, tenantId: session.tenantId } })
+    const budgetIds = budgets.map(b => b.id)
+
+    await tx.invoice.deleteMany({ where: { customerId: { in: ids }, tenantId: session.tenantId } })
+    await tx.budgetItem.deleteMany({ where: { budgetId: { in: budgetIds } } })
+    await tx.budget.deleteMany({ where: { customerId: { in: ids }, tenantId: session.tenantId } })
+    await tx.checklist.deleteMany({ where: { customerId: { in: ids }, tenantId: session.tenantId } })
+    await tx.vehicle.deleteMany({ where: { customerId: { in: ids }, tenantId: session.tenantId } })
+    await tx.customer.deleteMany({ where: { id: { in: ids }, tenantId: session.tenantId } })
+  })
+
+  revalidatePath('/customers')
+  revalidatePath('/budgets')
+  revalidatePath('/checklists')
+  revalidatePath('/vehicles')
+  revalidatePath('/invoices')
+  return { success: true }
+}
+
+export async function deleteStockItemsBulk(ids: string[]) {
+  const session = await getSession()
+  if (!session?.tenantId || !ids.length) return { success: false, message: 'Nenhum item informado' }
+
+  await prisma.stockItem.deleteMany({
+    where: { id: { in: ids }, tenantId: session.tenantId }
+  })
+
+  revalidatePath('/stock')
+  revalidatePath('/budgets')
+  return { success: true }
+}

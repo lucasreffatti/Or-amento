@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Car, Search, Edit2, User, FileText, CheckSquare, Shield } from 'lucide-react'
+import { Plus, Car, Search, Edit2, User, FileText, CheckSquare, Shield, Trash2 } from 'lucide-react'
 import { DeleteButton } from '@/components/DeleteButton'
-import { deleteVehicle } from '@/app/actions/delete'
+import { deleteVehicle, deleteVehiclesBulk } from '@/app/actions/delete'
 
 interface Vehicle {
   id: string
@@ -24,17 +24,20 @@ interface Vehicle {
 }
 
 export default function VehiclesClient({ initialVehicles }: { initialVehicles: Vehicle[] }) {
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterFuel, setFilterFuel] = useState<string>('ALL')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
   // Métricas
-  const totalVehicles = initialVehicles.length
-  const withChecklists = initialVehicles.filter(v => (v.checklists?.length || 0) > 0).length
-  const withBudgets = initialVehicles.filter(v => (v.budgets?.length || 0) > 0).length
-  const flexVehicles = initialVehicles.filter(v => v.engineType === 'FLEX').length
+  const totalVehicles = vehicles.length
+  const withChecklists = vehicles.filter(v => (v.checklists?.length || 0) > 0).length
+  const withBudgets = vehicles.filter(v => (v.budgets?.length || 0) > 0).length
+  const flexVehicles = vehicles.filter(v => v.engineType === 'FLEX').length
 
   // Filtragem
-  const filteredVehicles = initialVehicles.filter(v => {
+  const filteredVehicles = vehicles.filter(v => {
     const matchesSearch =
       v.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,6 +49,42 @@ export default function VehiclesClient({ initialVehicles }: { initialVehicles: V
     if (filterFuel !== 'ALL' && v.engineType !== filterFuel) return false
     return true
   })
+
+  const handleToggleSelectAll = () => {
+    const currentIds = filteredVehicles.map(v => v.id)
+    const allSelected = currentIds.every(id => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)))
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...currentIds])))
+    }
+  }
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!confirm(`ATENÇÃO: Excluir ${selectedIds.length} veículo(s) também apagará seus orçamentos e vistorias vinculadas.\n\nDeseja continuar com a exclusão em massa?`)) return
+
+    setIsBulkDeleting(true)
+    try {
+      const res = await deleteVehiclesBulk(selectedIds)
+      if (res.success) {
+        setVehicles(prev => prev.filter(v => !selectedIds.includes(v.id)))
+        setSelectedIds([])
+      } else {
+        alert(res.message || 'Erro ao excluir veículos em massa')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erro ao excluir veículos em massa')
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -140,6 +179,34 @@ export default function VehiclesClient({ initialVehicles }: { initialVehicles: V
         </div>
       </div>
 
+      {/* BARRA FLUTUANTE DE AÇÕES EM MASSA */}
+      {selectedIds.length > 0 && (
+        <div className="bg-neutral-900 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg border border-neutral-800 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <span className="bg-neutral-800 text-neutral-200 px-3 py-1 rounded-md text-xs font-mono font-bold">
+              {selectedIds.length} {selectedIds.length === 1 ? 'veículo selecionado' : 'veículos selecionados'}
+            </span>
+            <span className="text-xs text-neutral-400 hidden sm:inline">Exclusão em cascata (orçamentos e vistorias inclusos)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition-colors"
+            >
+              Limpar Seleção
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 min-h-[36px]"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {isBulkDeleting ? 'Excluindo...' : `Excluir ${selectedIds.length} Selecionado(s)`}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tabela de Veículos */}
       <div className="border border-neutral-200 bg-white rounded-xl shadow-sm overflow-hidden">
         {filteredVehicles.length === 0 ? (
@@ -163,6 +230,15 @@ export default function VehiclesClient({ initialVehicles }: { initialVehicles: V
             <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
               <thead className="bg-neutral-50/50">
                 <tr>
+                  <th className="px-4 py-4 w-10 text-center border-b border-neutral-100">
+                    <input
+                      type="checkbox"
+                      checked={filteredVehicles.length > 0 && filteredVehicles.every(v => selectedIds.includes(v.id))}
+                      onChange={handleToggleSelectAll}
+                      className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                      title="Selecionar Todos"
+                    />
+                  </th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Placa</th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Marca / Modelo</th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Proprietário</th>
@@ -172,13 +248,23 @@ export default function VehiclesClient({ initialVehicles }: { initialVehicles: V
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 bg-white">
-                {filteredVehicles.map((v) => (
-                  <tr key={v.id} className="hover:bg-neutral-50/80 transition-colors group">
-                    <td className="px-6 py-4 font-mono font-bold text-neutral-900 text-[13px] whitespace-nowrap">
-                      <span className="bg-neutral-100 text-neutral-800 border border-neutral-200 px-2.5 py-1 rounded-md">
-                        {v.plate}
-                      </span>
-                    </td>
+                {filteredVehicles.map((v) => {
+                  const isSelected = selectedIds.includes(v.id)
+                  return (
+                    <tr key={v.id} className={`hover:bg-neutral-50/80 transition-colors group ${isSelected ? 'bg-indigo-50/40' : ''}`}>
+                      <td className="px-4 py-4 text-center w-10">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(v.id)}
+                          className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-6 py-4 font-mono font-bold text-neutral-900 text-[13px] whitespace-nowrap">
+                        <span className="bg-neutral-100 text-neutral-800 border border-neutral-200 px-2.5 py-1 rounded-md">
+                          {v.plate}
+                        </span>
+                      </td>
                     <td className="px-6 py-4 text-neutral-900 font-medium text-[13px] whitespace-nowrap">
                       {v.brand} {v.model}
                     </td>
@@ -208,7 +294,8 @@ export default function VehiclesClient({ initialVehicles }: { initialVehicles: V
                       />
                     </td>
                   </tr>
-                ))}
+                )
+              })}
               </tbody>
             </table>
           </div>

@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, FileText, Search, Clock, CheckCircle2, XCircle, Send, DollarSign, Edit2, Eye, ShieldAlert } from 'lucide-react'
+import { Plus, FileText, Search, Clock, CheckCircle2, XCircle, Send, DollarSign, Edit2, Eye, ShieldAlert, Trash2 } from 'lucide-react'
 import { DeleteButton } from '@/components/DeleteButton'
-import { deleteBudget } from '@/app/actions/delete'
+import { deleteBudget, deleteBudgetsBulk } from '@/app/actions/delete'
 
 interface Budget {
   id: string
@@ -31,19 +31,22 @@ interface Budget {
 }
 
 export default function BudgetsClient({ initialBudgets }: { initialBudgets: Budget[] }) {
+  const [budgets, setBudgets] = useState<Budget[]>(initialBudgets)
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<'INTERNAL' | 'EXTERNAL'>('INTERNAL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
   // Métricas gerais
-  const totalCount = initialBudgets.length
-  const approvedBudgets = initialBudgets.filter(b => b.status === 'APPROVED')
+  const totalCount = budgets.length
+  const approvedBudgets = budgets.filter(b => b.status === 'APPROVED')
   const approvedCount = approvedBudgets.length
   const approvedTotalSum = approvedBudgets.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0)
-  const pendingCount = initialBudgets.filter(b => b.status === 'DRAFT' || b.status === 'SENT').length
+  const pendingCount = budgets.filter(b => b.status === 'DRAFT' || b.status === 'SENT').length
 
   // Filtragem
-  const filteredBudgets = initialBudgets.filter(b => {
+  const filteredBudgets = budgets.filter(b => {
     // Tipo de serviço (Na oficina vs Balcão)
     if (b.serviceType !== typeFilter) return false
 
@@ -66,6 +69,42 @@ export default function BudgetsClient({ initialBudgets }: { initialBudgets: Budg
 
     return true
   })
+
+  const handleToggleSelectAll = () => {
+    const currentIds = filteredBudgets.map(b => b.id)
+    const allSelected = currentIds.every(id => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)))
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...currentIds])))
+    }
+  }
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!confirm(`Tem certeza que deseja excluir ${selectedIds.length} orçamento(s) selecionado(s)?`)) return
+
+    setIsBulkDeleting(true)
+    try {
+      const res = await deleteBudgetsBulk(selectedIds)
+      if (res.success) {
+        setBudgets(prev => prev.filter(b => !selectedIds.includes(b.id)))
+        setSelectedIds([])
+      } else {
+        alert(res.message || 'Erro ao excluir orçamentos em massa')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erro ao excluir orçamentos em massa')
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
 
   const tabs = [
     { label: 'Todos', value: 'ALL', icon: null },
@@ -244,6 +283,33 @@ export default function BudgetsClient({ initialBudgets }: { initialBudgets: Budg
         </div>
       </div>
 
+      {/* BARRA FLUTUANTE DE AÇÕES EM MASSA */}
+      {selectedIds.length > 0 && (
+        <div className="bg-neutral-900 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg border border-neutral-800 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <span className="bg-neutral-800 text-neutral-200 px-3 py-1 rounded-md text-xs font-mono font-bold">
+              {selectedIds.length} {selectedIds.length === 1 ? 'orçamento selecionado' : 'orçamentos selecionados'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition-colors"
+            >
+              Limpar Seleção
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 min-h-[36px]"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {isBulkDeleting ? 'Excluindo...' : `Excluir ${selectedIds.length} Selecionado(s)`}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tabela de Orçamentos */}
       <div className="border border-neutral-200 bg-white rounded-xl shadow-sm overflow-hidden">
         {filteredBudgets.length === 0 ? (
@@ -267,6 +333,15 @@ export default function BudgetsClient({ initialBudgets }: { initialBudgets: Budg
             <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
               <thead className="bg-neutral-50/50">
                 <tr>
+                  <th className="px-4 py-4 w-10 text-center border-b border-neutral-100">
+                    <input
+                      type="checkbox"
+                      checked={filteredBudgets.length > 0 && filteredBudgets.every(b => selectedIds.includes(b.id))}
+                      onChange={handleToggleSelectAll}
+                      className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                      title="Selecionar Todos"
+                    />
+                  </th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Código / Cliente</th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Veículo</th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Status</th>
@@ -276,14 +351,24 @@ export default function BudgetsClient({ initialBudgets }: { initialBudgets: Budg
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 bg-white">
-                {filteredBudgets.map((b) => (
-                  <tr key={b.id} className="hover:bg-neutral-50/80 transition-colors group">
-                    <td className="px-6 py-4 font-medium text-neutral-900 text-[13px] whitespace-nowrap">
-                      <Link href={`/budgets/${b.id}`} className="hover:underline flex flex-col">
-                        <span className="font-mono text-xs text-indigo-600 font-bold">#{b.code || b.id.slice(0, 8)}</span>
-                        <span className="font-semibold text-neutral-900">{b.customer.name}</span>
-                      </Link>
-                    </td>
+                {filteredBudgets.map((b) => {
+                  const isSelected = selectedIds.includes(b.id)
+                  return (
+                    <tr key={b.id} className={`hover:bg-neutral-50/80 transition-colors group ${isSelected ? 'bg-indigo-50/40' : ''}`}>
+                      <td className="px-4 py-4 text-center w-10">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(b.id)}
+                          className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-6 py-4 font-medium text-neutral-900 text-[13px] whitespace-nowrap">
+                        <Link href={`/budgets/${b.id}`} className="hover:underline flex flex-col">
+                          <span className="font-mono text-xs text-indigo-600 font-bold">#{b.code || b.id.slice(0, 8)}</span>
+                          <span className="font-semibold text-neutral-900">{b.customer.name}</span>
+                        </Link>
+                      </td>
                     <td className="px-6 py-4 text-neutral-600 text-[13px] whitespace-nowrap">
                       {b.vehicle ? (
                         <div className="flex items-center gap-1.5">
@@ -328,7 +413,8 @@ export default function BudgetsClient({ initialBudgets }: { initialBudgets: Budg
                       />
                     </td>
                   </tr>
-                ))}
+                )
+              })}
               </tbody>
             </table>
           </div>

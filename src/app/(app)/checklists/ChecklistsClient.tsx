@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, CheckSquare, Search, Eye, Edit2, Car, User, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
+import { Plus, CheckSquare, Search, Eye, Edit2, Car, User, CheckCircle2, Clock, AlertTriangle, Trash2 } from 'lucide-react'
 import { DeleteButton } from '@/components/DeleteButton'
-import { deleteChecklist } from '@/app/actions/delete'
+import { deleteChecklist, deleteChecklistsBulk } from '@/app/actions/delete'
 
 interface Checklist {
   id: string
@@ -26,18 +26,21 @@ interface Checklist {
 }
 
 export default function ChecklistsClient({ initialChecklists }: { initialChecklists: Checklist[] }) {
+  const [checklists, setChecklists] = useState<Checklist[]>(initialChecklists)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterFuel, setFilterFuel] = useState<'ALL' | 'LOW_FUEL' | 'HIGH_FUEL'>('ALL')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
   // Métricas
-  const totalChecklists = initialChecklists.length
+  const totalChecklists = checklists.length
   const today = new Date().toDateString()
-  const todayCount = initialChecklists.filter(c => new Date(c.createdAt).toDateString() === today).length
-  const lowFuelCount = initialChecklists.filter(c => c.fuelLevel <= 25).length
-  const fullFuelCount = initialChecklists.filter(c => c.fuelLevel >= 75).length
+  const todayCount = checklists.filter(c => new Date(c.createdAt).toDateString() === today).length
+  const lowFuelCount = checklists.filter(c => c.fuelLevel <= 25).length
+  const fullFuelCount = checklists.filter(c => c.fuelLevel >= 75).length
 
   // Filtragem
-  const filteredChecklists = initialChecklists.filter(c => {
+  const filteredChecklists = checklists.filter(c => {
     const matchesSearch =
       c.vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,6 +52,42 @@ export default function ChecklistsClient({ initialChecklists }: { initialCheckli
     if (filterFuel === 'HIGH_FUEL') return c.fuelLevel >= 75
     return true
   })
+
+  const handleToggleSelectAll = () => {
+    const currentIds = filteredChecklists.map(c => c.id)
+    const allSelected = currentIds.every(id => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)))
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...currentIds])))
+    }
+  }
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!confirm(`Tem certeza que deseja excluir ${selectedIds.length} vistoria(s) selecionada(s)?`)) return
+
+    setIsBulkDeleting(true)
+    try {
+      const res = await deleteChecklistsBulk(selectedIds)
+      if (res.success) {
+        setChecklists(prev => prev.filter(c => !selectedIds.includes(c.id)))
+        setSelectedIds([])
+      } else {
+        alert(res.message || 'Erro ao excluir vistorias em massa')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erro ao excluir vistorias em massa')
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -160,6 +199,33 @@ export default function ChecklistsClient({ initialChecklists }: { initialCheckli
         </div>
       </div>
 
+      {/* BARRA FLUTUANTE DE AÇÕES EM MASSA */}
+      {selectedIds.length > 0 && (
+        <div className="bg-neutral-900 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg border border-neutral-800 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <span className="bg-neutral-800 text-neutral-200 px-3 py-1 rounded-md text-xs font-mono font-bold">
+              {selectedIds.length} {selectedIds.length === 1 ? 'vistoria selecionada' : 'vistorias selecionadas'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition-colors"
+            >
+              Limpar Seleção
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 min-h-[36px]"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {isBulkDeleting ? 'Excluindo...' : `Excluir ${selectedIds.length} Selecionada(s)`}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tabela de Checklists */}
       <div className="border border-neutral-200 bg-white rounded-xl shadow-sm overflow-hidden">
         {filteredChecklists.length === 0 ? (
@@ -183,6 +249,15 @@ export default function ChecklistsClient({ initialChecklists }: { initialCheckli
             <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
               <thead className="bg-neutral-50/50">
                 <tr>
+                  <th className="px-4 py-4 w-10 text-center border-b border-neutral-100">
+                    <input
+                      type="checkbox"
+                      checked={filteredChecklists.length > 0 && filteredChecklists.every(c => selectedIds.includes(c.id))}
+                      onChange={handleToggleSelectAll}
+                      className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                      title="Selecionar Todos"
+                    />
+                  </th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Veículo</th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Proprietário</th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Combustível</th>
@@ -191,9 +266,19 @@ export default function ChecklistsClient({ initialChecklists }: { initialCheckli
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 bg-white">
-                {filteredChecklists.map((c) => (
-                  <tr key={c.id} className="hover:bg-neutral-50/80 transition-colors group">
-                    <td className="px-6 py-4 font-medium text-neutral-900 text-[13px] whitespace-nowrap">
+                {filteredChecklists.map((c) => {
+                  const isSelected = selectedIds.includes(c.id)
+                  return (
+                    <tr key={c.id} className={`hover:bg-neutral-50/80 transition-colors group ${isSelected ? 'bg-indigo-50/40' : ''}`}>
+                      <td className="px-4 py-4 text-center w-10">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(c.id)}
+                          className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-6 py-4 font-medium text-neutral-900 text-[13px] whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <span className="bg-neutral-100 text-neutral-800 border border-neutral-200 px-2 py-0.5 rounded font-mono font-bold text-xs">
                           {c.vehicle.plate}
@@ -243,7 +328,8 @@ export default function ChecklistsClient({ initialChecklists }: { initialCheckli
                       />
                     </td>
                   </tr>
-                ))}
+                )
+              })}
               </tbody>
             </table>
           </div>

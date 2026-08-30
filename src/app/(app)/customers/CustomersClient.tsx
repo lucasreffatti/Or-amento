@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Users, Search, Edit2, Car, FileText, Calendar, CheckCircle2, Sparkles } from 'lucide-react'
+import { Plus, Users, Search, Edit2, Car, FileText, Calendar, CheckCircle2, Sparkles, Trash2 } from 'lucide-react'
 import { DeleteButton } from '@/components/DeleteButton'
-import { deleteCustomer } from '@/app/actions/delete'
+import { deleteCustomer, deleteCustomersBulk } from '@/app/actions/delete'
 
 interface Customer {
   id: string
@@ -19,18 +19,21 @@ interface Customer {
 }
 
 export default function CustomersClient({ initialCustomers }: { initialCustomers: Customer[] }) {
+  const [customers, setCustomers] = useState<Customer[]>(initialCustomers)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'ALL' | 'WITH_VEHICLES' | 'WITH_BUDGETS'>('ALL')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
   // Métricas
-  const totalCustomers = initialCustomers.length
-  const withVehicles = initialCustomers.filter(c => (c.vehicles?.length || 0) > 0).length
-  const withBudgets = initialCustomers.filter(c => (c.budgets?.length || 0) > 0).length
+  const totalCustomers = customers.length
+  const withVehicles = customers.filter(c => (c.vehicles?.length || 0) > 0).length
+  const withBudgets = customers.filter(c => (c.budgets?.length || 0) > 0).length
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-  const newThisMonth = initialCustomers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo).length
+  const newThisMonth = customers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo).length
 
   // Filtragem
-  const filteredCustomers = initialCustomers.filter(c => {
+  const filteredCustomers = customers.filter(c => {
     const matchesSearch = 
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.phone.includes(searchTerm) ||
@@ -43,6 +46,42 @@ export default function CustomersClient({ initialCustomers }: { initialCustomers
     if (filterType === 'WITH_BUDGETS') return (c.budgets?.length || 0) > 0
     return true
   })
+
+  const handleToggleSelectAll = () => {
+    const currentIds = filteredCustomers.map(c => c.id)
+    const allSelected = currentIds.every(id => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)))
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...currentIds])))
+    }
+  }
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!confirm(`ATENÇÃO: Excluir ${selectedIds.length} cliente(s) também apagará seus veículos, orçamentos e vistorias vinculadas.\n\nDeseja continuar com a exclusão em massa?`)) return
+
+    setIsBulkDeleting(true)
+    try {
+      const res = await deleteCustomersBulk(selectedIds)
+      if (res.success) {
+        setCustomers(prev => prev.filter(c => !selectedIds.includes(c.id)))
+        setSelectedIds([])
+      } else {
+        alert(res.message || 'Erro ao excluir clientes em massa')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erro ao excluir clientes em massa')
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -160,6 +199,34 @@ export default function CustomersClient({ initialCustomers }: { initialCustomers
         </div>
       </div>
 
+      {/* BARRA FLUTUANTE DE AÇÕES EM MASSA */}
+      {selectedIds.length > 0 && (
+        <div className="bg-neutral-900 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg border border-neutral-800 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <span className="bg-neutral-800 text-neutral-200 px-3 py-1 rounded-md text-xs font-mono font-bold">
+              {selectedIds.length} {selectedIds.length === 1 ? 'cliente selecionado' : 'clientes selecionados'}
+            </span>
+            <span className="text-xs text-neutral-400 hidden sm:inline">Exclusão em cascata (veículos e orçamentos inclusos)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition-colors"
+            >
+              Limpar Seleção
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 min-h-[36px]"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {isBulkDeleting ? 'Excluindo...' : `Excluir ${selectedIds.length} Selecionado(s)`}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tabela de Clientes */}
       <div className="border border-neutral-200 bg-white rounded-xl shadow-sm overflow-hidden">
         {filteredCustomers.length === 0 ? (
@@ -183,6 +250,15 @@ export default function CustomersClient({ initialCustomers }: { initialCustomers
             <table className="min-w-full divide-y divide-neutral-200/80 text-left text-sm">
               <thead className="bg-neutral-50/50">
                 <tr>
+                  <th className="px-4 py-4 w-10 text-center border-b border-neutral-100">
+                    <input
+                      type="checkbox"
+                      checked={filteredCustomers.length > 0 && filteredCustomers.every(c => selectedIds.includes(c.id))}
+                      onChange={handleToggleSelectAll}
+                      className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                      title="Selecionar Todos"
+                    />
+                  </th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Nome</th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Telefone</th>
                   <th className="px-6 py-4 font-semibold text-neutral-500 text-[11px] uppercase tracking-widest border-b border-neutral-100 whitespace-nowrap">Documento</th>
@@ -192,13 +268,23 @@ export default function CustomersClient({ initialCustomers }: { initialCustomers
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 bg-white">
-                {filteredCustomers.map((c) => (
-                  <tr key={c.id} className="hover:bg-neutral-50/80 transition-colors group">
-                    <td className="px-6 py-4 font-medium text-neutral-900 text-[13px] whitespace-nowrap">
-                      <Link href={`/customers/${c.id}`} className="hover:underline hover:text-black">
-                        {c.name}
-                      </Link>
-                    </td>
+                {filteredCustomers.map((c) => {
+                  const isSelected = selectedIds.includes(c.id)
+                  return (
+                    <tr key={c.id} className={`hover:bg-neutral-50/80 transition-colors group ${isSelected ? 'bg-indigo-50/40' : ''}`}>
+                      <td className="px-4 py-4 text-center w-10">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(c.id)}
+                          className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-6 py-4 font-medium text-neutral-900 text-[13px] whitespace-nowrap">
+                        <Link href={`/customers/${c.id}`} className="hover:underline hover:text-black">
+                          {c.name}
+                        </Link>
+                      </td>
                     <td className="px-6 py-4 text-neutral-600 font-mono text-[13px] whitespace-nowrap">{c.phone}</td>
                     <td className="px-6 py-4 text-neutral-500 font-mono text-[13px] whitespace-nowrap">{c.document || '-'}</td>
                     <td className="px-6 py-4 text-neutral-600 text-[13px] whitespace-nowrap">
@@ -224,7 +310,8 @@ export default function CustomersClient({ initialCustomers }: { initialCustomers
                       />
                     </td>
                   </tr>
-                ))}
+                )
+              })}
               </tbody>
             </table>
           </div>

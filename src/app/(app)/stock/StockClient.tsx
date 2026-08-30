@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Plus, Search, AlertTriangle, Package, DollarSign, ArrowUpRight, Edit2, Trash2, ShieldAlert, FileCode2, RotateCw, FileText, ChevronDown, ChevronUp, Building2, Camera } from 'lucide-react'
 import { createStockItem, updateStockItem, deleteStockItem, adjustStockQuantity } from '@/app/actions/stock'
+import { deleteStockItemsBulk } from '@/app/actions/delete'
 import { ImportXmlModal } from '@/components/ImportXmlModal'
 
 interface StockItem {
@@ -58,9 +59,11 @@ export default function StockClient({
   const [editingItem, setEditingItem] = useState<StockItem | null>(null)
   const [loading, setLoading] = useState(false)
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
   // Filtrar itens por aba ativa (FIXO vs ROTATIVO)
-  const tabItems = initialItems.filter(item => {
+  const tabItems = items.filter(item => {
     const isRotative = item.itemType === 'ROTATIVO'
     return activeTab === 'ROTATIVO' ? isRotative : !isRotative
   })
@@ -72,6 +75,42 @@ export default function StockClient({
     const matchesLowStock = showLowStockOnly ? item.quantity <= item.minQuantity : true
     return matchesSearch && matchesLowStock
   })
+
+  const handleToggleSelectAll = () => {
+    const currentIds = filteredItems.map(i => i.id)
+    const allSelected = currentIds.every(id => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)))
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...currentIds])))
+    }
+  }
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!confirm(`Tem certeza que deseja excluir ${selectedIds.length} produto(s) selecionado(s) do estoque?`)) return
+
+    setIsBulkDeleting(true)
+    try {
+      const res = await deleteStockItemsBulk(selectedIds)
+      if (res.success) {
+        setItems(prev => prev.filter(i => !selectedIds.includes(i.id)))
+        setSelectedIds([])
+      } else {
+        alert(res.message || 'Erro ao excluir itens em massa')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erro ao excluir em massa')
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
 
   // Filtrar entradas de notas
   const filteredEntries = entries.filter(entry => {
@@ -264,6 +303,34 @@ export default function StockClient({
         )}
       </div>
 
+      {/* BARRA FLUTUANTE DE AÇÕES EM MASSA */}
+      {selectedIds.length > 0 && (
+        <div className="bg-neutral-900 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg border border-neutral-800 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <span className="bg-neutral-800 text-neutral-200 px-3 py-1 rounded-md text-xs font-mono font-bold">
+              {selectedIds.length} {selectedIds.length === 1 ? 'item selecionado' : 'itens selecionados'}
+            </span>
+            <span className="text-xs text-neutral-400 hidden sm:inline">Seleção para exclusão conjunta</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition-colors"
+            >
+              Limpar Seleção
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 min-h-[36px]"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {isBulkDeleting ? 'Excluindo...' : `Excluir ${selectedIds.length} Selecionado(s)`}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* CONTEÚDO DAS ABAS FIXO E ROTATIVO */}
       {(activeTab === 'FIXO' || activeTab === 'ROTATIVO') && (
         <div className="border border-neutral-200 bg-white rounded-xl shadow-sm overflow-hidden">
@@ -271,6 +338,15 @@ export default function StockClient({
             <table className="w-full text-left text-sm text-neutral-700">
               <thead className="bg-neutral-50/80 text-neutral-500 font-semibold text-[11px] uppercase tracking-wider border-b border-neutral-200">
                 <tr>
+                  <th className="px-4 py-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={filteredItems.length > 0 && filteredItems.every(i => selectedIds.includes(i.id))}
+                      onChange={handleToggleSelectAll}
+                      className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                      title="Selecionar Todos"
+                    />
+                  </th>
                   <th className="px-4 py-3">Código (SKU)</th>
                   <th className="px-4 py-3">Descrição da Peça</th>
                   <th className="px-4 py-3">NCM Fiscal</th>
@@ -283,7 +359,7 @@ export default function StockClient({
               <tbody className="divide-y divide-neutral-100 bg-white">
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-neutral-400 text-sm">
+                    <td colSpan={8} className="px-4 py-8 text-center text-neutral-400 text-sm">
                       {activeTab === 'ROTATIVO'
                         ? 'Nenhuma peça rotativa (encomenda) cadastrada no momento.'
                         : 'Nenhuma peça encontrada no estoque de prateleira.'}
@@ -292,8 +368,17 @@ export default function StockClient({
                 ) : (
                   filteredItems.map((item) => {
                     const isLowStock = item.itemType !== 'ROTATIVO' && item.quantity <= item.minQuantity
+                    const isSelected = selectedIds.includes(item.id)
                     return (
-                      <tr key={item.id} className="hover:bg-neutral-50/80 transition-colors">
+                      <tr key={item.id} className={`hover:bg-neutral-50/80 transition-colors ${isSelected ? 'bg-indigo-50/40' : ''}`}>
+                        <td className="px-4 py-3.5 text-center w-10">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSelect(item.id)}
+                            className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-4 h-4 cursor-pointer"
+                          />
+                        </td>
                         <td className="px-4 py-3.5 font-mono text-xs font-bold text-neutral-900">
                           {item.code}
                         </td>
