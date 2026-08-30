@@ -194,7 +194,7 @@ export function AiAssistantChat() {
       {showSettings && !isMinimized && (
         <div className="p-3 bg-slate-950/90 border-b border-slate-800 text-xs">
           <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
-            <span>Chave Gemini API (Começa com AIzaSy...):</span>
+            <span>Chave Gemini API (Google AI Studio):</span>
             {savedKeySuccess && <span className="text-emerald-400 font-bold flex items-center"><Check className="w-3 h-3 mr-0.5" /> Salva!</span>}
           </label>
           <div className="flex items-center space-x-2">
@@ -202,7 +202,7 @@ export function AiAssistantChat() {
               type="password"
               value={customKey}
               onChange={e => saveApiKey(e.target.value)}
-              placeholder="Cole sua chave AIzaSy..."
+              placeholder="Cole sua chave gerada no AI Studio..."
               className="flex-1 bg-slate-900 text-slate-100 placeholder-slate-500 px-2.5 py-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-blue-500"
             />
           </div>
