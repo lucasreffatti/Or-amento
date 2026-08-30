@@ -530,27 +530,14 @@ export async function parsePartsNoteImageAction(
     }
   }
 
-  const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest']
-  let lastError: any = null
+  // Modelos ultra-rápidos e estáveis via REST API
+  const candidateModels = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.6-flash']
+  let lastErrorMsg = ''
 
-  const { GoogleGenerativeAI } = await import('@google/generative-ai')
-  const genAI = new GoogleGenerativeAI(apiKey)
-
-  const imageParts = base64List.map(base64Data => {
-    const mimeMatch = base64Data.match(/^data:([^;]+);base64,/)
-    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg'
-    const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '').trim()
-
-    return {
-      inlineData: {
-        data: cleanBase64,
-        mimeType
-      }
-    }
-  })
-
-  const prompt = `Analise ${imageParts.length === 1 ? 'este documento/foto (Nota Fiscal, DANFE, PDF ou Cupom)' : `estes ${imageParts.length} documentos/fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
-${imageParts.length > 1 ? 'IMPORTANTE: As fotos/arquivos são partes da mesma nota (ex: topo, meio ou continuação). Combine os dados e extraia todas as peças sem duplicar.' : ''}
+  const parts: any[] = [
+    {
+      text: `Analise ${base64List.length === 1 ? 'este documento/foto (Nota Fiscal, DANFE, PDF ou Cupom)' : `estes ${base64List.length} documentos/fotos que compõem a MESMA nota fiscal/recibo`} de peças de veículos/autopeças.
+${base64List.length > 1 ? 'IMPORTANTE: Combine os dados e extraia todas as peças sem duplicar.' : ''}
 Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte formato, sem texto antes ou depois:
 
 {
@@ -567,31 +554,59 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
     }
   ]
 }`
+    }
+  ]
+
+  for (const base64Data of base64List) {
+    const mimeMatch = base64Data.match(/^data:([^;]+);base64,/)
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg'
+    const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '').trim()
+
+    parts.push({
+      inlineData: {
+        data: cleanBase64,
+        mimeType
+      }
+    })
+  }
 
   for (const modelName of candidateModels) {
     try {
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 1000
-        }
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 1000
+          }
+        })
       })
+      clearTimeout(timeoutId)
 
-      const result = await model.generateContent([
-        prompt,
-        ...imageParts
-      ])
+      const resData = await response.json()
 
-      const responseText = result.response.text().trim()
+      if (!response.ok || resData.error) {
+        lastErrorMsg = resData.error?.message || `Erro HTTP ${response.status}`
+        console.warn(`Tentativa REST com modelo ${modelName} falhou:`, lastErrorMsg)
+        continue
+      }
+
+      const responseText = resData.candidates?.[0]?.content?.parts?.[0]?.text || ''
       const jsonMatch = responseText.match(/\{[\s\S]*\}/)
-      
+
       if (!jsonMatch) {
         continue
       }
 
       const parsedJson = JSON.parse(jsonMatch[0])
-      
+
       let existingStock: any[] = []
       try {
         const session = await getSession()
@@ -632,7 +647,7 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
       if (items.length === 0) {
         return {
           success: false,
-          error: 'Não foi possível identificar nenhuma peça ou item nas fotos enviadas. Certifique-se de que a foto da nota está nítida.'
+          error: 'Não foi possível identificar nenhuma peça ou item nas fotos/PDF enviados. Certifique-se de que o documento está nítido.'
         }
       }
 
@@ -660,39 +675,28 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
         }
       }
     } catch (err: any) {
-      console.warn(`Tentativa com modelo ${modelName} falhou:`, err?.message || err)
-      lastError = err
+      lastErrorMsg = err?.message || String(err)
+      console.warn(`Tentativa REST com modelo ${modelName} falhou:`, lastErrorMsg)
     }
   }
 
-  // Se todos os modelos falharem, analisa a mensagem de erro real
-  const status = lastError?.status
-  const msg = String(lastError?.message || '')
-
-  if (status === 401 || msg.includes('401') || msg.includes('UNAUTHORIZED') || msg.includes('API_KEY_INVALID')) {
+  if (lastErrorMsg.includes('401') || lastErrorMsg.includes('API_KEY_INVALID')) {
     return {
       success: false,
-      error: 'Chave API do Gemini não autorizada (Erro 401). Verifique sua chave no Assistente IA.'
+      error: 'Chave API do Gemini inválida ou não autorizada. Verifique sua chave no Assistente IA.'
     }
   }
 
-  if (status === 429 || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+  if (lastErrorMsg.includes('429') || lastErrorMsg.includes('RESOURCE_EXHAUSTED')) {
     return {
       success: false,
       error: 'Limite de requisições da chave do Gemini atingido temporariamente (Erro 429). Aguarde 1 minuto e tente novamente.'
     }
   }
 
-  if (status === 503 || msg.includes('503') || msg.includes('Service Unavailable')) {
-    return {
-      success: false,
-      error: 'O serviço de IA do Google está em alta demanda temporária (Erro 503). Tente enviar a foto novamente em alguns segundos.'
-    }
-  }
-
   return {
     success: false,
-    error: `Erro ao analisar foto com Gemini: ${msg.slice(0, 150) || 'Falha de comunicação com a IA'}`
+    error: `Erro ao analisar documento com a IA: ${lastErrorMsg.slice(0, 150) || 'Falha de comunicação com o servidor'}`
   }
 }
 
