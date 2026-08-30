@@ -573,7 +573,6 @@ Extraia todos os dados disponíveis e retorne estritamente um JSON no seguinte f
       const model = genAI.getGenerativeModel({
         model: modelName,
         generationConfig: {
-          responseMimeType: 'application/json',
           temperature: 0.1,
           maxOutputTokens: 1000
         }

@@ -13,7 +13,10 @@ interface ImportXmlModalProps {
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve) => {
-    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.xml')) {
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    const isXml = file.type === 'text/xml' || file.name.toLowerCase().endsWith('.xml')
+
+    if (isPdf || isXml) {
       const reader = new FileReader()
       reader.onload = () => resolve(reader.result as string)
       reader.onerror = () => resolve('')
@@ -151,9 +154,9 @@ export function ImportXmlModal({ isOpen, onClose, existingStockItems, onSuccess 
         const base64List = await Promise.all(files.map(f => fileToBase64(f)))
         const storedApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') || undefined : undefined
         
-        // Timeout de proteção de 30 segundos para evitar carregamento infinito
+        // Timeout de proteção de 90 segundos para permitir análise completa de PDFs/fotos
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Tempo limite excedido ao analisar o documento com a IA. Verifique sua conexão ou tente enviar uma foto/PDF menor.')), 30000)
+          setTimeout(() => reject(new Error('Tempo limite excedido ao analisar o documento com a IA. Verifique sua conexão ou tente enviar uma foto/PDF menor.')), 90000)
         )
 
         const res = await Promise.race([
