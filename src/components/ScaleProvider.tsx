@@ -1,7 +1,6 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { ZoomIn, ZoomOut, Monitor, Sparkles, Check, RotateCcw } from 'lucide-react'
 
 export type ScalePreset = 'auto' | 'compact' | 'normal' | 'large'
 
@@ -21,7 +20,6 @@ export function ScaleProvider({ children }: { children: React.ReactNode }) {
   const [preset, setPresetState] = useState<ScalePreset>('auto')
   const [effectiveScale, setEffectiveScale] = useState<number>(1)
   const [mounted, setMounted] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
 
   // Função para calcular a escala nativa automática baseada na resolução da tela e zoom do navegador
   const calculateAutoScale = useCallback(() => {
@@ -135,124 +133,13 @@ export function ScaleProvider({ children }: { children: React.ReactNode }) {
     setPreset('auto')
   }
 
-  const openWidget = () => {
-    setIsOpen(true)
-  }
+  const openWidget = () => {}
 
   const percentage = Math.round(effectiveScale * 100)
 
   return (
     <ScaleContext.Provider value={{ preset, setPreset, effectiveScale, resetToAuto, openWidget }}>
       {children}
-
-      {/* Flutuante Zoom Controller (Visível apenas após montagem) */}
-      {mounted && (
-        <div className="fixed bottom-4 right-4 z-[9999] hidden md:flex flex-col items-end print:hidden pointer-events-auto select-none">
-          {/* Menu Expansível de Escala */}
-          {isOpen && (
-            <div className="mb-2 bg-neutral-900/95 text-white p-3 rounded-xl shadow-2xl border border-neutral-800 backdrop-blur-md w-64 max-w-[calc(100vw-32px)] animate-in fade-in slide-in-from-bottom-2 duration-200">
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-2 mb-2">
-                <span className="text-[12px] font-semibold flex items-center gap-1.5 text-neutral-200">
-                  <Monitor className="w-3.5 h-3.5 text-indigo-400" /> Densidade da Tela
-                </span>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-[11px] text-neutral-400 hover:text-white px-1.5 py-0.5 rounded hover:bg-neutral-800 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-1">
-                {/* Opção Auto */}
-                <button
-                  onClick={() => setPreset('auto')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                    preset === 'auto'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Auto Adaptativo
-                  </span>
-                  {preset === 'auto' && <Check className="w-3.5 h-3.5" />}
-                </button>
-
-                {/* Opção Compacto (85%) */}
-                <button
-                  onClick={() => setPreset('compact')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                    preset === 'compact'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <ZoomOut className="w-3.5 h-3.5" /> Compacto (85%)
-                  </span>
-                  {preset === 'compact' && <Check className="w-3.5 h-3.5" />}
-                </button>
-
-                {/* Opção Padrão (100%) */}
-                <button
-                  onClick={() => setPreset('normal')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                    preset === 'normal'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Monitor className="w-3.5 h-3.5" /> Padrão (100%)
-                  </span>
-                  {preset === 'normal' && <Check className="w-3.5 h-3.5" />}
-                </button>
-
-                {/* Opção Ampliado (112%) */}
-                <button
-                  onClick={() => setPreset('large')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                    preset === 'large'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <ZoomIn className="w-3.5 h-3.5" /> Ampliado (112%)
-                  </span>
-                  {preset === 'large' && <Check className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-
-              <div className="mt-2 pt-2 border-t border-neutral-800 flex items-center justify-between text-[10px] text-neutral-400">
-                <span>Escala Ativa: <strong className="text-white font-mono">{percentage}%</strong></span>
-                {preset !== 'auto' && (
-                  <button
-                    onClick={resetToAuto}
-                    className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
-                  >
-                    <RotateCcw className="w-3 h-3" /> Resetar Auto
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Botão Gatilho Discreto (Alvo de toque otimizado 44px para mobile) */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            title="Ajustar Densidade/Zoom da Tela"
-            className="group flex items-center gap-2 bg-neutral-900/90 hover:bg-black text-white px-3.5 py-2 min-h-[44px] rounded-full shadow-xl border border-neutral-700/60 backdrop-blur-md text-[11px] font-medium transition-all duration-200 active:scale-95 hover:scale-105"
-          >
-            <Monitor className="w-3.5 h-3.5 text-indigo-400 group-hover:rotate-12 transition-transform" />
-            <span className="font-mono text-neutral-200">{percentage}%</span>
-            <span className="text-[10px] bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-400 font-semibold uppercase tracking-wider">
-              {preset === 'auto' ? 'Auto' : preset}
-            </span>
-          </button>
-        </div>
-      )}
     </ScaleContext.Provider>
   )
 }
